@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FinancialAuditor — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{--em:#00C896;--em2:#008F6A;--nv:#0A1628;--nv2:#0F2040;--gd:#F5A623;--sl:#C8D6E5;--sl2:#7A92AA;--s1:#111E35;--s2:#192540;--rd:#FF4D6D;--r:12px;}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--nv);color:var(--sl);font-family:'DM Sans',sans-serif;line-height:1.6;overflow-x:hidden;min-height:100vh;display:flex}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--nv)}::-webkit-scrollbar-thumb{background:var(--rd);border-radius:3px;opacity:.6}
+h1,h2,h3,h4{font-family:'Syne',sans-serif;font-weight:700}
+.mono{font-family:'DM Mono',monospace}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes slidein{from{transform:translateX(-8px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* SIDEBAR */
+.sb{width:244px;min-width:244px;background:var(--nv2);border-right:1px solid rgba(255,255,255,.06);height:100vh;overflow-y:auto;position:fixed;left:0;top:0;z-index:200;display:flex;flex-direction:column;transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.mn{margin-left:244px;flex:1;min-height:100vh;width:calc(100% - 244px)}
+@media(max-width:900px){.sb{transform:translateX(-244px)}.sb.open{transform:translateX(0)}.mn{margin-left:0;width:100%}}
+@media(max-width:640px){.g4{grid-template-columns:1fr 1fr!important}.g2{grid-template-columns:1fr!important}.g3{grid-template-columns:1fr!important}.hmob{display:none!important}.tscroll{overflow-x:auto}}
+
+/* NAV */
+.ni{display:flex;align-items:center;gap:.6rem;padding:.6rem .88rem;border-radius:10px;margin:0 .5rem .12rem;font-size:.81rem;font-weight:500;color:var(--sl2);cursor:pointer;transition:all .2s;text-decoration:none;border:none;background:none;width:calc(100% - 1rem);text-align:left;font-family:'DM Sans',sans-serif}
+.ni:hover{background:rgba(255,255,255,.05);color:#fff}
+.ni.act{background:rgba(255,77,109,.1);color:var(--rd);border:1px solid rgba(255,77,109,.2)}
+.ni .cnt{margin-left:auto;background:var(--rd);color:#fff;font-size:.58rem;font-weight:700;padding:.08rem .36rem;border-radius:50px;font-family:'Syne',sans-serif}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:100;background:rgba(10,22,40,.94);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.06);height:60px;display:flex;align-items:center;padding:0 1.2rem;gap:.7rem}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid rgba(255,255,255,.07);border-radius:var(--r)}
+.ch{transition:all .22s}.ch:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.3)}
+
+/* BUTTONS */
+.bp{background:linear-gradient(135deg,var(--rd),#b03028);color:#fff;border:none;border-radius:var(--r);font-family:'Syne',sans-serif;font-weight:600;font-size:.83rem;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.4rem;text-decoration:none}
+.bp:hover{transform:translateY(-1px);box-shadow:0 5px 18px rgba(255,77,109,.4)}
+.bpe{background:linear-gradient(135deg,var(--em),var(--em2));color:#fff;border:none;border-radius:var(--r);font-family:'Syne',sans-serif;font-weight:600;font-size:.83rem;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.4rem;text-decoration:none}
+.bpe:hover{transform:translateY(-1px);box-shadow:0 5px 18px rgba(0,200,150,.35)}
+.bgo{background:transparent;color:var(--gd);border:1.5px solid var(--gd);border-radius:var(--r);font-family:'Syne',sans-serif;font-weight:600;font-size:.83rem;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.4rem}
+.bgo:hover{background:rgba(245,166,35,.08)}
+.bg2{background:rgba(255,255,255,.05);color:var(--sl);border:1px solid rgba(255,255,255,.09);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:.81rem;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.4rem}
+.bg2:hover{background:rgba(255,255,255,.09);color:#fff}
+
+/* BADGES */
+.bd{display:inline-flex;align-items:center;padding:.18rem .55rem;border-radius:50px;font-size:.65rem;font-family:'Syne',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.be{background:rgba(0,200,150,.12);color:var(--em);border:1px solid rgba(0,200,150,.25)}
+.bgo2{background:rgba(245,166,35,.12);color:var(--gd);border:1px solid rgba(245,166,35,.25)}
+.br{background:rgba(255,77,109,.12);color:var(--rd);border:1px solid rgba(255,77,109,.25)}
+.bb{background:rgba(0,180,216,.12);color:#00B4D8;border:1px solid rgba(0,180,216,.25)}
+.bpu{background:rgba(108,92,231,.12);color:#9B8EF0;border:1px solid rgba(108,92,231,.25)}
+
+/* FORM */
+.fi{width:100%;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:var(--r);color:#fff;font-family:'DM Sans',sans-serif;font-size:.84rem;padding:.58rem .84rem;outline:none;transition:all .2s}
+.fi:focus{border-color:var(--em);background:rgba(0,200,150,.04);box-shadow:0 0 0 3px rgba(0,200,150,.08)}
+.fi::placeholder{color:var(--sl2)}
+select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%237A92AA' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:calc(100% - .7rem) center}
+.fl{display:block;font-size:.7rem;font-weight:600;font-family:'Syne',sans-serif;color:var(--sl2);margin-bottom:.25rem;text-transform:uppercase;letter-spacing:.04em}
+textarea.fi{resize:vertical;min-height:80px}
+
+/* TABS */
+.tbt{padding:.42rem .88rem;border-radius:8px;border:none;font-family:'Syne',sans-serif;font-weight:600;font-size:.76rem;cursor:pointer;transition:all .2s;color:var(--sl2);background:transparent}
+.tbt.act{background:rgba(255,77,109,.12);color:var(--rd);border:1px solid rgba(255,77,109,.22)}
+.tbt2.act{background:rgba(0,200,150,.12);color:var(--em);border:1px solid rgba(0,200,150,.22)}
+
+/* TABLE */
+.dt{width:100%;border-collapse:collapse}
+.dt th{padding:.64rem .84rem;font-size:.67rem;font-family:'Syne',sans-serif;font-weight:700;color:var(--sl2);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid rgba(255,255,255,.07);text-align:left;white-space:nowrap}
+.dt td{padding:.74rem .84rem;font-size:.81rem;color:var(--sl);border-bottom:1px solid rgba(255,255,255,.04)}
+.dt tr:hover td{background:rgba(255,255,255,.02)}
+.dt tr:last-child td{border-bottom:none}
+
+/* MODAL */
+.mo{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.78);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity .3s}
+.mo.open{opacity:1;pointer-events:all}
+.mb{background:var(--nv2);border:1px solid rgba(255,255,255,.1);border-radius:18px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;transform:scale(.96) translateY(14px);transition:transform .3s}
+.mo.open .mb{transform:scale(1) translateY(0)}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:1.6rem 1.6rem 0;margin-bottom:1.4rem}
+.mc{padding:0 1.6rem 1.6rem}
+
+/* PAGES */
+.pg{display:none;padding:1.5rem;animation:fadeUp .4s ease}
+.pg.act{display:block}
+
+/* PROGRESS */
+.pb{height:4px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden}
+.pf{height:100%;border-radius:2px;transition:width .6s}
+
+/* DIVIDER */
+.dv{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);margin:.85rem 0}
+
+/* TOAST */
+.toast{position:fixed;top:1.1rem;right:1.1rem;z-index:9999;background:var(--s2);border:1px solid rgba(0,200,150,.3);border-radius:var(--r);padding:.75rem 1rem;font-size:.81rem;color:#fff;box-shadow:0 12px 40px rgba(0,0,0,.4);transform:translateX(120%);transition:transform .35s cubic-bezier(.34,1.56,.64,1);max-width:300px;min-width:200px}
+.toast.show{transform:translateX(0)}
+.toast.red{border-color:rgba(255,77,109,.35)}
+
+/* OVERLAY */
+#sov{display:none;position:fixed;inset:0;z-index:190;background:rgba(0,0,0,.55);backdrop-filter:blur(3px)}
+
+/* TOGGLE */
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw{position:relative;display:inline-block;width:38px;height:20px;cursor:pointer}
+.sl3{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.12);border-radius:20px;transition:.3s}
+.sl3:before{position:absolute;content:'';height:14px;width:14px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+input:checked+.sl3{background:var(--em)}
+input:checked+.sl3:before{transform:translateX(18px)}
+
+/* LIVE DOT */
+.live::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--rd);margin-right:.35rem;animation:pulse 1.5s infinite}
+</style>
+</head>
+<body>
+
+<div id="sov" onclick="closeSB()"></div>
+<div class="toast" id="toast"><div style="display:flex;align-items:center;gap:.55rem"><div id="tdot" style="width:7px;height:7px;border-radius:50%;background:var(--em);flex-shrink:0"></div><span id="tmsg"></span></div></div>
+
+<!-- ============================================================ SIDEBAR -->
+<aside class="sb" id="sb">
+  <div style="padding:1rem .88rem .65rem;border-bottom:1px solid rgba(255,255,255,.06)">
+    <a href="financialauditor-part1.html" style="display:flex;align-items:center;gap:.55rem;text-decoration:none;margin-bottom:.7rem">
+      <div style="width:32px;height:32px;background:linear-gradient(135deg,var(--rd),#b03028);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="16" height="16" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+      </div>
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:.93rem;color:#fff">Financial<span style="color:var(--rd)">Auditor</span></div>
+        <div style="font-size:.53rem;color:var(--rd);font-family:'DM Mono',monospace;letter-spacing:.06em">ADMIN CONSOLE</div>
+      </div>
+    </a>
+    <div style="background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.28);border-radius:6px;padding:.25rem .6rem;font-size:.62rem;font-family:'DM Mono',monospace;color:var(--rd);display:inline-flex;align-items:center;gap:.35rem"><span style="width:6px;height:6px;border-radius:50%;background:var(--rd);display:inline-block;animation:pulse 1.5s infinite"></span>SUPER ADMIN</div>
+  </div>
+
+  <div style="padding:.7rem .88rem;border-bottom:1px solid rgba(255,255,255,.06)">
+    <div style="display:flex;align-items:center;gap:.58rem">
+      <div style="width:33px;height:33px;border-radius:50%;background:linear-gradient(135deg,var(--rd),#b03028);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;color:#fff;font-size:.76rem;flex-shrink:0">SA</div>
+      <div style="overflow:hidden;flex:1">
+        <div style="font-size:.81rem;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">System Administrator</div>
+        <div style="font-size:.65rem;color:var(--sl2)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="6c0d080105022c0a05020d020f050d000d19080518031e42020b">[email&#160;protected]</a></div>
+      </div>
+      <div style="width:7px;height:7px;border-radius:50%;background:var(--em);flex-shrink:0;animation:pulse 2s infinite"></div>
+    </div>
+  </div>
+
+  <nav style="flex:1;padding:.5rem 0;overflow-y:auto">
+    <div style="padding:.26rem .88rem .32rem;font-size:.58rem;color:var(--sl2);font-family:'DM Mono',monospace;letter-spacing:.08em;text-transform:uppercase">Overview</div>
+    <button class="ni act" onclick="show('overview',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Admin Dashboard
+    </button>
+    <button class="ni" onclick="show('analytics',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>Platform Analytics
+    </button>
+
+    <div style="padding:.45rem .88rem .32rem;margin-top:.28rem;font-size:.58rem;color:var(--sl2);font-family:'DM Mono',monospace;letter-spacing:.08em;text-transform:uppercase">Users</div>
+    <button class="ni" onclick="show('clients',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Client Management
+    </button>
+    <button class="ni" onclick="show('auditors',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>Auditor Management<span class="cnt">5</span>
+    </button>
+
+    <div style="padding:.45rem .88rem .32rem;margin-top:.28rem;font-size:.58rem;color:var(--sl2);font-family:'DM Mono',monospace;letter-spacing:.08em;text-transform:uppercase">Services</div>
+    <button class="ni" onclick="show('requests',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Service Requests<span class="cnt">8</span>
+    </button>
+    <button class="ni" onclick="show('billing',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>Billing &amp; Subscriptions
+    </button>
+    <button class="ni" onclick="show('payouts',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Revenue &amp; Payouts
+    </button>
+
+    <div style="padding:.45rem .88rem .32rem;margin-top:.28rem;font-size:.58rem;color:var(--sl2);font-family:'DM Mono',monospace;letter-spacing:.08em;text-transform:uppercase">Platform</div>
+    <button class="ni" onclick="show('auditlog',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>Audit Logs
+    </button>
+    <button class="ni" onclick="show('settings',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>System Settings
+    </button>
+    <a href="financialauditor-part2.html" class="ni">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>Client Dashboard
+    </a>
+    <a href="financialauditor-part1.html" class="ni">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Landing Page
+    </a>
+  </nav>
+
+  <div style="padding:.65rem .88rem;border-top:1px solid rgba(255,255,255,.06)">
+    <div style="display:flex;justify-content:space-between;font-size:.67rem;margin-bottom:.28rem"><span style="color:var(--sl2)">AI Engine</span><span style="color:var(--em)">● 99.9% up</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:.67rem;margin-bottom:.28rem"><span style="color:var(--sl2)">Database</span><span style="color:var(--em)">● Healthy</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:.67rem;margin-bottom:.65rem"><span style="color:var(--sl2)">API Gateway</span><span style="color:var(--em)">● Operational</span></div>
+    <button onclick="toast('Logged out','var(--rd)');setTimeout(()=>location.href='financialauditor-part1.html',1100)" style="display:flex;align-items:center;gap:.45rem;background:none;border:none;cursor:pointer;color:var(--sl2);font-size:.75rem;width:100%;padding:.28rem 0;transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--sl2)'">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Sign Out
+    </button>
+  </div>
+</aside>
+
+<!-- ============================================================ MAIN -->
+<div class="mn" id="mn">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <button onclick="openSB()" style="background:none;border:none;cursor:pointer;color:var(--sl2);width:33px;height:33px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0" onmouseover="this.style.background='rgba(255,255,255,.07)'" onmouseout="this.style.background='none'">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+  <div style="flex:1;font-family:'Syne',sans-serif;font-size:.87rem">
+    <span style="color:var(--rd);font-size:.7rem;font-family:'DM Mono',monospace">ADMIN</span>
+    <span style="color:var(--sl2);margin:0 .3rem">/</span>
+    <span style="color:#fff" id="bct">Dashboard Overview</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:.5rem">
+    <div class="hmob" style="background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.28);border-radius:6px;padding:.2rem .58rem;font-size:.6rem;font-family:'DM Mono',monospace;color:var(--rd);letter-spacing:.05em">ADMIN</div>
+    <button onclick="show('requests',null)" style="position:relative;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);width:34px;height:34px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--sl2);flex-shrink:0;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.09)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+      <div style="position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--rd);border:1.5px solid var(--nv)"></div>
+    </button>
+    <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--rd),#b03028);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;color:#fff;font-size:.74rem;flex-shrink:0;cursor:pointer">SA</div>
+  </div>
+</div>
+
+<!-- ======================================================= OVERVIEW PAGE -->
+<div class="pg act" id="p-overview">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.875rem">
+    <div>
+      <h1 style="font-size:1.45rem;color:#fff;margin-bottom:.2rem">Admin Dashboard <span class="live" style="font-size:.7rem;color:var(--rd);font-family:'DM Mono',monospace">LIVE</span></h1>
+      <p style="font-size:.83rem;color:var(--sl2)">Platform-wide operations · FinancialAuditor Nigeria</p>
+    </div>
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+      <button onclick="openM('m-broadcast')" class="bpe" style="padding:.55rem 1rem">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>Broadcast
+      </button>
+      <button onclick="show('requests',null)" class="bp" style="padding:.55rem 1rem">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Requests (8)
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI cards -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.25rem" class="g4">
+    <div class="card ch" style="padding:1.1rem;overflow:hidden;position:relative">
+      <div style="position:absolute;top:0;right:0;width:55px;height:55px;border-radius:0 var(--r) 0 55px;background:var(--em);opacity:.07"></div>
+      <div style="font-size:.62rem;font-family:'DM Mono',monospace;color:var(--sl2);margin-bottom:.45rem;text-transform:uppercase">Total Users</div>
+      <div style="font-family:'Syne',sans-serif;font-size:1.52rem;font-weight:800;color:#fff;margin-bottom:.2rem">52,841</div>
+      <div style="font-size:.67rem;color:var(--em)">↑ 847 new this week</div>
+      <div style="height:3px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:.65rem;overflow:hidden"><div style="height:100%;width:78%;background:var(--em);border-radius:2px"></div></div>
+    </div>
+    <div class="card ch" style="padding:1.1rem;overflow:hidden;position:relative">
+      <div style="position:absolute;top:0;right:0;width:55px;height:55px;border-radius:0 var(--r) 0 55px;background:var(--gd);opacity:.07"></div>
+      <div style="font-size:.62rem;font-family:'DM Mono',monospace;color:var(--sl2);margin-bottom:.45rem;text-transform:uppercase">Monthly Revenue</div>
+      <div style="font-family:'Syne',sans-serif;font-size:1.52rem;font-weight:800;color:#fff;margin-bottom:.2rem">₦42.1M</div>
+      <div style="font-size:.67rem;color:var(--gd)">↑ 23.4% vs last month</div>
+      <div style="height:3px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:.65rem;overflow:hidden"><div style="height:100%;width:68%;background:var(--gd);border-radius:2px"></div></div>
+    </div>
+    <div class="card ch" style="padding:1.1rem;overflow:hidden;position:relative">
+      <div style="position:absolute;top:0;right:0;width:55px;height:55px;border-radius:0 var(--r) 0 55px;background:#9B8EF0;opacity:.07"></div>
+      <div style="font-size:.62rem;font-family:'DM Mono',monospace;color:var(--sl2);margin-bottom:.45rem;text-transform:uppercase">Active Auditors</div>
+      <div style="font-family:'Syne',sans-serif;font-size:1.52rem;font-weight:800;color:#fff;margin-bottom:.2rem">513</div>
+      <div style="font-size:.67rem;color:#9B8EF0">5 pending verification</div>
+      <div style="height:3px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:.65rem;overflow:hidden"><div style="height:100%;width:55%;background:#9B8EF0;border-radius:2px"></div></div>
+    </div>
+    <div class="card ch" style="padding:1.1rem;overflow:hidden;position:relative">
+      <div style="position:absolute;top:0;right:0;width:55px;height:55px;border-radius:0 var(--r) 0 55px;background:var(--rd);opacity:.07"></div>
+      <div style="font-size:.62rem;font-family:'DM Mono',monospace;color:var(--sl2);margin-bottom:.45rem;text-transform:uppercase">Open Requests</div>
+      <div style="font-family:'Syne',sans-serif;font-size:1.52rem;font-weight:800;color:#fff;margin-bottom:.2rem">8</div>
+      <div style="font-size:.67rem;color:var(--rd)">3 urgent · action needed</div>
+      <div style="height:3px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:.65rem;overflow:hidden"><div style="height:100%;width:38%;background:var(--rd);border-radius:2px"></div></div>
+    </div>
+  </div>
+
+  <!-- Charts row -->
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.15rem;margin-bottom:1.15rem" class="g2">
+    <div class="card" style="padding:1.35rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
+        <div>
+          <h3 style="font-size:.94rem;color:#fff;margin-bottom:.14rem">Platform Revenue 2025</h3>
+          <p style="font-size:.71rem;color:var(--sl2)">Subscriptions + 5% marketplace commission</p>
+        </div>
+        <span class="bd be" style="font-size:.6rem">Jan–Jun</span>
+      </div>
+      <div style="height:140px">
+        <svg viewBox="0 0 560 120" style="width:100%;height:100%" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="rg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(255,77,109,.45)"/><stop offset="100%" stop-color="rgba(255,77,109,0)"/></linearGradient>
+            <linearGradient id="rg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(0,200,150,.3)"/><stop offset="100%" stop-color="rgba(0,200,150,0)"/></linearGradient>
+          </defs>
+          <line x1="0" y1="30" x2="560" y2="30" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+          <line x1="0" y1="60" x2="560" y2="60" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+          <line x1="0" y1="90" x2="560" y2="90" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+          <path d="M0,100 C80,86 160,68 240,50 S400,28 480,17 S540,12 560,9" stroke="var(--rd)" stroke-width="2.5" fill="none"/>
+          <path d="M0,100 C80,86 160,68 240,50 S400,28 480,17 S540,12 560,9 L560,120 L0,120Z" fill="url(#rg1)"/>
+          <path d="M0,110 C80,104 160,96 240,89 S400,78 480,71 S540,66 560,63" stroke="var(--em)" stroke-width="2" fill="none" stroke-dasharray="5,3"/>
+          <path d="M0,110 C80,104 160,96 240,89 S400,78 480,71 S540,66 560,63 L560,120 L0,120Z" fill="url(#rg2)" opacity=".65"/>
+          <text x="4" y="116" fill="rgba(122,146,170,.6)" font-size="8" font-family="DM Mono">Jan</text>
+          <text x="88" y="116" fill="rgba(122,146,170,.6)" font-size="8" font-family="DM Mono">Feb</text>
+          <text x="175" y="116" fill="rgba(122,146,170,.6)" font-size="8" font-family="DM Mono">Mar</text>
+          <text x="263" y="116" fill="rgba(122,146,170,.6)" font-size="8" font-family="DM Mono">Apr</text>
+          <text x="350" y="116" fill="rgba(122,146,170,.6)" font-size="8" font-family="DM Mono">May</text>
+          <text x="445" y="116" fill="rgba(122,146,170,.6)" font-size="8" font-family="DM Mono">Jun</text>
+        </svg>
+      </div>
+      <div style="display:flex;gap:1.25rem;margin-top:.5rem;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:.35rem;font-size:.71rem;color:var(--sl2)"><div style="width:11px;height:2px;background:var(--rd);border-radius:1px"></div>Subscriptions</div>
+        <div style="display:flex;align-items:center;gap:.35rem;font-size:.71rem;color:var(--sl2)"><div style="width:11px;height:2px;background:var(--em);border-radius:1px"></div>Marketplace (5%)</div>
+        <div style="margin-left:auto;font-size:.71rem;color:var(--sl2)">H1 Total: <span style="color:var(--em);font-weight:700">₦218.4M</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:1.35rem">
+      <h3 style="font-size:.94rem;color:#fff;margin-bottom:.2rem">Plan Distribution</h3>
+      <p style="font-size:.71rem;color:var(--sl2);margin-bottom:1.1rem">52,841 active subscribers</p>
+      <div style="display:flex;flex-direction:column;gap:.72rem">
+        <div><div style="display:flex;justify-content:space-between;margin-bottom:.24rem"><span style="font-size:.77rem;color:var(--sl)">Enterprise</span><span style="font-size:.77rem;color:#fff;font-family:'DM Mono',monospace">1,240</span></div><div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden"><div style="height:100%;width:22%;background:#9B8EF0;border-radius:2px"></div></div></div>
+        <div><div style="display:flex;justify-content:space-between;margin-bottom:.24rem"><span style="font-size:.77rem;color:var(--sl)">Pro</span><span style="font-size:.77rem;color:#fff;font-family:'DM Mono',monospace">18,600</span></div><div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden"><div style="height:100%;width:60%;background:var(--rd);border-radius:2px"></div></div></div>
+        <div><div style="display:flex;justify-content:space-between;margin-bottom:.24rem"><span style="font-size:.77rem;color:var(--sl)">Starter</span><span style="font-size:.77rem;color:#fff;font-family:'DM Mono',monospace">28,181</span></div><div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden"><div style="height:100%;width:100%;background:var(--em);border-radius:2px"></div></div></div>
+        <div><div style="display:flex;justify-content:space-between;margin-bottom:.24rem"><span style="font-size:.77rem;color:var(--sl)">Free Trial</span><span style="font-size:.77rem;color:#fff;font-family:'DM Mono',monospace">4,820</span></div><div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden"><div style="height:100%;width:17%;background:var(--gd);border-radius:2px"></div></div></div>
+      </div>
+      <div class="dv"></div>
+      <div style="display:flex;justify-content:space-between;font-size:.75rem"><span style="color:var(--sl2)">Trial conversion</span><span style="color:var(--em);font-weight:700">68.4%</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:.75rem;margin-top:.28rem"><span style="color:var(--sl2)">Monthly churn</span><span style="color:var(--rd);font-weight:700">2.1%</span></div>
+    </div>
+  </div>
+
+  <!-- Recent signups + Pending actions -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.15rem" class="g2">
+    <div class="card" style="padding:1.35rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <h3 style="font-size:.94rem;color:#fff">Recent Signups</h3>
+        <button onclick="show('clients',null)" style="font-size:.71rem;color:var(--em);background:none;border:none;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600">All →</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.42rem">
+        <div style="display:flex;align-items:center;gap:.62rem;padding:.58rem;background:rgba(255,255,255,.02);border-radius:9px"><div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--em),var(--em2));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;color:#fff;font-size:.7rem;flex-shrink:0">TK</div><div style="flex:1;overflow:hidden"><div style="font-size:.79rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Tayo Kola-Idowu</div><div style="font-size:.67rem;color:var(--sl2)">TechVentures Ltd · Pro</div></div><span class="bd be" style="font-size:.56rem">2 min</span></div>
+        <div style="display:flex;align-items:center;gap:.62rem;padding:.58rem;background:rgba(255,255,255,.02);border-radius:9px"><div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--gd),#e8921a);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;color:#fff;font-size:.7rem;flex-shrink:0">FS</div><div style="flex:1;overflow:hidden"><div style="font-size:.79rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Fatima Suleiman</div><div style="font-size:.67rem;color:var(--sl2)">Suleiman Foundation · Starter</div></div><span class="bd be" style="font-size:.56rem">18 min</span></div>
+        <div style="display:flex;align-items:center;gap:.62rem;padding:.58rem;background:rgba(255,255,255,.02);border-radius:9px"><div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#6C5CE7,#5A4BD1);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;color:#fff;font-size:.7rem;flex-shrink:0">OA</div><div style="flex:1;overflow:hidden"><div style="font-size:.79rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Adeyemi Group PLC</div><div style="font-size:.67rem;color:var(--sl2)">Corporate · Enterprise</div></div><span class="bd bgo2" style="font-size:.56rem">1 hr</span></div>
+        <div style="display:flex;align-items:center;gap:.62rem;padding:.58rem;background:rgba(255,255,255,.02);border-radius:9px"><div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--rd),#b03028);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;color:#fff;font-size:.7rem;flex-shrink:0">MI</div><div style="flex:1;overflow:hidden"><div style="font-size:.79rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Musa Ibrahim</div><div style="font-size:.67rem;color:var(--sl2)">Individual · Free Trial</div></div><span class="bd" style="font-size:.56rem;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--sl2)">3 hr</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:1.35rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <h3 style="font-size:.94rem;color:#fff">Pending Admin Actions</h3>
+        <span class="bd br" style="font-size:.58rem">11 items</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.62rem">
+        <div style="background:rgba(255,77,109,.06);border:1px solid rgba(255,77,109,.2);border-radius:10px;padding:.82rem;display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap">
+          <div><div style="font-size:.8rem;color:#fff;margin-bottom:.15rem">5 Auditor Applications</div><div style="font-size:.69rem;color:var(--sl2)">NIN &amp; certificate check needed</div></div>
+          <button onclick="show('auditors',null)" class="bp" style="padding:.36rem .8rem;font-size:.73rem">Review</button>
+        </div>
+        <div style="background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.2);border-radius:10px;padding:.82rem;display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap">
+          <div><div style="font-size:.8rem;color:#fff;margin-bottom:.15rem">3 CAC Registration Requests</div><div style="font-size:.69rem;color:var(--sl2)">Clients awaiting contact — urgent</div></div>
+          <button onclick="show('requests',null)" class="bgo" style="padding:.36rem .8rem;font-size:.73rem">Contact</button>
+        </div>
+        <div style="background:rgba(0,200,150,.06);border:1px solid rgba(0,200,150,.2);border-radius:10px;padding:.82rem;display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap">
+          <div><div style="font-size:.8rem;color:#fff;margin-bottom:.15rem">₦2.1M Auditor Payouts Due</div><div style="font-size:.69rem;color:var(--sl2)">8 auditors in payment queue</div></div>
+          <button onclick="show('payouts',null)" class="bpe" style="padding:.36rem .8rem;font-size:.73rem">Process</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================= SERVICE REQUESTS PAGE -->
+<div class="pg" id="p-requests">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.875rem">
+    <div>
+      <h1 style="font-size:1.45rem;color:#fff;margin-bottom:.2rem">Service Requests</h1>
+      <p style="font-size:.83rem;color:var(--sl2)">CAC registrations · FIRS filings · Corporate document requests</p>
+    </div>
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+      <button class="tbt act" onclick="tabSwitch(this)">All (8)</button>
+      <button class="tbt" onclick="tabSwitch(this)">Urgent (3)</button>
+      <button class="tbt" onclick="tabSwitch(this)">CAC (3)</button>
+      <button class="tbt" onclick="tabSwitch(this)">Tax (2)</button>
+      <button class="tbt" onclick="tabSwitch(this)">Documents (3)</button>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:1rem">
+
+    <!-- REQ 1 -->
+    <div class="card" style="padding:1.35rem;border-color:rgba(255,77,109,.28);background:rgba(255,77,109,.025)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+        <div style="flex:1;min-width:250px">
+          <div style="display:flex;align-items:center;gap:.52rem;flex-wrap:wrap;margin-bottom:.72rem">
+            <span class="bd br">Urgent</span><span class="bd bb" style="font-size:.58rem">CAC Registration</span>
+            <span style="font-size:.68rem;color:var(--sl2);font-family:'DM Mono',monospace">REQ-2025-0847 · 3 hrs ago</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:.82rem;margin-bottom:.82rem">
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Client Name</div><div style="font-size:.84rem;color:#fff;font-weight:600">Emeka Oduya</div></div>
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Email</div><div style="font-size:.79rem;color:var(--sl)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="82e7efe7e9e3c2ede6f7fbe3acece5">[email&#160;protected]</a></div></div>
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Phone / WhatsApp</div><div style="font-size:.79rem;color:var(--sl)">+234 802 345 6789</div></div>
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Service</div><div style="font-size:.79rem;color:#fff">Company Incorporation (Ltd)</div></div>
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Business Name</div><div style="font-size:.79rem;color:var(--sl)">Oduya Tech Solutions Ltd</div></div>
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Subscription</div><div style="font-size:.79rem;color:var(--em);font-weight:600">Pro Plan</div></div>
+          </div>
+          <div style="font-size:.78rem;color:var(--sl2);background:rgba(255,255,255,.03);border-radius:8px;padding:.62rem;line-height:1.6"><strong style="color:var(--sl)">Note:</strong> Needs company registered before month-end for contract signing. Very urgent.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.5rem;min-width:148px">
+          <button onclick="openM('m-contact');fillContact('Emeka Oduya','emeka@oduya.ng','+234 802 345 6789')" class="bpe" style="padding:.58rem .9rem;justify-content:center;font-size:.79rem;width:100%">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>Contact Client
+          </button>
+          <button onclick="markProgress(this)" class="bg2" style="padding:.58rem .9rem;justify-content:center;font-size:.79rem;width:100%">In Progress</button>
+          <button onclick="markDone(this)" class="bg2" style="padding:.58rem .9rem;justify-content:center;font-size:.79rem;width:100%">Mark Resolved</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- REQ 2 -->
+    <div class="card" style="padding:1.35rem;border-color:rgba(245,166,35,.2)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+        <div style="flex:1;min-width:250px">
+          <div style="display:flex;align-items:center;gap:.52rem;flex-wrap:wrap;margin-bottom:.72rem">
+            <span class="bd bgo2">Pending</span><span class="bd bpu" style="font-size:.58rem">Foundation Registration</span>
+            <span style="font-size:.68rem;color:var(--sl2);font-family:'DM Mono',monospace">REQ-2025-0846 · 5 hrs ago</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:.82rem">
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Client</div><div style="font-size:.84rem;color:#fff;font-weight:600">Ngozi Kalu</div></div>
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Email</div><div style="font-size:.79rem;color:var(--sl)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="87e9e0e8fdeec7efe8f7e2e1e8f2e9e3e6f3eee8e9a9e9e0">[email&#160;protected]</a></div></div>
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Phone</div><div style="font-size:.79rem;color:var(--sl)">+234 706 234 5678</div></div>
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Service</div><div style="font-size:.79rem;color:#fff">NGO / Foundation CAC Reg</div></div>
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Org Name</div><div style="font-size:.79rem;color:var(--sl)">Hope &amp; Light Foundation</div></div>
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Plan</div><div style="font-size:.79rem;color:var(--em);font-weight:600">Starter</div></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.5rem;min-width:148px">
+          <button onclick="openM('m-contact');fillContact('Ngozi Kalu','ngozi@hopefoundation.ng','+234 706 234 5678')" class="bpe" style="padding:.58rem .9rem;justify-content:center;font-size:.79rem;width:100%">Contact Client</button>
+          <button onclick="markProgress(this)" class="bg2" style="padding:.58rem .9rem;justify-content:center;font-size:.79rem;width:100%">In Progress</button>
+          <button onclick="markDone(this)" class="bg2" style="padding:.58rem .9rem;justify-content:center;font-size:.79rem;width:100%">Mark Resolved</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- REQ 3 -->
+    <div class="card" style="padding:1.35rem;border-color:rgba(255,77,109,.2)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+        <div style="flex:1;min-width:250px">
+          <div style="display:flex;align-items:center;gap:.52rem;flex-wrap:wrap;margin-bottom:.72rem">
+            <span class="bd br">Urgent</span><span class="bd bpu" style="font-size:.58rem">FIRS Tax Filing</span>
+            <span style="font-size:.68rem;color:var(--sl2);font-family:'DM Mono',monospace">REQ-2025-0844 · 1 day ago</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:.82rem">
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Client</div><div style="font-size:.84rem;color:#fff;font-weight:600">Adaeze Okonkwo</div></div>
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Email</div><div style="font-size:.79rem;color:var(--sl)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="26474247435c436647415449405443554e084841">[email&#160;protected]</a></div></div>
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Phone</div><div style="font-size:.79rem;color:var(--sl)">+234 803 456 7890</div></div>
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Service</div><div style="font-size:.79rem;color:#fff">Annual FIRS Returns + VAT</div></div>
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">TIN</div><div style="font-size:.79rem;color:var(--sl)">1234567-0001</div></div>
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Deadline</div><div style="font-size:.79rem;color:var(--rd);font-weight:700">14 days</div></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.5rem;min-width:148px">
+          <button onclick="openM('m-contact');fillContact('Adaeze Okonkwo','adaeze@agrofresh.ng','+234 803 456 7890')" class="bpe" style="padding:.58rem .9rem;justify-content:center;font-size:.79rem;width:100%">Contact Client</button>
+          <button onclick="markProgress(this)" class="bg2" style="padding:.58rem .9rem;justify-content:center;font-size:.79rem;width:100%">In Progress</button>
+          <button onclick="markDone(this)" class="bg2" style="padding:.58rem .9rem;justify-content:center;font-size:.79rem;width:100%">Mark Resolved</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- REQ 4 -->
+    <div class="card" style="padding:1.35rem">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+        <div style="flex:1;min-width:250px">
+          <div style="display:flex;align-items:center;gap:.52rem;flex-wrap:wrap;margin-bottom:.72rem">
+            <span class="bd be">New</span><span class="bd bb" style="font-size:.58rem">Corporate Document</span>
+            <span style="font-size:.68rem;color:var(--sl2);font-family:'DM Mono',monospace">REQ-2025-0843 · 2 days ago</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:.82rem">
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Client</div><div style="font-size:.84rem;color:#fff;font-weight:600">Adeyemi Group PLC</div></div>
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Email</div><div style="font-size:.79rem;color:var(--sl)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3950575f5679585d5c405c54505e4b564c49175a5654">[email&#160;protected]</a></div></div>
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Phone</div><div style="font-size:.79rem;color:var(--sl)">+234 701 987 6543</div></div>
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Service</div><div style="font-size:.79rem;color:#fff">Shareholder Agreement Drafting</div></div>
+            <div><div style="font-size:.64rem;color:var(--sl2);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:.14rem">Plan</div><div style="font-size:.79rem;color:#9B8EF0;font-weight:600">Enterprise</div></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.5rem;min-width:148px">
+          <button onclick="openM('m-contact');fillContact('Adeyemi Group','info@adeyemigroup.com','+234 701 987 6543')" class="bpe" style="padding:.58rem .9rem;justify-content:center;font-size:.79rem;width:100%">Contact Client</button>
+          <button onclick="markProgress(this)" class="bg2" style="padding:.58rem .9rem;justify-content:center;font-size:.79rem;width:100%">In Progress</button>
+          <button onclick="markDone(this)" class="bg2" style="padding:.58rem .9rem;justify-content:center;font-size:.79rem;width:100%">Mark Resolved</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================= AUDITOR MANAGEMENT PAGE -->
+<div class="pg" id="p-auditors">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.875rem">
+    <div>
+      <h1 style="font-size:1.45rem;color:#fff;margin-bottom:.2rem">Auditor Management</h1>
+      <p style="font-size:.83rem;color:var(--sl2)">Verify applications · Manage marketplace · Track performance</p>
+    </div>
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+      <button class="tbt act" onclick="tabSwitch(this)">All (518)</button>
+      <button class="tbt" onclick="tabSwitch(this)">Pending (5)</button>
+      <button class="tbt" onclick="tabSwitch(this)">Active (508)</button>
+      <button class="tbt" onclick="tabSwitch(this)">Suspended (5)</button>
+    </div>
+  </div>
+
+  <!-- Pending applications -->
+  <div class="card" style="padding:1.35rem;margin-bottom:1.25rem;border-color:rgba(245,166,35,.22)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;flex-wrap:wrap;gap:.5rem">
+      <h3 style="font-size:.94rem;color:#fff">Pending Verification <span style="color:var(--rd)">(5)</span></h3>
+      <span class="bd bgo2">Action Required</span>
+    </div>
+    <div class="tscroll">
+      <table class="dt">
+        <thead><tr><th>Applicant</th><th>Certification</th><th>License No.</th><th>Specialisation</th><th>NIN</th><th>Submitted</th><th>Actions</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><div style="font-size:.82rem;color:#fff;font-weight:600">Chidinma Ugwu</div><div style="font-size:.68rem;color:var(--sl2)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="67040f0e030e090a0627000a060e0b4904080a">[email&#160;protected]</a> · Abuja</div></td>
+            <td><span class="bd be" style="font-size:.59rem">ICAN ACA</span></td>
+            <td class="mono" style="font-size:.75rem">ICAN/ACA/2018/04521</td>
+            <td style="font-size:.78rem">Management Acct</td>
+            <td><span class="bd be" style="font-size:.59rem">✓ Verified</span></td>
+            <td class="mono" style="font-size:.73rem;color:var(--sl2)">2 hrs ago</td>
+            <td><div style="display:flex;gap:.35rem;flex-wrap:wrap"><button onclick="approveAuditor(this,'Chidinma Ugwu')" class="bpe" style="padding:.26rem .68rem;font-size:.71rem">Approve</button><button onclick="rejectAuditor(this)" class="bp" style="padding:.26rem .68rem;font-size:.71rem">Reject</button></div></td>
+          </tr>
+          <tr>
+            <td><div style="font-size:.82rem;color:#fff;font-weight:600">Babatunde Nwachukwu</div><div style="font-size:.68rem;color:var(--sl2)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3b595a59487b544e4f5754545015585456">[email&#160;protected]</a> · P/Harcourt</div></td>
+            <td><span class="bd bb" style="font-size:.59rem">ACCA</span></td>
+            <td class="mono" style="font-size:.75rem">ACCA/P/2020/07832</td>
+            <td style="font-size:.78rem">Forensic Acct</td>
+            <td><span class="bd bgo2" style="font-size:.59rem">Pending</span></td>
+            <td class="mono" style="font-size:.73rem;color:var(--sl2)">5 hrs ago</td>
+            <td><div style="display:flex;gap:.35rem;flex-wrap:wrap"><button onclick="approveAuditor(this,'Babatunde')" class="bpe" style="padding:.26rem .68rem;font-size:.71rem">Approve</button><button onclick="rejectAuditor(this)" class="bp" style="padding:.26rem .68rem;font-size:.71rem">Reject</button></div></td>
+          </tr>
+          <tr>
+            <td><div style="font-size:.82rem;color:#fff;font-weight:600">Amara Eze</div><div style="font-size:.68rem;color:var(--sl2)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="dfbeb2beadbef1baa5ba9fa6beb7b0b0f1bcb0b2">[email&#160;protected]</a> · Lagos</div></td>
+            <td><span class="bd be" style="font-size:.59rem">ICAN FCA</span></td>
+            <td class="mono" style="font-size:.75rem">ICAN/FCA/2015/01243</td>
+            <td style="font-size:.78rem">External Audit</td>
+            <td><span class="bd be" style="font-size:.59rem">✓ Verified</span></td>
+            <td class="mono" style="font-size:.73rem;color:var(--sl2)">1 day ago</td>
+            <td><div style="display:flex;gap:.35rem;flex-wrap:wrap"><button onclick="approveAuditor(this,'Amara Eze')" class="bpe" style="padding:.26rem .68rem;font-size:.71rem">Approve</button><button onclick="rejectAuditor(this)" class="bp" style="padding:.26rem .68rem;font-size:.71rem">Reject</button></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Active auditors -->
+  <div class="card" style="padding:1.35rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;flex-wrap:wrap;gap:.75rem">
+      <h3 style="font-size:.94rem;color:#fff">Active Auditors (508)</h3>
+      <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+        <input class="fi" style="max-width:195px" placeholder="Search auditors…"/>
+        <button onclick="toast('Exporting auditor list…')" class="bg2" style="padding:.48rem .88rem;font-size:.77rem">Export</button>
+      </div>
+    </div>
+    <div class="tscroll">
+      <table class="dt">
+        <thead><tr><th>Auditor</th><th>Cert.</th><th>Location</th><th>Jobs</th><th>Rating</th><th>Total Earned</th><th>Commission (5%)</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td><div style="font-size:.82rem;color:#fff;font-weight:600">Emmanuel Ihejirika</div><div style="font-size:.68rem;color:var(--sl2)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="83e6eeeee2edf6e6efeac3f3f1e2e0f7eae0e6adede4">[email&#160;protected]</a></div></td><td><span class="bd be" style="font-size:.59rem">ICAN FCA</span></td><td style="font-size:.78rem">Lagos</td><td class="mono" style="color:#fff">47</td><td style="color:var(--gd);font-size:.8rem">★ 4.9</td><td class="mono" style="color:var(--em)">₦2,115,000</td><td class="mono" style="color:var(--rd)">₦111,315</td><td><span class="bd be" style="font-size:.58rem">Active</span></td><td><button onclick="openM('m-auditorview')" class="bg2" style="padding:.26rem .62rem;font-size:.71rem">View</button></td></tr>
+          <tr><td><div style="font-size:.82rem;color:#fff;font-weight:600">Amara Eze</div><div style="font-size:.68rem;color:var(--sl2)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="adccc0ccdfcc83c8d7c8eddddfccced9c4cec883c3ca">[email&#160;protected]</a></div></td><td><span class="bd be" style="font-size:.59rem">ICAN FCA</span></td><td style="font-size:.78rem">Abuja</td><td class="mono" style="color:#fff">31</td><td style="color:var(--gd);font-size:.8rem">★ 4.8</td><td class="mono" style="color:var(--em)">₦1,395,000</td><td class="mono" style="color:var(--rd)">₦73,421</td><td><span class="bd be" style="font-size:.58rem">Active</span></td><td><button onclick="openM('m-auditorview')" class="bg2" style="padding:.26rem .62rem;font-size:.71rem">View</button></td></tr>
+          <tr><td><div style="font-size:.82rem;color:#fff;font-weight:600">Yemi Abara</div><div style="font-size:.68rem;color:var(--sl2)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b3cad6dedaf3c3db9ed2d0d0dcc6ddc7c09dddd4">[email&#160;protected]</a></div></td><td><span class="bd bb" style="font-size:.59rem">ANAN</span></td><td style="font-size:.78rem">Port Harcourt</td><td class="mono" style="color:#fff">19</td><td style="color:var(--gd);font-size:.8rem">★ 4.6</td><td class="mono" style="color:var(--em)">₦760,000</td><td class="mono" style="color:var(--rd)">₦40,000</td><td><span class="bd bgo2" style="font-size:.58rem">Busy</span></td><td><button onclick="openM('m-auditorview')" class="bg2" style="padding:.26rem .62rem;font-size:.71rem">View</button></td></tr>
+          <tr><td><div style="font-size:.82rem;color:#fff;font-weight:600">Sade Ogundimu</div><div style="font-size:.68rem;color:var(--sl2)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="aeddcfcacbeec1c9dbc0cac7c3db83cddecf80c0c9">[email&#160;protected]</a></div></td><td><span class="bd bpu" style="font-size:.59rem">ACCA</span></td><td style="font-size:.78rem">Ibadan</td><td class="mono" style="color:#fff">12</td><td style="color:var(--gd);font-size:.8rem">★ 4.7</td><td class="mono" style="color:var(--em)">₦480,000</td><td class="mono" style="color:var(--rd)">₦25,263</td><td><span class="bd be" style="font-size:.58rem">Active</span></td><td><button onclick="openM('m-auditorview')" class="bg2" style="padding:.26rem .62rem;font-size:.71rem">View</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================= CLIENT MANAGEMENT PAGE -->
+<div class="pg" id="p-clients">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.875rem">
+    <div>
+      <h1 style="font-size:1.45rem;color:#fff;margin-bottom:.2rem">Client Management</h1>
+      <p style="font-size:.83rem;color:var(--sl2)">All registered businesses, individuals &amp; organisations</p>
+    </div>
+    <button onclick="toast('Exporting client list to CSV…')" class="bg2" style="padding:.55rem 1.1rem">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Export CSV
+    </button>
+  </div>
+  <div class="card" style="padding:1rem;margin-bottom:1.25rem">
+    <div style="display:flex;gap:.72rem;flex-wrap:wrap;align-items:center">
+      <input class="fi" style="flex:1;min-width:170px;max-width:240px" placeholder="Search clients…"/>
+      <select class="fi" style="width:auto;min-width:110px"><option>All Plans</option><option>Enterprise</option><option>Pro</option><option>Starter</option><option>Trial</option></select>
+      <select class="fi" style="width:auto;min-width:112px"><option>All Types</option><option>Business</option><option>Individual</option><option>Foundation</option></select>
+      <select class="fi" style="width:auto;min-width:105px"><option>All States</option><option>Lagos</option><option>Abuja</option><option>Rivers</option><option>Kano</option></select>
+    </div>
+  </div>
+  <div class="card" style="padding:1.35rem">
+    <div class="tscroll">
+      <table class="dt">
+        <thead><tr><th>Client</th><th>Type</th><th>Plan</th><th>State</th><th>RC / NIN</th><th>Joined</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td><div style="font-size:.82rem;color:#fff;font-weight:600">AgroFresh Nigeria Ltd</div><div style="font-size:.68rem;color:var(--sl2)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="9ffefbfefae5fadffef8edf0f9edfaecf7b1f1f8">[email&#160;protected]</a></div></td><td style="font-size:.78rem">Business</td><td><span class="bd bb" style="font-size:.58rem">Pro</span></td><td style="font-size:.78rem">Lagos</td><td class="mono" style="font-size:.73rem">RC-1234567</td><td class="mono" style="font-size:.73rem;color:var(--sl2)">Jan 2025</td><td><span class="bd be" style="font-size:.58rem">Active</span></td><td><div style="display:flex;gap:.32rem"><button onclick="openM('m-clientview')" class="bg2" style="padding:.26rem .6rem;font-size:.71rem">View</button><button onclick="toast('Email sent')" class="bpe" style="padding:.26rem .6rem;font-size:.71rem">Email</button></div></td></tr>
+          <tr><td><div style="font-size:.82rem;color:#fff;font-weight:600">Adeyemi Group PLC</div><div style="font-size:.68rem;color:var(--sl2)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="cca5a2aaa38cada8a9b5a9a1a5abbea3b9bce2afa3a1">[email&#160;protected]</a></div></td><td style="font-size:.78rem">Corporate</td><td><span class="bd bpu" style="font-size:.58rem">Enterprise</span></td><td style="font-size:.78rem">Lagos</td><td class="mono" style="font-size:.73rem">RC-PLC-9981</td><td class="mono" style="font-size:.73rem;color:var(--sl2)">Feb 2025</td><td><span class="bd be" style="font-size:.58rem">Active</span></td><td><div style="display:flex;gap:.32rem"><button onclick="openM('m-clientview')" class="bg2" style="padding:.26rem .6rem;font-size:.71rem">View</button><button onclick="toast('Email sent')" class="bpe" style="padding:.26rem .6rem;font-size:.71rem">Email</button></div></td></tr>
+          <tr><td><div style="font-size:.82rem;color:#fff;font-weight:600">Hope &amp; Light Foundation</div><div style="font-size:.68rem;color:var(--sl2)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3c525b5346557c54534c595a534952585d4855535212525b">[email&#160;protected]</a></div></td><td style="font-size:.78rem">Foundation</td><td><span class="bd be" style="font-size:.58rem">Starter</span></td><td style="font-size:.78rem">Abuja</td><td class="mono" style="font-size:.73rem">RC-NGO-4521</td><td class="mono" style="font-size:.73rem;color:var(--sl2)">Mar 2025</td><td><span class="bd be" style="font-size:.58rem">Active</span></td><td><div style="display:flex;gap:.32rem"><button onclick="openM('m-clientview')" class="bg2" style="padding:.26rem .6rem;font-size:.71rem">View</button><button onclick="toast('Email sent')" class="bpe" style="padding:.26rem .6rem;font-size:.71rem">Email</button></div></td></tr>
+          <tr><td><div style="font-size:.82rem;color:#fff;font-weight:600">TechVentures Ltd</div><div style="font-size:.68rem;color:var(--sl2)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="ef9b8e9680af9b8a8c87998a819b9a9d8a9cc18188">[email&#160;protected]</a></div></td><td style="font-size:.78rem">Business</td><td><span class="bd bb" style="font-size:.58rem">Pro</span></td><td style="font-size:.78rem">Lagos</td><td class="mono" style="font-size:.73rem">RC-7654321</td><td class="mono" style="font-size:.73rem;color:var(--sl2)">Jun 2025</td><td><span class="bd be" style="font-size:.58rem">Active</span></td><td><div style="display:flex;gap:.32rem"><button onclick="openM('m-clientview')" class="bg2" style="padding:.26rem .6rem;font-size:.71rem">View</button><button onclick="toast('Email sent')" class="bpe" style="padding:.26rem .6rem;font-size:.71rem">Email</button></div></td></tr>
+          <tr><td><div style="font-size:.82rem;color:#fff;font-weight:600">Musa Ibrahim</div><div style="font-size:.68rem;color:var(--sl2)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="58352d2b3976313a2a39303135183f35393134763b3735">[email&#160;protected]</a></div></td><td style="font-size:.78rem">Individual</td><td><span class="bd bgo2" style="font-size:.58rem">Trial</span></td><td style="font-size:.78rem">Kano</td><td class="mono" style="font-size:.73rem">NIN:****5678</td><td class="mono" style="font-size:.73rem;color:var(--sl2)">Jun 2025</td><td><span class="bd bgo2" style="font-size:.58rem">Trial</span></td><td><div style="display:flex;gap:.32rem"><button onclick="openM('m-clientview')" class="bg2" style="padding:.26rem .6rem;font-size:.71rem">View</button><button onclick="toast('Upgrade prompt sent')" class="bpe" style="padding:.26rem .6rem;font-size:.71rem">Upgrade</button></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1.1rem;flex-wrap:wrap;gap:.5rem">
+      <span style="font-size:.73rem;color:var(--sl2)">Showing 5 of 52,841 clients</span>
+      <div style="display:flex;gap:.35rem">
+        <button class="bg2" style="padding:.33rem .68rem;font-size:.75rem">← Prev</button>
+        <button class="bg2" style="padding:.33rem .68rem;font-size:.75rem;background:rgba(255,77,109,.1);border-color:rgba(255,77,109,.25);color:var(--rd)">1</button>
+        <button class="bg2" style="padding:.33rem .68rem;font-size:.75rem">2</button>
+        <button class="bg2" style="padding:.33rem .68rem;font-size:.75rem">3</button>
+        <button class="bg2" style="padding:.33rem .68rem;font-size:.75rem">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================= BILLING PAGE -->
+<div class="pg" id="p-billing">
+  <h1 style="font-size:1.45rem;color:#fff;margin-bottom:.2rem">Billing &amp; Subscriptions</h1>
+  <p style="font-size:.83rem;color:var(--sl2);margin-bottom:1.5rem">Manage plans, renewals, payments &amp; invoices</p>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.25rem" class="g4">
+    <div class="card ch" style="padding:1.1rem"><div style="font-size:.62rem;font-family:'DM Mono',monospace;color:var(--sl2);margin-bottom:.45rem;text-transform:uppercase">MRR</div><div style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:.2rem">₦42.1M</div><div style="font-size:.67rem;color:var(--em)">↑ 23.4% MoM</div></div>
+    <div class="card ch" style="padding:1.1rem"><div style="font-size:.62rem;font-family:'DM Mono',monospace;color:var(--sl2);margin-bottom:.45rem;text-transform:uppercase">ARR (Projected)</div><div style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:.2rem">₦505M</div><div style="font-size:.67rem;color:var(--gd)">FY 2025 target</div></div>
+    <div class="card ch" style="padding:1.1rem"><div style="font-size:.62rem;font-family:'DM Mono',monospace;color:var(--sl2);margin-bottom:.45rem;text-transform:uppercase">Renewals (30 days)</div><div style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:.2rem">247</div><div style="font-size:.67rem;color:var(--gd)">₦4.7M expected</div></div>
+    <div class="card ch" style="padding:1.1rem"><div style="font-size:.62rem;font-family:'DM Mono',monospace;color:var(--sl2);margin-bottom:.45rem;text-transform:uppercase">Overdue</div><div style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:.2rem">18</div><div style="font-size:.67rem;color:var(--rd)">₦360K outstanding</div></div>
+  </div>
+  <div class="card" style="padding:1.35rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;flex-wrap:wrap;gap:.75rem">
+      <h3 style="font-size:.94rem;color:#fff">Recent Payment Transactions</h3>
+      <button onclick="toast('Exporting billing data…')" class="bg2" style="padding:.48rem .88rem;font-size:.77rem">Export</button>
+    </div>
+    <div class="tscroll">
+      <table class="dt">
+        <thead><tr><th>Date</th><th>Client</th><th>Plan</th><th>Amount (₦)</th><th>Method</th><th>Ref</th><th>Status</th><th>Invoice</th></tr></thead>
+        <tbody>
+          <tr><td class="mono" style="font-size:.75rem;color:var(--sl2)">15 Jun 25</td><td><div style="font-size:.81rem;color:#fff">AgroFresh Nigeria Ltd</div></td><td><span class="bd bb" style="font-size:.58rem">Pro</span></td><td class="mono" style="color:var(--em)">50,000</td><td style="font-size:.78rem">Paystack</td><td class="mono" style="font-size:.73rem;color:var(--sl2)">PAY-93847</td><td><span class="bd be" style="font-size:.58rem">Paid</span></td><td><button onclick="toast('Invoice downloaded')" class="bg2" style="padding:.2rem .58rem;font-size:.69rem">PDF</button></td></tr>
+          <tr><td class="mono" style="font-size:.75rem;color:var(--sl2)">14 Jun 25</td><td><div style="font-size:.81rem;color:#fff">Adeyemi Group PLC</div></td><td><span class="bd bpu" style="font-size:.58rem">Enterprise</span></td><td class="mono" style="color:var(--em)">150,000</td><td style="font-size:.78rem">Bank Transfer</td><td class="mono" style="font-size:.73rem;color:var(--sl2)">TXF-74521</td><td><span class="bd be" style="font-size:.58rem">Paid</span></td><td><button onclick="toast('Invoice downloaded')" class="bg2" style="padding:.2rem .58rem;font-size:.69rem">PDF</button></td></tr>
+          <tr><td class="mono" style="font-size:.75rem;color:var(--sl2)">12 Jun 25</td><td><div style="font-size:.81rem;color:#fff">TechVentures Ltd</div></td><td><span class="bd bb" style="font-size:.58rem">Pro</span></td><td class="mono" style="color:var(--em)">50,000</td><td style="font-size:.78rem">Paystack</td><td class="mono" style="font-size:.73rem;color:var(--sl2)">PAY-93512</td><td><span class="bd be" style="font-size:.58rem">Paid</span></td><td><button onclick="toast('Invoice downloaded')" class="bg2" style="padding:.2rem .58rem;font-size:.69rem">PDF</button></td></tr>
+          <tr><td class="mono" style="font-size:.75rem;color:var(--sl2)">10 Jun 25</td><td><div style="font-size:.81rem;color:#fff">Bright Future Ltd</div></td><td><span class="bd be" style="font-size:.58rem">Starter</span></td><td class="mono" style="color:var(--gd)">20,000</td><td style="font-size:.78rem">Paystack</td><td class="mono" style="font-size:.73rem;color:var(--sl2)">PAY-93100</td><td><span class="bd bgo2" style="font-size:.58rem">Pending</span></td><td><button onclick="toast('Invoice downloaded')" class="bg2" style="padding:.2rem .58rem;font-size:.69rem">PDF</button></td></tr>
+          <tr><td class="mono" style="font-size:.75rem;color:var(--sl2)">05 Jun 25</td><td><div style="font-size:.81rem;color:#fff">Kola Traders Ltd</div></td><td><span class="bd be" style="font-size:.58rem">Starter</span></td><td class="mono" style="color:var(--rd)">20,000</td><td style="font-size:.78rem">Paystack</td><td class="mono" style="font-size:.73rem;color:var(--sl2)">PAY-92801</td><td><span class="bd br" style="font-size:.58rem">Failed</span></td><td><button onclick="toast('Retry initiated')" class="bp" style="padding:.2rem .58rem;font-size:.69rem">Retry</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================= PAYOUTS PAGE -->
+<div class="pg" id="p-payouts">
+  <h1 style="font-size:1.45rem;color:#fff;margin-bottom:.2rem">Revenue &amp; Auditor Payouts</h1>
+  <p style="font-size:.83rem;color:var(--sl2);margin-bottom:1.5rem">Platform commissions · Auditor disbursements · Payout queue</p>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem" class="g3">
+    <div class="card ch" style="padding:1.2rem;background:rgba(0,200,150,.04);border-color:rgba(0,200,150,.2)">
+      <div style="font-size:.62rem;font-family:'DM Mono',monospace;color:var(--sl2);margin-bottom:.45rem;text-transform:uppercase">Total Platform Revenue</div>
+      <div style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:.2rem">₦218.4M</div>
+      <div style="font-size:.67rem;color:var(--em)">H1 2025 · All plans</div>
+    </div>
+    <div class="card ch" style="padding:1.2rem;background:rgba(255,77,109,.04);border-color:rgba(255,77,109,.2)">
+      <div style="font-size:.62rem;font-family:'DM Mono',monospace;color:var(--sl2);margin-bottom:.45rem;text-transform:uppercase">Pending Payouts</div>
+      <div style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:.2rem">₦2.1M</div>
+      <div style="font-size:.67rem;color:var(--rd)">8 auditors awaiting</div>
+    </div>
+    <div class="card ch" style="padding:1.2rem;background:rgba(245,166,35,.04);border-color:rgba(245,166,35,.2)">
+      <div style="font-size:.62rem;font-family:'DM Mono',monospace;color:var(--sl2);margin-bottom:.45rem;text-transform:uppercase">Commission Collected</div>
+      <div style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:.2rem">₦10.92M</div>
+      <div style="font-size:.67rem;color:var(--gd)">5% of ₦218.4M marketplace</div>
+    </div>
+  </div>
+  <div class="card" style="padding:1.35rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;flex-wrap:wrap;gap:.75rem">
+      <h3 style="font-size:.94rem;color:#fff">Auditor Payout Queue</h3>
+      <button onclick="toast('Processing all payouts via Paystack…');setTimeout(()=>toast('✓ All payouts processed successfully'),2500)" class="bpe" style="padding:.52rem 1.1rem;font-size:.8rem">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Process All Payouts
+      </button>
+    </div>
+    <div class="tscroll">
+      <table class="dt">
+        <thead><tr><th>Auditor</th><th>Bank Account</th><th>Jobs Completed</th><th>Gross Earned (₦)</th><th>Platform 5% (₦)</th><th>Net Payout (₦)</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td><div style="font-size:.82rem;color:#fff;font-weight:600">Emmanuel Ihejirika</div><div style="font-size:.68rem;color:var(--sl2)">GTB · ****4521</div></td><td class="mono" style="font-size:.73rem">GTBank</td><td class="mono" style="color:#fff">8 jobs</td><td class="mono" style="color:#fff">450,000</td><td class="mono" style="color:var(--rd)">22,500</td><td class="mono" style="color:var(--em);font-weight:700">427,500</td><td><span class="bd bgo2" style="font-size:.58rem">Pending</span></td><td><button onclick="processPayout(this,'Emmanuel')" class="bpe" style="padding:.26rem .65rem;font-size:.71rem">Pay Now</button></td></tr>
+          <tr><td><div style="font-size:.82rem;color:#fff;font-weight:600">Amara Eze</div><div style="font-size:.68rem;color:var(--sl2)">Zenith · ****8834</div></td><td class="mono" style="font-size:.73rem">Zenith Bank</td><td class="mono" style="color:#fff">5 jobs</td><td class="mono" style="color:#fff">275,000</td><td class="mono" style="color:var(--rd)">13,750</td><td class="mono" style="color:var(--em);font-weight:700">261,250</td><td><span class="bd bgo2" style="font-size:.58rem">Pending</span></td><td><button onclick="processPayout(this,'Amara')" class="bpe" style="padding:.26rem .65rem;font-size:.71rem">Pay Now</button></td></tr>
+          <tr><td><div style="font-size:.82rem;color:#fff;font-weight:600">Yemi Abara</div><div style="font-size:.68rem;color:var(--sl2)">UBA · ****2291</div></td><td class="mono" style="font-size:.73rem">UBA</td><td class="mono" style="color:#fff">4 jobs</td><td class="mono" style="color:#fff">180,000</td><td class="mono" style="color:var(--rd)">9,000</td><td class="mono" style="color:var(--em);font-weight:700">171,000</td><td><span class="bd be" style="font-size:.58rem">Processed</span></td><td><button class="bg2" style="padding:.26rem .65rem;font-size:.71rem;opacity:.5;cursor:default">Done</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================= ANALYTICS PAGE -->
+<div class="pg" id="p-analytics">
+  <h1 style="font-size:1.45rem;color:#fff;margin-bottom:.2rem">Platform Analytics</h1>
+  <p style="font-size:.83rem;color:var(--sl2);margin-bottom:1.5rem">Growth metrics · Engagement · AI performance · Business intelligence</p>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.25rem" class="g4">
+    <div class="card ch" style="padding:1.1rem"><div style="font-size:.62rem;font-family:'DM Mono',monospace;color:var(--sl2);margin-bottom:.45rem;text-transform:uppercase">Avg Session Time</div><div style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:.2rem">18.4m</div><div style="font-size:.67rem;color:var(--em)">↑ 3.2m vs last month</div></div>
+    <div class="card ch" style="padding:1.1rem"><div style="font-size:.62rem;font-family:'DM Mono',monospace;color:var(--sl2);margin-bottom:.45rem;text-transform:uppercase">AI Accuracy Rate</div><div style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:.2rem">99.4%</div><div style="font-size:.67rem;color:var(--em)">Across all audits</div></div>
+    <div class="card ch" style="padding:1.1rem"><div style="font-size:.62rem;font-family:'DM Mono',monospace;color:var(--sl2);margin-bottom:.45rem;text-transform:uppercase">Docs Processed</div><div style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:.2rem">1.2M</div><div style="font-size:.67rem;color:var(--gd)">H1 2025 total</div></div>
+    <div class="card ch" style="padding:1.1rem"><div style="font-size:.62rem;font-family:'DM Mono',monospace;color:var(--sl2);margin-bottom:.45rem;text-transform:uppercase">NPS Score</div><div style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:.2rem">74</div><div style="font-size:.67rem;color:var(--em)">Industry avg: 42</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.15rem;margin-bottom:1.15rem" class="g2">
+    <div class="card" style="padding:1.35rem">
+      <h3 style="font-size:.94rem;color:#fff;margin-bottom:.2rem">User Growth Trend</h3>
+      <p style="font-size:.71rem;color:var(--sl2);margin-bottom:1rem">Weekly new signups · 2025</p>
+      <div style="display:flex;align-items:flex-end;gap:.4rem;height:100px">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.3rem"><div style="width:100%;background:rgba(0,200,150,.2);border-radius:3px 3px 0 0;height:35%"></div><span style="font-size:.6rem;color:var(--sl2)">W1</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.3rem"><div style="width:100%;background:rgba(0,200,150,.3);border-radius:3px 3px 0 0;height:48%"></div><span style="font-size:.6rem;color:var(--sl2)">W2</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.3rem"><div style="width:100%;background:rgba(0,200,150,.4);border-radius:3px 3px 0 0;height:55%"></div><span style="font-size:.6rem;color:var(--sl2)">W3</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.3rem"><div style="width:100%;background:rgba(0,200,150,.5);border-radius:3px 3px 0 0;height:62%"></div><span style="font-size:.6rem;color:var(--sl2)">W4</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.3rem"><div style="width:100%;background:rgba(0,200,150,.65);border-radius:3px 3px 0 0;height:70%"></div><span style="font-size:.6rem;color:var(--sl2)">W5</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.3rem"><div style="width:100%;background:rgba(0,200,150,.8);border-radius:3px 3px 0 0;height:80%"></div><span style="font-size:.6rem;color:var(--sl2)">W6</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:.3rem"><div style="width:100%;background:var(--em);border-radius:3px 3px 0 0;height:100%"></div><span style="font-size:.6rem;color:var(--em)">W7</span></div>
+      </div>
+      <div style="margin-top:.75rem;padding:.65rem;background:rgba(0,200,150,.05);border-radius:8px;font-size:.75rem;color:var(--em)">↑ 847 new users this week — highest ever recorded</div>
+    </div>
+    <div class="card" style="padding:1.35rem">
+      <h3 style="font-size:.94rem;color:#fff;margin-bottom:.2rem">Geographic Distribution</h3>
+      <p style="font-size:.71rem;color:var(--sl2);margin-bottom:1rem">Users by state</p>
+      <div style="display:flex;flex-direction:column;gap:.62rem">
+        <div><div style="display:flex;justify-content:space-between;margin-bottom:.24rem"><span style="font-size:.77rem;color:var(--sl)">Lagos</span><span style="font-size:.77rem;color:#fff;font-family:'DM Mono',monospace">22,847 (43%)</span></div><div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden"><div style="height:100%;width:86%;background:var(--rd);border-radius:2px"></div></div></div>
+        <div><div style="display:flex;justify-content:space-between;margin-bottom:.24rem"><span style="font-size:.77rem;color:var(--sl)">Abuja (FCT)</span><span style="font-size:.77rem;color:#fff;font-family:'DM Mono',monospace">10,568 (20%)</span></div><div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden"><div style="height:100%;width:55%;background:var(--em);border-radius:2px"></div></div></div>
+        <div><div style="display:flex;justify-content:space-between;margin-bottom:.24rem"><span style="font-size:.77rem;color:var(--sl)">Rivers</span><span style="font-size:.77rem;color:#fff;font-family:'DM Mono',monospace">7,926 (15%)</span></div><div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden"><div style="height:100%;width:40%;background:var(--gd);border-radius:2px"></div></div></div>
+        <div><div style="display:flex;justify-content:space-between;margin-bottom:.24rem"><span style="font-size:.77rem;color:var(--sl)">Kano</span><span style="font-size:.77rem;color:#fff;font-family:'DM Mono',monospace">4,227 (8%)</span></div><div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden"><div style="height:100%;width:24%;background:#9B8EF0;border-radius:2px"></div></div></div>
+        <div><div style="display:flex;justify-content:space-between;margin-bottom:.24rem"><span style="font-size:.77rem;color:var(--sl)">Other States</span><span style="font-size:.77rem;color:#fff;font-family:'DM Mono',monospace">7,273 (14%)</span></div><div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden"><div style="height:100%;width:35%;background:var(--sl2);border-radius:2px"></div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="padding:1.35rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;flex-wrap:wrap;gap:.75rem">
+      <h3 style="font-size:.94rem;color:#fff">AI Engine Performance</h3>
+      <span class="bd be" style="font-size:.6rem">Real-time</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem" class="g3">
+      <div style="padding:.9rem;background:rgba(0,200,150,.05);border:1px solid rgba(0,200,150,.15);border-radius:10px;text-align:center"><div style="font-family:'Syne',sans-serif;font-size:1.35rem;font-weight:800;color:var(--em)">99.4%</div><div style="font-size:.72rem;color:var(--sl2);margin-top:.25rem">Anomaly Detection Accuracy</div></div>
+      <div style="padding:.9rem;background:rgba(245,166,35,.05);border:1px solid rgba(245,166,35,.15);border-radius:10px;text-align:center"><div style="font-family:'Syne',sans-serif;font-size:1.35rem;font-weight:800;color:var(--gd)">2.3s</div><div style="font-size:.72rem;color:var(--sl2);margin-top:.25rem">Avg Document Processing Time</div></div>
+      <div style="padding:.9rem;background:rgba(108,92,231,.05);border:1px solid rgba(108,92,231,.15);border-radius:10px;text-align:center"><div style="font-family:'Syne',sans-serif;font-size:1.35rem;font-weight:800;color:#9B8EF0">₦4.2B</div><div style="font-size:.72rem;color:var(--sl2);margin-top:.25rem">Total Value Audited (H1 2025)</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================= AUDIT LOG PAGE -->
+<div class="pg" id="p-auditlog">
+  <h1 style="font-size:1.45rem;color:#fff;margin-bottom:.2rem">Platform Audit Logs</h1>
+  <p style="font-size:.83rem;color:var(--sl2);margin-bottom:1.5rem">All system events, admin actions &amp; security logs</p>
+  <div class="card" style="padding:1rem;margin-bottom:1.25rem">
+    <div style="display:flex;gap:.72rem;flex-wrap:wrap;align-items:center">
+      <input class="fi" style="flex:1;min-width:170px;max-width:250px" placeholder="Search logs…"/>
+      <select class="fi" style="width:auto;min-width:115px"><option>All Events</option><option>User Actions</option><option>Admin Actions</option><option>AI Events</option><option>Security</option><option>Payments</option></select>
+      <select class="fi" style="width:auto;min-width:105px"><option>Today</option><option>Last 7 days</option><option>Last 30 days</option><option>Custom</option></select>
+      <button onclick="toast('Exporting audit logs…')" class="bg2" style="padding:.58rem 1rem;font-size:.78rem">Export</button>
+    </div>
+  </div>
+  <div class="card" style="padding:1.35rem">
+    <div class="tscroll">
+      <table class="dt">
+        <thead><tr><th>Timestamp</th><th>Event</th><th>Actor</th><th>IP Address</th><th>Details</th><th>Severity</th></tr></thead>
+        <tbody>
+          <tr><td class="mono" style="font-size:.73rem;color:var(--sl2)">2025-06-15 14:32:18</td><td style="font-size:.8rem;color:#fff">Auditor Approved</td><td style="font-size:.78rem">Admin (SA)</td><td class="mono" style="font-size:.73rem">197.210.4.21</td><td style="font-size:.77rem;color:var(--sl)">Emmanuel Ihejirika approved</td><td><span class="bd be" style="font-size:.58rem">Info</span></td></tr>
+          <tr><td class="mono" style="font-size:.73rem;color:var(--sl2)">2025-06-15 14:15:03</td><td style="font-size:.8rem;color:#fff">Payment Processed</td><td style="font-size:.78rem">System</td><td class="mono" style="font-size:.73rem">Internal</td><td style="font-size:.77rem;color:var(--sl)">₦50,000 · AgroFresh · PAY-93847</td><td><span class="bd be" style="font-size:.58rem">Info</span></td></tr>
+          <tr><td class="mono" style="font-size:.73rem;color:var(--sl2)">2025-06-15 13:47:22</td><td style="font-size:.8rem;color:var(--gd)">New User Signup</td><td style="font-size:.78rem">User</td><td class="mono" style="font-size:.73rem">41.220.15.8</td><td style="font-size:.77rem;color:var(--sl)">TechVentures Ltd · Pro plan</td><td><span class="bd be" style="font-size:.58rem">Info</span></td></tr>
+          <tr><td class="mono" style="font-size:.73rem;color:var(--sl2)">2025-06-15 12:30:11</td><td style="font-size:.8rem;color:var(--rd)">Failed Login (3x)</td><td style="font-size:.78rem">Unknown</td><td class="mono" style="font-size:.73rem">195.82.10.5</td><td style="font-size:.77rem;color:var(--sl)">Brute force attempt · blocked</td><td><span class="bd br" style="font-size:.58rem">Warning</span></td></tr>
+          <tr><td class="mono" style="font-size:.73rem;color:var(--sl2)">2025-06-15 11:18:44</td><td style="font-size:.8rem;color:#fff">AI Audit Run</td><td style="font-size:.78rem">AI Engine</td><td class="mono" style="font-size:.73rem">Internal</td><td style="font-size:.77rem;color:var(--sl)">AgroFresh · 1,247 docs · 7 anomalies</td><td><span class="bd be" style="font-size:.58rem">Info</span></td></tr>
+          <tr><td class="mono" style="font-size:.73rem;color:var(--sl2)">2025-06-15 10:05:29</td><td style="font-size:.8rem;color:var(--rd)">Payment Failed</td><td style="font-size:.78rem">System</td><td class="mono" style="font-size:.73rem">Internal</td><td style="font-size:.77rem;color:var(--sl)">₦20,000 · Kola Traders · PAY-92801</td><td><span class="bd bgo2" style="font-size:.58rem">Error</span></td></tr>
+          <tr><td class="mono" style="font-size:.73rem;color:var(--sl2)">2025-06-15 09:00:00</td><td style="font-size:.8rem;color:var(--em)">System Backup</td><td style="font-size:.78rem">System</td><td class="mono" style="font-size:.73rem">Internal</td><td style="font-size:.77rem;color:var(--sl)">Daily backup · 847GB · Completed</td><td><span class="bd be" style="font-size:.58rem">Info</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1.1rem;flex-wrap:wrap;gap:.5rem">
+      <span style="font-size:.73rem;color:var(--sl2)">Showing 7 of 48,291 log entries</span>
+      <div style="display:flex;gap:.35rem">
+        <button class="bg2" style="padding:.33rem .68rem;font-size:.75rem">← Prev</button>
+        <button class="bg2" style="padding:.33rem .68rem;font-size:.75rem;background:rgba(255,77,109,.1);border-color:rgba(255,77,109,.25);color:var(--rd)">1</button>
+        <button class="bg2" style="padding:.33rem .68rem;font-size:.75rem">2</button>
+        <button class="bg2" style="padding:.33rem .68rem;font-size:.75rem">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================= SETTINGS PAGE -->
+<div class="pg" id="p-settings">
+  <h1 style="font-size:1.45rem;color:#fff;margin-bottom:.2rem">System Settings</h1>
+  <p style="font-size:.83rem;color:var(--sl2);margin-bottom:1.5rem">Platform configuration · Pricing · Integrations · Security</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem" class="g2">
+    <!-- Platform Settings -->
+    <div class="card" style="padding:1.4rem">
+      <h3 style="font-size:.94rem;color:#fff;margin-bottom:1.1rem">Platform Configuration</h3>
+      <div style="display:flex;flex-direction:column;gap:.85rem">
+        <div><label class="fl">Platform Name</label><input class="fi" value="FinancialAuditor Nigeria"/></div>
+        <div><label class="fl">Support Email</label><input class="fi" value="support@financialauditor.ng"/></div>
+        <div><label class="fl">WhatsApp Support</label><input class="fi" value="+234 800 FINAUDIT"/></div>
+        <div><label class="fl">Marketplace Commission (%)</label><input class="fi" value="5" type="number"/></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem;background:rgba(255,255,255,.03);border-radius:10px">
+          <div><div style="font-size:.82rem;color:#fff;margin-bottom:.12rem">Maintenance Mode</div><div style="font-size:.7rem;color:var(--sl2)">Temporarily disable platform access</div></div>
+          <label class="sw"><input type="checkbox" onchange="toast(this.checked?'Maintenance mode ON':'Maintenance mode OFF')"><span class="sl3"></span></label>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem;background:rgba(255,255,255,.03);border-radius:10px">
+          <div><div style="font-size:.82rem;color:#fff;margin-bottom:.12rem">New User Signups</div><div style="font-size:.7rem;color:var(--sl2)">Allow new registrations</div></div>
+          <label class="sw"><input type="checkbox" checked onchange="toast(this.checked?'Signups enabled':'Signups disabled')"><span class="sl3"></span></label>
+        </div>
+        <button onclick="toast('Platform settings saved successfully')" class="bpe" style="padding:.7rem;justify-content:center;width:100%">Save Settings</button>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:1.1rem">
+      <!-- Pricing Config -->
+      <div class="card" style="padding:1.4rem">
+        <h3 style="font-size:.94rem;color:#fff;margin-bottom:1rem">Plan Pricing (₦)</h3>
+        <div style="display:flex;flex-direction:column;gap:.78rem">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+            <div><label class="fl">Starter / year</label><input class="fi" value="20000" type="number"/></div>
+            <div><label class="fl">Pro / year</label><input class="fi" value="50000" type="number"/></div>
+          </div>
+          <div><label class="fl">Enterprise (base) / year</label><input class="fi" value="150000" type="number"/></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+            <div><label class="fl">Growth Pack Min (₦/mo)</label><input class="fi" value="5000" type="number"/></div>
+            <div><label class="fl">Growth Pack Max (₦/mo)</label><input class="fi" value="20000" type="number"/></div>
+          </div>
+          <button onclick="toast('Pricing updated successfully')" class="bp" style="padding:.65rem;justify-content:center;width:100%">Update Pricing</button>
+        </div>
+      </div>
+
+      <!-- Integrations -->
+      <div class="card" style="padding:1.4rem">
+        <h3 style="font-size:.94rem;color:#fff;margin-bottom:1rem">Integrations &amp; APIs</h3>
+        <div style="display:flex;flex-direction:column;gap:.65rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:.72rem;background:rgba(255,255,255,.03);border-radius:10px">
+            <div style="display:flex;align-items:center;gap:.55rem"><div style="width:28px;height:28px;border-radius:7px;background:rgba(0,200,150,.15);display:flex;align-items:center;justify-content:center"><svg width="13" height="13" fill="var(--em)" viewBox="0 0 24 24"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg></div><div><div style="font-size:.8rem;color:#fff">Paystack</div><div style="font-size:.67rem;color:var(--em)">Connected</div></div></div>
+            <label class="sw"><input type="checkbox" checked onchange="toast('Paystack toggled')"><span class="sl3"></span></label>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:.72rem;background:rgba(255,255,255,.03);border-radius:10px">
+            <div style="display:flex;align-items:center;gap:.55rem"><div style="width:28px;height:28px;border-radius:7px;background:rgba(245,166,35,.15);display:flex;align-items:center;justify-content:center"><svg width="13" height="13" fill="var(--gd)" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div><div><div style="font-size:.8rem;color:#fff">AI Engine (GPT-4)</div><div style="font-size:.67rem;color:var(--em)">Connected</div></div></div>
+            <label class="sw"><input type="checkbox" checked onchange="toast('AI Engine toggled')"><span class="sl3"></span></label>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:.72rem;background:rgba(255,255,255,.03);border-radius:10px">
+            <div style="display:flex;align-items:center;gap:.55rem"><div style="width:28px;height:28px;border-radius:7px;background:rgba(108,92,231,.15);display:flex;align-items:center;justify-content:center"><svg width="13" height="13" fill="#9B8EF0" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg></div><div><div style="font-size:.8rem;color:#fff">NIN Verification API</div><div style="font-size:.67rem;color:var(--em)">Connected</div></div></div>
+            <label class="sw"><input type="checkbox" checked onchange="toast('NIN API toggled')"><span class="sl3"></span></label>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:.72rem;background:rgba(255,255,255,.03);border-radius:10px">
+            <div style="display:flex;align-items:center;gap:.55rem"><div style="width:28px;height:28px;border-radius:7px;background:rgba(0,180,216,.15);display:flex;align-items:center;justify-content:center"><svg width="13" height="13" fill="#00B4D8" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></div><div><div style="font-size:.8rem;color:#fff">Email Service (SendGrid)</div><div style="font-size:.67rem;color:var(--gd)">Config required</div></div></div>
+            <label class="sw"><input type="checkbox" onchange="toast('Email service toggled')"><span class="sl3"></span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /mn -->
+
+<!-- ============================================================ MODALS -->
+
+<!-- CONTACT CLIENT MODAL -->
+<div class="mo" id="m-contact">
+  <div class="mb">
+    <div class="mh">
+      <div><h3 style="font-size:1.1rem;color:#fff">Contact Client</h3><p style="font-size:.77rem;color:var(--sl2)">Send a message or log a communication</p></div>
+      <button onclick="closeM('m-contact')" style="background:rgba(255,255,255,.07);border:none;width:30px;height:30px;border-radius:8px;cursor:pointer;color:var(--sl2);display:flex;align-items:center;justify-content:center"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+    <div class="mc">
+      <div style="display:flex;flex-direction:column;gap:.85rem">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+          <div><label class="fl">Client Name</label><input class="fi" id="mc-name" placeholder="Client name"/></div>
+          <div><label class="fl">Email</label><input class="fi" id="mc-email" placeholder="email@client.ng"/></div>
+        </div>
+        <div><label class="fl">WhatsApp / Phone</label><input class="fi" id="mc-phone" placeholder="+234 800 000 0000"/></div>
+        <div>
+          <label class="fl">Contact Method</label>
+          <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+            <button class="tbt act" onclick="tabSwitch(this)" style="font-size:.75rem">Email</button>
+            <button class="tbt" onclick="tabSwitch(this)" style="font-size:.75rem">WhatsApp</button>
+            <button class="tbt" onclick="tabSwitch(this)" style="font-size:.75rem">Phone Call</button>
+          </div>
+        </div>
+        <div><label class="fl">Subject</label><input class="fi" value="Re: Your FinancialAuditor Service Request"/></div>
+        <div><label class="fl">Message</label><textarea class="fi" rows="4" placeholder="Write your message to the client…">Dear Client,
+
+Thank you for your service request. We have received your application and our team will contact you within 24 hours to proceed.
+
+Best regards,
+FinancialAuditor Admin Team</textarea></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+          <div><label class="fl">Priority</label><select class="fi"><option>Normal</option><option selected>High</option><option>Urgent</option></select></div>
+          <div><label class="fl">Follow-up Date</label><input class="fi" type="date"/></div>
+        </div>
+        <button onclick="closeM('m-contact');toast('Message sent to client successfully')" class="bpe" style="padding:.78rem;justify-content:center;width:100%">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          Send Message
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BROADCAST MODAL -->
+<div class="mo" id="m-broadcast">
+  <div class="mb">
+    <div class="mh">
+      <div><h3 style="font-size:1.1rem;color:#fff">Broadcast Message</h3><p style="font-size:.77rem;color:var(--sl2)">Send platform-wide announcement to all users</p></div>
+      <button onclick="closeM('m-broadcast')" style="background:rgba(255,255,255,.07);border:none;width:30px;height:30px;border-radius:8px;cursor:pointer;color:var(--sl2);display:flex;align-items:center;justify-content:center"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+    <div class="mc">
+      <div style="display:flex;flex-direction:column;gap:.85rem">
+        <div><label class="fl">Audience</label><select class="fi"><option>All Users (52,841)</option><option>Enterprise Only</option><option>Pro Users</option><option>Starter Users</option><option>Free Trial Users</option><option>All Auditors</option></select></div>
+        <div><label class="fl">Broadcast Channel</label>
+          <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+            <button class="tbt act" onclick="tabSwitch(this)" style="font-size:.75rem">In-App</button>
+            <button class="tbt" onclick="tabSwitch(this)" style="font-size:.75rem">Email</button>
+            <button class="tbt" onclick="tabSwitch(this)" style="font-size:.75rem">Both</button>
+          </div>
+        </div>
+        <div><label class="fl">Subject / Title</label><input class="fi" placeholder="e.g. Platform Maintenance Notice"/></div>
+        <div><label class="fl">Message</label><textarea class="fi" rows="5" placeholder="Write your broadcast message…"></textarea></div>
+        <div style="display:flex;align-items:center;gap:.75rem">
+          <div style="flex:1"><label class="fl">Schedule</label><select class="fi"><option>Send Immediately</option><option>Schedule for Later</option></select></div>
+          <div style="flex:1"><label class="fl">Message Type</label><select class="fi"><option>Info</option><option>Warning</option><option>Success</option><option>Critical</option></select></div>
+        </div>
+        <button onclick="closeM('m-broadcast');toast('Broadcast sent to 52,841 users!')" class="bpe" style="padding:.78rem;justify-content:center;width:100%">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+          Send Broadcast
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AUDITOR VIEW MODAL -->
+<div class="mo" id="m-auditorview">
+  <div class="mb">
+    <div class="mh">
+      <div><h3 style="font-size:1.1rem;color:#fff">Auditor Profile</h3><p style="font-size:.77rem;color:var(--sl2)">Full profile &amp; performance metrics</p></div>
+      <button onclick="closeM('m-auditorview')" style="background:rgba(255,255,255,.07);border:none;width:30px;height:30px;border-radius:8px;cursor:pointer;color:var(--sl2);display:flex;align-items:center;justify-content:center"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+    <div class="mc">
+      <div style="display:flex;align-items:center;gap:.85rem;margin-bottom:1.25rem;padding:1rem;background:rgba(255,255,255,.03);border-radius:12px">
+        <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--em),var(--em2));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;color:#fff;font-size:1.1rem;flex-shrink:0">EI</div>
+        <div><div style="font-size:1rem;font-weight:700;color:#fff;font-family:'Syne',sans-serif">Emmanuel Ihejirika</div><div style="font-size:.74rem;color:var(--sl2)">ICAN FCA · Lagos · 12 yrs experience</div><div style="display:flex;gap:.4rem;margin-top:.3rem"><span class="bd be" style="font-size:.58rem">Active</span><span class="bd bgo2" style="font-size:.58rem">Top Rated</span></div></div>
+        <div style="margin-left:auto;text-align:right"><div style="font-size:1.1rem;font-weight:700;color:var(--gd);font-family:'Syne',sans-serif">★ 4.9</div><div style="font-size:.7rem;color:var(--sl2)">47 reviews</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem">
+        <div style="padding:.8rem;background:rgba(0,200,150,.06);border:1px solid rgba(0,200,150,.15);border-radius:10px"><div style="font-size:.67rem;color:var(--sl2);margin-bottom:.25rem">Total Earned</div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;color:var(--em)">₦2,115,000</div></div>
+        <div style="padding:.8rem;background:rgba(255,77,109,.06);border:1px solid rgba(255,77,109,.15);border-radius:10px"><div style="font-size:.67rem;color:var(--sl2);margin-bottom:.25rem">Commission Paid (5%)</div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;color:var(--rd)">₦111,315</div></div>
+        <div style="padding:.8rem;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px"><div style="font-size:.67rem;color:var(--sl2);margin-bottom:.25rem">Jobs Completed</div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;color:#fff">47 jobs</div></div>
+        <div style="padding:.8rem;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px"><div style="font-size:.67rem;color:var(--sl2);margin-bottom:.25rem">License No.</div><div style="font-family:'DM Mono',monospace;font-size:.82rem;color:#fff">ICAN/FCA/2013/01847</div></div>
+      </div>
+      <div style="display:flex;gap:.65rem;flex-wrap:wrap">
+        <button onclick="closeM('m-auditorview');toast('Suspension notice sent to Emmanuel')" class="bp" style="flex:1;justify-content:center;padding:.68rem">Suspend Auditor</button>
+        <button onclick="closeM('m-auditorview');toast('Payout processed for Emmanuel')" class="bpe" style="flex:1;justify-content:center;padding:.68rem">Pay Earnings</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENT DETAIL MODAL -->
+<div class="mo" id="m-clientview">
+  <div class="mb">
+    <div class="mh">
+      <div><h3 style="font-size:1.1rem;color:#fff">Client Profile</h3><p style="font-size:.77rem;color:var(--sl2)">Full account &amp; subscription details</p></div>
+      <button onclick="closeM('m-clientview')" style="background:rgba(255,255,255,.07);border:none;width:30px;height:30px;border-radius:8px;cursor:pointer;color:var(--sl2);display:flex;align-items:center;justify-content:center"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+    <div class="mc">
+      <div style="padding:1rem;background:rgba(255,255,255,.03);border-radius:12px;margin-bottom:1.25rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem">
+          <div><div style="font-size:1rem;font-weight:700;color:#fff;font-family:'Syne',sans-serif">AgroFresh Nigeria Ltd</div><div style="font-size:.74rem;color:var(--sl2)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="fd9c999c988798bd9c9a8f929b8f988e95d3939a">[email&#160;protected]</a> · +234 803 456 7890</div></div>
+          <span class="bd bb">Pro Plan</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem;font-size:.78rem">
+          <div><span style="color:var(--sl2)">RC Number: </span><span style="color:#fff;font-family:'DM Mono',monospace">RC-1234567</span></div>
+          <div><span style="color:var(--sl2)">TIN: </span><span style="color:#fff;font-family:'DM Mono',monospace">1234567-0001</span></div>
+          <div><span style="color:var(--sl2)">State: </span><span style="color:#fff">Lagos</span></div>
+          <div><span style="color:var(--sl2)">Sector: </span><span style="color:#fff">Agriculture</span></div>
+          <div><span style="color:var(--sl2)">Joined: </span><span style="color:#fff">Jan 2025</span></div>
+          <div><span style="color:var(--sl2)">Renewal: </span><span style="color:var(--em)">31 Dec 2025</span></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.65rem;margin-bottom:1.1rem">
+        <div style="padding:.75rem;background:rgba(0,200,150,.06);border:1px solid rgba(0,200,150,.15);border-radius:10px;text-align:center"><div style="font-size:.67rem;color:var(--sl2);margin-bottom:.2rem">Revenue Audited</div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;color:var(--em)">₦4.2M</div></div>
+        <div style="padding:.75rem;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;text-align:center"><div style="font-size:.67rem;color:var(--sl2);margin-bottom:.2rem">Documents</div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;color:#fff">1,247</div></div>
+        <div style="padding:.75rem;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;text-align:center"><div style="font-size:.67rem;color:var(--sl2);margin-bottom:.2rem">Anomalies</div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;color:var(--rd)">7</div></div>
+      </div>
+      <div style="display:flex;gap:.65rem;flex-wrap:wrap">
+        <button onclick="closeM('m-clientview');openM('m-contact');fillContact('Adaeze Okonkwo','adaeze@agrofresh.ng','+234 803 456 7890')" class="bpe" style="flex:1;justify-content:center;padding:.68rem">Contact Client</button>
+        <button onclick="closeM('m-clientview');toast('Account suspended')" class="bp" style="flex:1;justify-content:center;padding:.68rem">Suspend Account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+// SIDEBAR
+function openSB(){
+  document.getElementById('sb').classList.add('open');
+  document.getElementById('sov').style.display='block';
+  document.body.style.overflow='hidden';
+}
+function closeSB(){
+  document.getElementById('sb').classList.remove('open');
+  document.getElementById('sov').style.display='none';
+  document.body.style.overflow='';
+}
+
+// PAGE NAVIGATION
+const pageNames={
+  overview:'Dashboard Overview',requests:'Service Requests',auditors:'Auditor Management',
+  clients:'Client Management',billing:'Billing & Revenue',payouts:'Auditor Payouts',
+  analytics:'Platform Analytics',auditlog:'Audit Logs',settings:'System Settings'
+};
+function show(id,btn){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('act'));
+  var pg=document.getElementById('p-'+id);
+  if(pg) pg.classList.add('act');
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));
+  if(btn) btn.classList.add('act');
+  var t=document.getElementById('bct');
+  if(t) t.textContent=pageNames[id]||id;
+  if(window.innerWidth<900) closeSB();
+  window.scrollTo(0,0);
+}
+
+// TABS
+function tabSwitch(el){
+  var parent=el.parentElement;
+  if(parent) parent.querySelectorAll('.tab,.tbt').forEach(function(b){b.classList.remove('act');});
+  el.classList.add('act');
+}
+
+// MODALS
+function openModal(id){
+  var m=document.getElementById(id);
+  if(m){m.classList.add('open');document.body.style.overflow='hidden';}
+}
+function closeModal(id){
+  var m=document.getElementById(id);
+  if(m){m.classList.remove('open');document.body.style.overflow='';}
+}
+document.addEventListener('click',function(e){
+  if(e.target.classList.contains('modal')){
+    e.target.classList.remove('open');
+    document.body.style.overflow='';
+  }
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    document.querySelectorAll('.modal.open').forEach(function(m){
+      m.classList.remove('open');document.body.style.overflow='';
+    });
+    closeSB();
+  }
+});
+
+// TOAST NOTIFICATION
+function toast(msg,col){
+  var t=document.getElementById('toast');
+  var d=document.getElementById('tdot');
+  var s=document.getElementById('tmsg');
+  if(!t) return;
+  s.textContent=msg;
+  if(d) d.style.background=col||'var(--em)';
+  t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},3200);
+}
+
+// CONTACT MODAL FILL
+function fillContact(name,phone,email){
+  var n=document.getElementById('mc-name');
+  var p=document.getElementById('mc-phone');
+  var em=document.getElementById('mc-email');
+  if(n) n.value=name||'';
+  if(p) p.value=phone||'';
+  if(em) em.value=email||'';
+}
+
+// SERVICE REQUEST ACTIONS
+function markInProgress(btn){
+  var card=btn.closest('.card');
+  if(!card) return;
+  var badge=card.querySelector('.bd');
+  if(badge){badge.className='bd bd-bl';badge.textContent='In Progress';}
+  btn.textContent='In Progress ✓';
+  btn.disabled=true;
+  btn.style.opacity='0.5';
+  toast('Request marked as In Progress');
+}
+function resolveRequest(btn){
+  var card=btn.closest('.card');
+  if(card){
+    card.style.opacity='0.5';
+    card.style.transform='scale(0.98)';
+    card.style.transition='all 0.4s';
+    setTimeout(function(){card.style.display='none';},400);
+  }
+  toast('Request resolved and closed ✓');
+}
+
+// AUDITOR ACTIONS
+function approveAuditor(btn,name){
+  var row=btn.closest('tr');
+  if(row){
+    var statusCell=row.querySelector('td:nth-child(5)');
+    if(statusCell) statusCell.innerHTML='<span class="bd bd-em" style="font-size:.6rem">✓ Approved</span>';
+    btn.textContent='Approved ✓';
+    btn.disabled=true;
+    btn.className='btn-ghost';
+    btn.style.opacity='0.5';
+  }
+  toast((name||'Auditor')+' approved & activated on marketplace ✓');
+}
+function rejectAuditor(btn){
+  var row=btn.closest('tr');
+  if(row){
+    row.style.opacity='0.4';
+    setTimeout(function(){row.style.display='none';},500);
+  }
+  toast('Application rejected. Notification sent to applicant.');
+}
+
+// PAYOUT
+function payout(btn,name,amount){
+  btn.textContent='Processing…';
+  btn.disabled=true;
+  setTimeout(function(){
+    btn.textContent='Paid ✓';
+    btn.className='bd bd-em';
+    btn.style.padding='.27rem .68rem';
+    var row=btn.closest('tr');
+    if(row) row.style.opacity='0.5';
+    toast('Payout of '+amount+' sent to '+name+' via bank transfer ✓');
+  },1500);
+}
+function processAllPayouts(){
+  document.querySelectorAll('#p-payouts .btn-green[onclick^="payout"]').forEach(function(b){
+    if(!b.disabled) b.click();
+  });
+  setTimeout(function(){toast('All pending payouts processed successfully ✓');},2000);
+}
+
+// AUDITOR SUSPEND
+function suspendAuditor(){
+  toast('Auditor account suspended. Access revoked.','var(--rd)');
+  closeModal('m-auditorprofile');
+}
+
+// CLIENT ACTIONS
+function suspendClient(){
+  toast('Client account suspended.','var(--rd)');
+  closeModal('m-clientprofile');
+}
+
+// SETTINGS SAVE
+function saveSettings(section){
+  toast(section+' settings saved successfully ✓');
+}
+
+// BROADCAST SEND
+function sendBroadcast(){
+  var title=document.getElementById('bc-title-input');
+  var msg=document.getElementById('bc-msg');
+  if(title&&title.value&&msg&&msg.value){
+    toast('Broadcast sent to all '+document.getElementById('bc-target').value+' ✓');
+    closeModal('m-broadcast');
+    title.value='';msg.value='';
+  } else {
+    toast('Please fill in all fields','var(--rd)');
+  }
+}
+
+// AUDIT LOG ACTIONS
+function exportLogs(){
+  toast('Audit logs exported to CSV ✓');
+}
+
+// SIDEBAR OVERLAY
+document.getElementById('sov').addEventListener('click',closeSB);
+</script>
+</body>
+</html>
