@@ -1,40 +1,40 @@
 <script lang="ts">
-	import '../app.css';
-	import Header from '$lib/components/layout/Header.svelte';
-	import Sidebar from '$lib/components/layout/Sidebar.svelte';
-	import MobileNav from '$lib/components/layout/MobileNav.svelte';
-	import Footer from '$lib/components/layout/Footer.svelte';
-	import favicon from '$lib/assets/favicon.svg';
-	import { page } from '$app/state';
-	import { cn } from '$lib/utils';
-
-	let { children } = $props();
-
-	// Check if we're on a dashboard or admin page to show sidebar
-	let showSidebar = $derived(page.url.pathname.startsWith('/dashboard') || page.url.pathname.startsWith('/admin'));
+  import { onMount } from 'svelte';
+  import { fade, fly } from 'svelte/transition';
+  
+  let { children } = $props();
+  
+  // Anti-overflow protection
+  onMount(() => {
+    const handleResize = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    
+    return () => window.removeEventListener('resize', handleResize);
+  });
 </script>
 
-<svelte:head>
-	<link rel="icon" href={favicon} />
-	<title>FinancialAuditor — AI-Powered Financial Intelligence Platform</title>
-</svelte:head>
+<div class="min-h-screen bg-navy text-slate font-sans selection:bg-emerald/30 overflow-x-hidden w-full relative">
+  <!-- Background Elements -->
+  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div class="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-emerald/5 blur-[120px]"></div>
+    <div class="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] rounded-full bg-gold/5 blur-[100px]"></div>
+    <div class="absolute inset-0 grid-pattern opacity-30"></div>
+  </div>
 
-<div class="flex min-h-screen bg-surface-50">
-	{#if showSidebar}
-		<Sidebar />
-	{/if}
-
-	<div class={cn("flex-1 flex flex-col min-w-0", showSidebar && "md:pl-64")}>
-		<Header />
-		
-		<main class="flex-1 pb-20 lg:pb-0">
-			{@render children()}
-		</main>
-
-		{#if !showSidebar}
-			<Footer />
-		{/if}
-	</div>
+  <div class="relative z-10 flex flex-col min-h-screen">
+    {@render children()}
+  </div>
 </div>
 
-<MobileNav />
+<style>
+  :global(body) {
+    background-color: var(--color-navy);
+    overflow-x: hidden;
+    width: 100%;
+  }
+</style>

@@ -1,266 +1,258 @@
 <script lang="ts">
+  import Header from '$lib/components/layout/Header.svelte';
+  import Footer from '$lib/components/layout/Footer.svelte';
   import { onMount } from 'svelte';
-  import { fade, fly, slide } from 'svelte/transition';
-  import SEO from '$lib/components/SEO.svelte';
-  import { 
-    CheckCircle2, 
-    ShieldCheck, 
-    ArrowRight, 
-    BarChart3, 
-    Bot, 
-    FileText, 
-    Users, 
-    Zap,
-    Lock,
-    Globe
-  } from 'lucide-svelte';
+  import { fade, fly } from 'svelte/transition';
 
-  let visible = $state(false);
-
-  onMount(() => {
-    visible = true;
-  });
+  // Stats for the landing page
+  const stats = [
+    { label: 'Businesses Served', value: '50,000+', emoji: '🏢', color: 'emerald' },
+    { label: 'Value Audited', value: '₦2.1B+', emoji: '💰', color: 'gold' },
+    { label: 'Certified Auditors', value: '500+', emoji: '👨‍💼', color: 'emerald' },
+    { label: 'Accuracy Rate', value: '99.7%', emoji: '✅', color: 'gold' }
+  ];
 
   const features = [
     {
-      icon: Bot,
       title: 'AI Audit Engine',
-      description: 'Multimodal AI (OCR + NLP + ML) extracts, categorizes, and audits 100+ document formats with 99.7% accuracy.',
+      desc: 'Multimodal AI (OCR + NLP + ML) extracts, categorizes, and audits 100+ document formats. Detects fraud and tax discrepancies in real-time.',
+      emoji: '🤖',
       tags: ['OCR', 'Fraud Detection', 'Auto-Reconcile'],
-      color: 'brand'
+      color: 'emerald'
     },
     {
-      icon: BarChart3,
       title: 'Predictive Analytics',
-      description: 'AI delivers performance advisory — revenue forecasting, cost optimization, and EBITDA projections in real-time.',
+      desc: 'AI delivers performance advisory — revenue forecasting, cost optimization suggestions, and EBITDA projections based on historical data.',
+      emoji: '📈',
       tags: ['Forecasting', 'KPI Tracking', 'Benchmarks'],
-      color: 'accent'
+      color: 'gold'
     },
     {
-      icon: FileText,
-      title: 'FIRS & CAC Compliance',
-      description: 'Auto-generates FIRS-ready tax filings, VAT calculations, and CAC-compliant financial statements instantly.',
+      title: 'Compliance Engine',
+      desc: 'Auto-generates FIRS-ready tax filings, VAT calculations, and CAC-compliant financial statements for any period.',
+      emoji: '🛡️',
       tags: ['FIRS Ready', 'VAT/Tax', 'CAC Reports'],
       color: 'info'
-    },
-    {
-      icon: Users,
-      title: 'Auditor Marketplace',
-      description: 'Connect with 500+ ICAN-certified professional auditors. Our bid-based system ensures competitive pricing.',
-      tags: ['ICAN Certified', 'Bid System', 'Vetted'],
-      color: 'info'
-    },
-    {
-      icon: Zap,
-      title: 'Smart Document Upload',
-      description: 'Drag-and-drop interface supports invoices, receipts, and bank statements. AI auto-classifies and extracts data.',
-      tags: ['Drag & Drop', '100+ Formats', 'Blockchain Trail'],
-      color: 'brand'
-    },
-    {
-      icon: ShieldCheck,
-      title: 'RaaS Advisory Engine',
-      description: 'Results-as-a-Service. AI simulates business scenarios and delivers Monthly Growth Packs with playbooks.',
-      tags: ['Growth Packs', 'ROI Tracking', 'Guaranteed'],
-      color: 'danger'
     }
-  ];
-
-  const stats = [
-    { label: 'Businesses Served', value: '50,000+', sub: 'Active SMEs' },
-    { label: 'Value Audited', value: '₦2.1B+', sub: 'Processed in 2025' },
-    { label: 'Certified Auditors', value: '500+', sub: 'ICAN Registered' },
-    { label: 'Accuracy Rate', value: '99.7%', sub: 'AI Precision' }
   ];
 </script>
 
-<SEO 
-  title="Home" 
-  description="FinancialAuditor - Nigeria's #1 AI-Powered Financial Intelligence Platform for SMEs and Corporations. FIRS-compliant. CAC-ready." 
-/>
+<Header />
 
-<!-- HERO SECTION -->
-<section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-white">
-  <!-- Background Pattern -->
-  <div class="absolute inset-0 z-0 opacity-[0.03] pointer-events-none">
-    <div class="absolute inset-0" style="background-image: radial-gradient(#059669 1px, transparent 1px); background-size: 40px 40px;"></div>
-  </div>
-
-  <div class="container-custom relative z-10">
-    <div class="flex flex-col items-center text-center max-w-4xl mx-auto mb-16">
-      {#if visible}
-        <div in:fly={{ y: 20, duration: 600 }}>
-          <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-50 border border-brand-100 text-brand-700 text-xs font-bold uppercase tracking-wider mb-8 shadow-sm">
-            <span class="relative flex h-2 w-2">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-600"></span>
-            </span>
+<main class="flex-1">
+  <!-- Hero Section -->
+  <section class="hero-bg grid-pattern min-h-screen pt-[68px] flex items-center overflow-hidden relative">
+    <div class="container-custom py-12 lg:py-24 relative z-10">
+      <div class="grid lg:grid-cols-2 gap-12 lg:gap-24 items-center">
+        <!-- Hero Content -->
+        <div class="space-y-8" transition:fade={{ duration: 800 }}>
+          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald/10 border border-emerald/20 text-emerald text-sm font-bold animate-pulse">
+            <span class="w-2 h-2 rounded-full bg-emerald"></span>
             Nigeria's #1 AI Financial Intelligence Platform
           </div>
           
-          <h1 class="mb-8 leading-[1.1]">
-            Financial Intelligence <br/>
-            <span class="grad-text">Reimagined with AI.</span>
+          <h1 class="text-5xl lg:text-7xl font-heading font-black leading-[1.1] text-white tracking-tighter">
+            Audit <span class="text-emerald italic">Smarter.</span><br/>
+            <span class="grad-text">Grow Faster.</span><br/>
+            Comply Effortlessly.
           </h1>
-          
-          <p class="text-surface-500 text-lg lg:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
-            Automate your auditing, ensure 100% compliance, and unlock predictive insights. Purpose-built for the Nigerian business ecosystem.
+
+          <p class="text-lg lg:text-xl text-slate-dim max-w-xl leading-relaxed">
+            AI-powered financial auditing, real-time compliance, and predictive advisory — purpose-built for Nigerian businesses. FIRS-compliant. CAC-ready. Instant results.
           </p>
-          
-          <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-            <a href="/auth/signup" class="btn-primary px-8 py-4 text-lg w-full sm:w-auto">
-              Start Free Trial
-              <ArrowRight size={20} class="ml-2" />
-            </a>
-            <a href="#features" class="btn-secondary px-8 py-4 text-lg w-full sm:w-auto">
-              Explore Features
-            </a>
+
+          <div class="flex flex-wrap gap-4 pt-4">
+            <button class="btn-primary group text-lg py-4 px-8">
+              <span>🚀 Start Free — 30 Days</span>
+            </button>
+            <button class="btn-secondary text-lg py-4 px-8">
+              <span>🎥 See How It Works</span>
+            </button>
           </div>
-          
-          <div class="flex flex-wrap items-center justify-center gap-8 text-surface-400">
-            <div class="flex items-center gap-2 text-sm font-medium">
-              <CheckCircle2 size={18} class="text-brand-600" />
-              FIRS Compliant
+
+          <!-- Trust Badges -->
+          <div class="flex flex-wrap items-center gap-6 pt-8 border-t border-white/5">
+            <div class="flex items-center gap-2 text-sm text-slate-dim">
+              <span class="text-emerald">✅</span> FIRS Compliant
             </div>
-            <div class="flex items-center gap-2 text-sm font-medium">
-              <Lock size={18} class="text-brand-600" />
-              Bank-Grade Security
+            <div class="flex items-center gap-2 text-sm text-slate-dim">
+              <span class="text-gold">🛡️</span> Bank-Grade Security
             </div>
-            <div class="flex items-center gap-2 text-sm font-medium">
-              <Globe size={18} class="text-brand-600" />
-              CAC Integrated
+            <div class="flex items-center gap-2 text-sm text-slate-dim">
+              <span class="text-emerald">🎓</span> ICAN Certified
             </div>
           </div>
         </div>
-      {/if}
-    </div>
 
-    <!-- DASHBOARD PREVIEW MOCKUP -->
-    {#if visible}
-      <div in:fly={{ y: 40, delay: 300, duration: 800 }} class="relative max-w-5xl mx-auto">
-        <div class="card-premium overflow-hidden p-2 bg-surface-50">
-          <div class="bg-white rounded-lg shadow-sm border border-surface-200 overflow-hidden">
-            <!-- Mockup Toolbar -->
-            <div class="flex items-center gap-2 px-4 py-3 border-b border-surface-100 bg-surface-50/50">
+        <!-- Hero Preview Mockup -->
+        <div class="relative lg:block" transition:fly={{ x: 50, duration: 1000, delay: 200 }}>
+          <div class="bg-surface border border-white/10 rounded-[32px] p-6 shadow-2xl shadow-emerald/20 relative z-10 animate-float backdrop-blur-xl">
+            <!-- Mockup Window Bar -->
+            <div class="flex items-center gap-2 mb-6">
               <div class="flex gap-1.5">
-                <div class="w-3 h-3 rounded-full bg-danger/20"></div>
-                <div class="w-3 h-3 rounded-full bg-warning/20"></div>
-                <div class="w-3 h-3 rounded-full bg-success/20"></div>
+                <div class="w-3 h-3 rounded-full bg-[#FF5F57]"></div>
+                <div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                <div class="w-3 h-3 rounded-full bg-[#28CA41]"></div>
               </div>
-              <div class="flex-1 max-w-xs mx-auto bg-white border border-surface-200 rounded px-3 py-1 text-[10px] text-surface-400 font-mono text-center">
-                app.financialauditor.ewinproject.org/dashboard
+              <div class="flex-1 bg-white/5 rounded-lg py-1 px-3 text-[10px] font-mono text-slate-dim truncate">
+                app.financialauditor.ng/dashboard
               </div>
             </div>
-            <!-- Mockup Content -->
-            <div class="p-6 lg:p-10">
-              <div class="grid grid-cols-3 gap-6 mb-10">
-                {#each Array(3) as _, i}
-                  <div class="h-24 rounded-xl bg-surface-50 border border-surface-100 animate-pulse" style="animation-delay: {i * 100}ms"></div>
-                {/each}
+
+            <!-- KPI Row -->
+            <div class="grid grid-cols-3 gap-3 mb-6">
+              <div class="bg-emerald/5 border border-emerald/10 rounded-2xl p-4">
+                <div class="text-[10px] text-slate-dim font-mono mb-1 uppercase tracking-wider">Revenue</div>
+                <div class="text-xl font-heading font-bold text-white">₦4.2M</div>
+                <div class="text-[10px] text-emerald mt-1">▲ 18.4%</div>
               </div>
-              <div class="h-64 rounded-xl bg-surface-50 border border-surface-100 animate-pulse"></div>
+              <div class="bg-gold/5 border border-gold/10 rounded-2xl p-4">
+                <div class="text-[10px] text-slate-dim font-mono mb-1 uppercase tracking-wider">Profit</div>
+                <div class="text-xl font-heading font-bold text-white">₦1.8M</div>
+                <div class="text-[10px] text-gold mt-1">▲ 12.1%</div>
+              </div>
+              <div class="bg-danger/5 border border-danger/10 rounded-2xl p-4">
+                <div class="text-[10px] text-slate-dim font-mono mb-1 uppercase tracking-wider">Burn</div>
+                <div class="text-xl font-heading font-bold text-white">₦2.4M</div>
+                <div class="text-[10px] text-danger mt-1">▼ 5.2%</div>
+              </div>
+            </div>
+
+            <!-- Chart Area -->
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-4 h-32 mb-6 relative overflow-hidden">
+               <div class="text-[10px] text-slate-dim font-mono mb-2">CASH FLOW · 6 MONTHS</div>
+               <div class="absolute inset-x-0 bottom-0 h-16 bg-linear-to-t from-emerald/20 to-transparent"></div>
+               <!-- Simple SVG Path for preview -->
+               <svg class="w-full h-full text-emerald" viewBox="0 0 100 40">
+                 <path d="M0 35 Q 25 25, 50 30 T 100 10" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" />
+               </svg>
+            </div>
+
+            <!-- AI Insight -->
+            <div class="bg-emerald/10 border border-emerald/20 rounded-2xl p-4 flex gap-4">
+              <div class="w-10 h-10 rounded-xl bg-linear-to-br from-emerald to-emerald-deep flex items-center justify-center shrink-0 shadow-lg shadow-emerald/20">
+                <span class="text-lg">🤖</span>
+              </div>
+              <div>
+                <div class="text-xs font-heading font-bold text-emerald mb-1 uppercase tracking-wider">AI ADVISORY</div>
+                <p class="text-xs text-slate leading-relaxed">Logistics costs are 12% above average. Use E-WIN logistics for ₦216K projected Q3 savings.</p>
+              </div>
             </div>
           </div>
-        </div>
-        
-        <!-- Floating Elements -->
-        <div class="absolute -top-6 -right-6 lg:-right-12 animate-float">
-          <div class="bg-white p-4 rounded-2xl shadow-xl border border-surface-100 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center">
-              <Bot size={24} />
+
+          <!-- Decorative Floating Badges -->
+          <div class="absolute -top-6 -left-6 bg-navy/90 border border-white/10 rounded-2xl p-4 backdrop-blur shadow-xl animate-float" style="animation-delay: 1s">
+            <div class="text-[10px] text-slate-dim font-mono">AUDIT STATUS</div>
+            <div class="text-sm font-bold text-emerald flex items-center gap-2">
+              <span>✅</span> Completed
             </div>
-            <div>
-              <div class="text-[10px] font-bold text-surface-400 uppercase tracking-widest">AI Insight</div>
-              <div class="text-xs font-bold text-surface-900">Optimization Found</div>
+          </div>
+          <div class="absolute -bottom-6 -right-6 bg-navy/90 border border-white/10 rounded-2xl p-4 backdrop-blur shadow-xl animate-float" style="animation-delay: 2s">
+            <div class="text-[10px] text-slate-dim font-mono">ANOMALIES FOUND</div>
+            <div class="text-sm font-bold text-gold flex items-center gap-2">
+              <span>⚠️</span> 3 Flagged
             </div>
           </div>
         </div>
       </div>
-    {/if}
-  </div>
-</section>
+    </div>
+  </section>
 
-<!-- STATS SECTION -->
-<section class="py-20 border-y border-surface-100 bg-surface-50/30">
-  <div class="container-custom">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
-      {#each stats as stat}
-        <div class="text-center group">
-          <div class="text-4xl lg:text-5xl font-heading font-extrabold text-surface-900 mb-2 group-hover:scale-105 transition-transform duration-300">
-            {stat.value}
-          </div>
-          <div class="text-sm font-bold text-brand-600 uppercase tracking-widest mb-1">{stat.label}</div>
-          <div class="text-xs text-surface-400 font-medium">{stat.sub}</div>
+  <!-- Ticker Section -->
+  <div class="bg-black/40 border-y border-white/5 py-4 overflow-hidden relative">
+    <div class="ticker-content flex gap-12 whitespace-nowrap px-12">
+      {#each Array(2) as _}
+        <div class="flex items-center gap-12 text-sm font-mono text-slate-dim">
+          <span>🇳🇬 FIRS Compliant Reports</span>
+          <span class="text-emerald">◆</span>
+          <span>AI-Powered OCR Document Analysis</span>
+          <span class="text-emerald">◆</span>
+          <span>Certified ICAN Auditor Marketplace</span>
+          <span class="text-emerald">◆</span>
+          <span>CAC Registration Services</span>
+          <span class="text-emerald">◆</span>
+          <span>Blockchain Audit Trail</span>
+          <span class="text-emerald">◆</span>
+          <span>Profit & Loss · Balance Sheet · Cash Flow</span>
         </div>
       {/each}
     </div>
   </div>
-</section>
 
-<!-- FEATURES SECTION -->
-<section id="features" class="py-24 lg:py-32 bg-white">
-  <div class="container-custom">
-    <div class="max-w-3xl mb-20">
-      <div class="inline-flex items-center px-4 py-1 rounded-full bg-brand-50 border border-brand-100 text-brand-700 text-[10px] font-bold uppercase tracking-widest mb-6">
-        Platform Excellence
-      </div>
-      <h2 class="mb-6">Everything you need to <span class="grad-text">scale with confidence.</span></h2>
-      <p class="text-surface-500 text-lg leading-relaxed">
-        We've combined deep financial expertise with state-of-the-art AI to build a platform that handles the complexity of Nigerian business operations.
-      </p>
-    </div>
-
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {#each features as feature}
-        <div class="card-premium p-8 group flex flex-col h-full">
-          <div class="w-14 h-14 rounded-2xl bg-surface-50 flex items-center justify-center text-brand-600 mb-8 group-hover:bg-brand-600 group-hover:text-white transition-all duration-500">
-            <feature.icon size={32} strokeWidth={1.5} />
+  <!-- Stats Section -->
+  <section class="py-24 bg-navy-mid/50 relative overflow-hidden">
+    <div class="container-custom">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+        {#each stats as stat}
+          <div class="card-premium p-8 text-center group">
+            <div class="text-4xl mb-4 transform group-hover:scale-125 transition-transform duration-500">{stat.emoji}</div>
+            <div class="text-3xl lg:text-4xl font-heading font-black text-white mb-2">{stat.value}</div>
+            <div class="text-sm font-bold text-slate-dim uppercase tracking-widest">{stat.label}</div>
           </div>
-          <h3 class="text-xl font-bold mb-4">{feature.title}</h3>
-          <p class="text-surface-500 text-sm leading-relaxed mb-8 flex-1">
-            {feature.description}
-          </p>
-          <div class="flex flex-wrap gap-2 mt-auto pt-6 border-t border-surface-50">
-            {#each feature.tags as tag}
-              <span class="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-surface-50 text-surface-500 border border-surface-100">
-                {tag}
-              </span>
-            {/each}
-          </div>
-        </div>
-      {/each}
-    </div>
-  </div>
-</section>
-
-<!-- CTA SECTION -->
-<section class="py-24 lg:py-32">
-  <div class="container-custom">
-    <div class="relative rounded-[2rem] overflow-hidden bg-surface-900 p-10 lg:p-20 text-center">
-      <!-- Decorative circles -->
-      <div class="absolute -top-20 -left-20 w-64 h-64 bg-brand-600/20 rounded-full blur-3xl"></div>
-      <div class="absolute -bottom-20 -right-20 w-64 h-64 bg-brand-400/10 rounded-full blur-3xl"></div>
-
-      <div class="relative z-10 max-w-2xl mx-auto">
-        <h2 class="text-white mb-8">Ready to transform your financial operations?</h2>
-        <p class="text-surface-400 text-lg mb-12">
-          Join 50,000+ Nigerian businesses already auditing smarter with FinancialAuditor.
-        </p>
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a href="/auth/signup" class="btn-primary px-10 py-4 text-lg w-full sm:w-auto bg-brand-500 hover:bg-brand-600">
-            Get Started Now
-          </a>
-          <a href="/contact" class="px-10 py-4 text-white font-semibold hover:text-brand-400 transition-colors w-full sm:w-auto">
-            Talk to Sales
-          </a>
-        </div>
+        {/each}
       </div>
     </div>
-  </div>
-</section>
+  </section>
+
+  <!-- Features Grid -->
+  <section class="py-24 relative" id="features">
+    <div class="container-custom">
+      <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
+        <div class="inline-block px-4 py-1 rounded-full bg-emerald/10 border border-emerald/20 text-emerald text-xs font-bold uppercase tracking-widest">Platform Features</div>
+        <h2 class="text-4xl lg:text-5xl font-heading font-black text-white">Everything Your Business Needs to <span class="grad-text">Stay Audit-Ready</span></h2>
+        <p class="text-lg text-slate-dim">From AI-powered document analysis to FIRS-compliant reporting — one platform handles it all.</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {#each features as feature}
+          <div class="card-premium p-8 group">
+            <div class="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:bg-emerald/10 group-hover:scale-110 transition-all duration-500">
+              {feature.emoji}
+            </div>
+            <h3 class="text-xl font-heading font-bold text-white mb-4">{feature.title}</h3>
+            <p class="text-slate-dim leading-relaxed mb-6">{feature.desc}</p>
+            <div class="flex flex-wrap gap-2">
+              {#each feature.tags as tag}
+                <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg bg-white/5 text-slate-dim border border-white/10 group-hover:border-emerald/20 group-hover:text-emerald transition-colors">{tag}</span>
+              {/each}
+            </div>
+          </div>
+        {/each}
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-24 relative">
+    <div class="container-custom">
+      <div class="bg-linear-to-br from-emerald/20 to-navy-mid border border-white/10 rounded-[40px] p-12 lg:p-24 text-center relative overflow-hidden group">
+        <div class="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
+        <div class="relative z-10 max-w-3xl mx-auto space-y-8">
+          <h2 class="text-4xl lg:text-6xl font-heading font-black text-white leading-tight">Ready to Automate Your <span class="text-emerald italic">Financial Intelligence?</span></h2>
+          <p class="text-xl text-slate-dim">Join 50,000+ Nigerian businesses saving time and ensuring 100% compliance with FinancialAuditor.</p>
+          <div class="flex flex-wrap justify-center gap-6">
+            <button class="btn-primary py-5 px-10 text-xl">
+              <span>🔥 Start Free Trial Now</span>
+            </button>
+            <button class="btn-secondary py-5 px-10 text-xl border-white/20 text-white hover:bg-white/5">
+              <span>📞 Book Enterprise Demo</span>
+            </button>
+          </div>
+          <p class="text-sm text-slate-dim italic">No credit card required. Cancel anytime. FIRS-compliant.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<Footer />
 
 <style>
-  :global(h1, h2, h3) {
-    font-family: 'Syne', sans-serif;
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
   }
 </style>

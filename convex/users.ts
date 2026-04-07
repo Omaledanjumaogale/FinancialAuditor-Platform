@@ -1,7 +1,7 @@
-import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { v } from "convex/values";
 
-export const getUserByUid = query({
+export const getByUid = query({
   args: { uid: v.string() },
   handler: async (ctx, args) => {
     return await ctx.db
@@ -11,29 +11,33 @@ export const getUserByUid = query({
   },
 });
 
-export const createUser = mutation({
+export const store = mutation({
   args: {
     uid: v.string(),
     email: v.string(),
     name: v.optional(v.string()),
     role: v.union(v.literal("client"), v.literal("auditor"), v.literal("admin")),
+    companyName: v.optional(v.string()),
     plan: v.union(v.literal("starter"), v.literal("pro"), v.literal("enterprise")),
+    isVerified: v.boolean(),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("users")
       .withIndex("by_uid", (q) => q.eq("uid", args.uid))
       .unique();
-    
-    if (existing) return existing._id;
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        name: args.name ?? existing.name,
+        companyName: args.companyName ?? existing.companyName,
+      });
+      return existing._id;
+    }
 
     return await ctx.db.insert("users", {
-      uid: args.uid,
-      email: args.email,
-      name: args.name,
-      role: args.role,
-      plan: args.plan,
-      isVerified: false,
+      ...args,
+      createdAt: Date.now(),
     });
   },
 });

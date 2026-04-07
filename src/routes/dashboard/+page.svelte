@@ -1,221 +1,181 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { fade, fly } from 'svelte/transition';
-  import SEO from '$lib/components/SEO.svelte';
   import { 
     TrendingUp, 
-    TrendingDown, 
-    DollarSign, 
-    CreditCard, 
+    Users, 
+    ShieldAlert, 
+    FileText, 
     ArrowUpRight, 
     ArrowDownRight,
-    AlertCircle,
-    CheckCircle2,
-    Calendar,
-    Bot,
-    MoreHorizontal,
-    FileText
+    Search,
+    Filter,
+    MoreHorizontal
   } from 'lucide-svelte';
-  import { cn } from '$lib/utils';
 
   const stats = [
-    { icon: DollarSign, label: 'Total Revenue', value: '₦4.2M', trend: '+18.4%', isPositive: true, color: 'brand' },
-    { icon: ArrowUpRight, label: 'Net Profit', value: '₦1.8M', trend: '+12.1%', isPositive: true, color: 'accent' },
-    { icon: TrendingDown, label: 'Total Expenses', value: '₦2.4M', trend: '-5.2%', isPositive: true, color: 'danger' },
-    { icon: CreditCard, label: 'Cash Balance', value: '₦940K', trend: 'Healthy', isPositive: true, color: 'info' }
+    { label: 'Total Audits', value: '1,284', change: '+12.5%', icon: FileText, color: 'emerald', emoji: '📂' },
+    { label: 'Active Users', value: '842', change: '+5.2%', icon: Users, color: 'gold', emoji: '👥' },
+    { label: 'Anomalies', value: '12', change: '-2.4%', icon: ShieldAlert, color: 'danger', emoji: '⚠️' },
+    { label: 'Revenue Growth', value: '₦4.2M', change: '+18.4%', icon: TrendingUp, color: 'emerald', emoji: '📈' }
   ];
 
-  const transactions = [
-    { name: 'Sales — Agromart Ltd', date: '15 Jun 2025', amount: '+₦320,000', status: 'Completed', type: 'income' },
-    { name: 'Logistics — Swift Cargo', date: '14 Jun 2025', amount: '−₦85,000', status: 'Pending', type: 'expense' },
-    { name: 'Wholesale — Lagos Hub', date: '13 Jun 2025', amount: '+₦560,000', status: 'Completed', type: 'income' },
-    { name: 'Salaries — June 2025', date: '12 Jun 2025', amount: '−₦210,000', status: 'Completed', type: 'expense' }
-  ];
-
-  const insights = [
-    { icon: Bot, title: 'Cost Optimization', message: 'Cut logistics 12% → Save ₦216K in Q3. AI found 3 better carrier routes.', color: 'brand', tag: 'Opportunity' },
-    { icon: AlertCircle, title: 'Duplicate Payment', message: 'Sunny Electronics ₦45,000 — 10 & 11 Jun. Review recommended.', color: 'danger', tag: 'Anomaly' },
-    { icon: Calendar, title: 'Tax Compliance', message: 'VAT filing due in 14 days. Estimated ₦312,000. Auto-file ready.', color: 'accent', tag: 'Reminder' }
+  const recentActivities = [
+    { id: 1, title: 'FIRS Audit Report Generated', type: 'Report', time: '2 mins ago', status: 'Completed', emoji: '📄' },
+    { id: 2, title: 'Anomalies detected in Logistics', type: 'Alert', time: '15 mins ago', status: 'Warning', emoji: '🚨' },
+    { id: 3, title: 'New ICAN Auditor Connected', type: 'User', time: '1 hour ago', status: 'Success', emoji: '🤝' },
+    { id: 4, title: 'VAT Calculation Updated', type: 'Tax', time: '3 hours ago', status: 'Completed', emoji: '📊' }
   ];
 </script>
 
-<SEO title="Client Dashboard" description="Overview of your financial performance and AI-driven audits." />
+<div class="space-y-8" in:fade>
+  <!-- Welcome Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-heading font-black text-white">Dashboard Overview</h1>
+      <p class="text-slate-dim">Welcome back, <span class="text-white font-bold">Adaeze Okonkwo</span> 👋. Here's what's happening today.</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <button class="btn-secondary py-2 px-4 text-sm border-white/10 text-white hover:bg-white/5 flex items-center gap-2">
+        <Filter size={16} />
+        Filter
+      </button>
+      <button class="btn-primary py-2 px-4 text-sm flex items-center gap-2">
+        <span>⚡ Run New Audit</span>
+      </button>
+    </div>
+  </div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-  {#each stats as stat, i}
-    <div 
-      class="card-premium p-6 group" 
-      in:fly={{ y: 20, delay: 100 * i, duration: 500 }}
-    >
-      <div class="flex items-center justify-between mb-4">
-        <div class="w-10 h-10 rounded-xl bg-surface-50 flex items-center justify-center text-surface-600 group-hover:bg-brand-600 group-hover:text-white transition-all duration-300">
-          <stat.icon size={20} />
+  <!-- Stats Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    {#each stats as stat}
+      <div class="card-premium p-6 group relative overflow-hidden">
+        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+          <stat.icon size={64} />
         </div>
-        <button class="text-surface-300 hover:text-surface-600 transition-colors">
-          <MoreHorizontal size={18} />
+        <div class="relative z-10">
+          <div class="flex items-center justify-between mb-4">
+            <div class="text-2xl">{stat.emoji}</div>
+            <div class={`text-xs font-bold px-2 py-1 rounded-lg ${stat.change.startsWith('+') ? 'bg-emerald/10 text-emerald' : 'bg-danger/10 text-danger'}`}>
+              {stat.change}
+            </div>
+          </div>
+          <div class="text-sm font-bold text-slate-dim uppercase tracking-widest mb-1">{stat.label}</div>
+          <div class="text-3xl font-heading font-black text-white">{stat.value}</div>
+        </div>
+      </div>
+    {/each}
+  </div>
+
+  <div class="grid lg:grid-cols-3 gap-8">
+    <!-- Chart / Main Content -->
+    <div class="lg:col-span-2 space-y-8">
+      <div class="card-premium p-6">
+        <div class="flex items-center justify-between mb-8">
+          <h3 class="text-xl font-heading font-bold text-white flex items-center gap-2">
+            <span>📉</span> Financial Intelligence Trend
+          </h3>
+          <select class="bg-navy border border-white/10 rounded-lg text-xs text-slate-dim px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald">
+            <option>Last 7 Days</option>
+            <option>Last 30 Days</option>
+            <option>Last 12 Months</option>
+          </select>
+        </div>
+        
+        <div class="h-64 flex items-end gap-2 relative">
+          {#each Array(12) as _, i}
+            <div 
+              class="flex-1 bg-linear-to-t from-emerald/40 to-emerald/10 rounded-t-lg transition-all hover:from-emerald hover:to-emerald/50 cursor-pointer group relative"
+              style={`height: ${Math.random() * 80 + 20}%`}
+            >
+              <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-white text-navy text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                ₦{(Math.random() * 500).toFixed(0)}K
+              </div>
+            </div>
+          {/each}
+        </div>
+        <div class="flex justify-between mt-4 text-[10px] font-mono text-slate-dim uppercase tracking-widest">
+          <span>Jan</span>
+          <span>Feb</span>
+          <span>Mar</span>
+          <span>Apr</span>
+          <span>May</span>
+          <span>Jun</span>
+          <span>Jul</span>
+          <span>Aug</span>
+          <span>Sep</span>
+          <span>Oct</span>
+          <span>Nov</span>
+          <span>Dec</span>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="card-premium p-6 bg-linear-to-br from-emerald/5 to-transparent border-emerald/10 group cursor-pointer hover:border-emerald/30">
+          <div class="text-3xl mb-4 group-hover:scale-110 transition-transform">📤</div>
+          <h4 class="text-lg font-heading font-bold text-white mb-2">Upload Documents</h4>
+          <p class="text-sm text-slate-dim mb-4">Drag and drop receipts, invoices or bank statements for instant AI analysis.</p>
+          <div class="text-emerald text-sm font-bold flex items-center gap-2">
+            Get Started <ArrowUpRight size={16} />
+          </div>
+        </div>
+        <div class="card-premium p-6 bg-linear-to-br from-gold/5 to-transparent border-gold/10 group cursor-pointer hover:border-gold/30">
+          <div class="text-3xl mb-4 group-hover:scale-110 transition-transform">🔍</div>
+          <h4 class="text-lg font-heading font-bold text-white mb-2">Marketplace</h4>
+          <p class="text-sm text-slate-dim mb-4">Connect with ICAN certified auditors for professional verification.</p>
+          <div class="text-gold text-sm font-bold flex items-center gap-2">
+            Browse Auditors <ArrowUpRight size={16} />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar Content (Recent Activity) -->
+    <div class="space-y-8">
+      <div class="card-premium p-6">
+        <h3 class="text-xl font-heading font-bold text-white mb-6 flex items-center gap-2">
+          <span>🔔</span> Recent Activity
+        </h3>
+        <div class="space-y-6">
+          {#each recentActivities as activity}
+            <div class="flex gap-4 relative">
+              <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-lg shrink-0">
+                {activity.emoji}
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-bold text-white truncate">{activity.title}</div>
+                <div class="flex items-center gap-2 text-[10px] text-slate-dim mt-1">
+                  <span>{activity.type}</span>
+                  <span>•</span>
+                  <span>{activity.time}</span>
+                </div>
+              </div>
+              <button class="text-slate-dim hover:text-white transition-colors">
+                <MoreHorizontal size={16} />
+              </button>
+            </div>
+          {/each}
+        </div>
+        <button class="w-full mt-8 py-3 text-xs font-bold text-slate-dim hover:text-white border border-white/10 rounded-xl transition-all hover:bg-white/5">
+          View All Activities
         </button>
       </div>
-      <div class="text-[10px] font-bold text-surface-400 uppercase tracking-widest mb-1">{stat.label}</div>
-      <div class="flex items-baseline gap-2">
-        <span class="text-2xl font-extrabold text-surface-900">{stat.value}</span>
-        <span class={cn(
-          "text-[10px] font-bold px-1.5 py-0.5 rounded-md",
-          stat.isPositive ? "bg-brand-50 text-brand-700" : "bg-danger-50 text-danger-700"
-        )}>
-          {stat.trend}
-        </span>
-      </div>
-    </div>
-  {/each}
-</div>
 
-<div class="grid lg:grid-cols-3 gap-8 mb-10">
-  <!-- Revenue Analytics -->
-  <div class="lg:col-span-2 card-premium p-8">
-    <div class="flex items-center justify-between mb-10">
-      <div>
-        <h3 class="text-lg font-bold text-surface-900 mb-1">Revenue vs Expenses</h3>
-        <p class="text-xs text-surface-500 font-medium">Performance tracking for FY 2026</p>
-      </div>
-      <div class="flex bg-surface-50 p-1 rounded-lg border border-surface-200">
-        <button class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-white shadow-sm border border-surface-200 text-surface-900 transition-all">6 Months</button>
-        <button class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-surface-400 hover:text-surface-600 transition-all">1 Year</button>
-      </div>
-    </div>
-    
-    <!-- Custom Chart Component Placeholder -->
-    <div class="overflow-x-auto pb-4">
-      <div class="h-64 min-w-[500px] md:min-w-0 flex items-end justify-between gap-4 px-2">
-      {#each [45, 60, 52, 85, 78, 95] as height, i}
-        <div class="flex-1 flex flex-col items-center gap-4 group">
-          <div class="relative w-full">
-            <!-- Background bar -->
-            <div class="absolute bottom-0 left-0 right-0 h-64 bg-surface-50 rounded-t-lg"></div>
-            <!-- Progress bar -->
-            <div 
-              class="relative z-10 w-full bg-brand-500 rounded-t-lg transition-all duration-1000 ease-out group-hover:bg-brand-600 group-hover:shadow-lg group-hover:shadow-brand-500/20" 
-              style="height: {height * 2.5}px"
-            >
-              <div class="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all bg-surface-900 text-white text-[10px] font-bold px-2 py-1 rounded shadow-xl">
-                ₦{(height * 100).toLocaleString()}K
-              </div>
-            </div>
-          </div>
-          <span class="text-[10px] font-bold text-surface-400 uppercase tracking-widest">
-            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'][i]}
-          </span>
+      <!-- AI Advisory Card -->
+      <div class="card-premium p-6 bg-linear-to-br from-emerald/20 to-navy border-emerald/20 overflow-hidden relative group">
+        <div class="absolute -right-4 -bottom-4 text-8xl opacity-10 group-hover:scale-110 transition-transform">🤖</div>
+        <div class="relative z-10">
+          <div class="text-xs font-heading font-bold text-emerald mb-2 uppercase tracking-widest">AI Advisory Pro</div>
+          <h4 class="text-lg font-heading font-bold text-white mb-4">Optimization Found!</h4>
+          <p class="text-sm text-slate-dim mb-6 leading-relaxed">
+            Your logistics expenditure is <span class="text-danger font-bold">12.5%</span> higher than the industry average for Lagos-based SMEs.
+          </p>
+          <button class="w-full py-3 bg-emerald text-navy font-bold rounded-xl text-xs hover:brightness-110 transition-all shadow-lg shadow-emerald/20">
+            View Playbook 📘
+          </button>
         </div>
-      {/each}
+      </div>
     </div>
-  </div>
-
-  <!-- AI Insights Feed -->
-  <div class="flex flex-col gap-6">
-    <div class="flex items-center justify-between px-2">
-      <h3 class="text-lg font-bold text-surface-900">AI Intelligence</h3>
-      <span class="flex h-2 w-2 rounded-full bg-brand-500 animate-pulse"></span>
-    </div>
-    
-    <div class="space-y-4">
-      {#each insights as insight}
-        <div class="card-premium p-5 group cursor-pointer hover:border-brand-200">
-          <div class="flex gap-4">
-            <div class={cn(
-              "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors",
-              "bg-surface-50 text-surface-600 group-hover:bg-brand-600 group-hover:text-white"
-            )}>
-              <insight.icon size={20} />
-            </div>
-            <div>
-              <div class="flex items-center gap-2 mb-1">
-                <span class="text-[10px] font-bold text-surface-400 uppercase tracking-widest">{insight.tag}</span>
-                <div class="h-1 w-1 rounded-full bg-surface-200"></div>
-                <span class="text-[10px] font-bold text-brand-600 uppercase tracking-widest">{insight.title}</span>
-              </div>
-              <p class="text-sm text-surface-600 leading-relaxed font-medium">{insight.message}</p>
-            </div>
-          </div>
-        </div>
-      {/each}
-    </div>
-    
-    <button class="btn-secondary w-full py-4 text-xs uppercase tracking-[0.2em] min-h-[44px]">
-      View All Insights
-    </button>
-  </div>
-</div>
-
-<!-- Transactions Table -->
-<div class="card-premium overflow-hidden">
-  <div class="p-8 border-b border-surface-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-    <div>
-      <h3 class="text-lg font-bold text-surface-900">Recent Transactions</h3>
-      <p class="text-xs text-surface-500 font-medium">Real-time ledger updates</p>
-    </div>
-    <div class="flex flex-wrap gap-2">
-      <button class="btn-secondary px-4 py-3 text-xs min-h-[44px] flex-1 sm:flex-none">Export CSV</button>
-      <button class="btn-primary px-4 py-3 text-xs min-h-[44px] flex-1 sm:flex-none">View Full Ledger</button>
-    </div>
-  </div>
-  
-  <div class="overflow-x-auto">
-    <table class="w-full text-left">
-      <thead>
-        <tr class="bg-surface-50/50">
-          <th class="px-8 py-4 text-[10px] font-bold text-surface-400 uppercase tracking-widest">Transaction Details</th>
-          <th class="px-8 py-4 text-[10px] font-bold text-surface-400 uppercase tracking-widest">Date</th>
-          <th class="px-8 py-4 text-[10px] font-bold text-surface-400 uppercase tracking-widest">Amount</th>
-          <th class="px-8 py-4 text-[10px] font-bold text-surface-400 uppercase tracking-widest text-right">Status</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-surface-100">
-        {#each transactions as tx}
-          <tr class="group hover:bg-surface-50/50 transition-colors">
-            <td class="px-8 py-5">
-              <div class="flex items-center gap-4">
-                <div class={cn(
-                  "w-9 h-9 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110",
-                  tx.type === 'income' ? "bg-brand-50 text-brand-600" : "bg-danger-50 text-danger-600"
-                )}>
-                  {#if tx.type === 'income'}
-                    <ArrowUpRight size={18} />
-                  {:else}
-                    <ArrowDownRight size={18} />
-                  {/if}
-                </div>
-                <div>
-                  <div class="text-sm font-bold text-surface-900">{tx.name}</div>
-                  <div class="text-[10px] font-bold text-surface-400 uppercase tracking-widest">Financial Audit v2</div>
-                </div>
-              </div>
-            </td>
-            <td class="px-8 py-5">
-              <div class="text-xs font-semibold text-surface-600">{tx.date}</div>
-            </td>
-            <td class="px-8 py-5">
-              <div class={cn(
-                "text-sm font-extrabold font-mono",
-                tx.type === 'income' ? "text-brand-600" : "text-surface-900"
-              )}>
-                {tx.amount}
-              </div>
-            </td>
-            <td class="px-8 py-5 text-right">
-              <span class={cn(
-                "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                tx.status === 'Completed' ? "bg-brand-50 text-brand-700" : "bg-warning-50 text-warning-700"
-              )}>
-                {#if tx.status === 'Completed'}
-                  <CheckCircle2 size={12} />
-                {:else}
-                  <AlertCircle size={12} />
-                {/if}
-                {tx.status}
-              </span>
-            </td>
-          </tr>
-        {/each}
-      </tbody>
-    </table>
   </div>
 </div>
