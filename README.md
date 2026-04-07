@@ -1,4 +1,17 @@
-# sv
+# FinancialAuditor Intelligence Platform
+
+An enterprise-grade financial auditing and intelligence platform built with SvelteKit, Convex, and Tailwind CSS.
+
+## Key Features
+
+- **Enterprise-Grade UI/UX**: Premium light-first design with world-class SaaS aesthetics.
+- **SvelteKit 5**: Leveraging the latest Svelte features for optimal performance.
+- **Convex Backend**: Real-time database and serverless functions.
+- **Firebase Integration**: Secure authentication and file storage.
+- **Multi-Modal AI Extraction**: Intelligent data processing for audit workflows.
+- **FIRS & CAC Compliance**: Built-in frameworks for Nigerian regulatory standards.
+
+## Development
 
 Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
 
