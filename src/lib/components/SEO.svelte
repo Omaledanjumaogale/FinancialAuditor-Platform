@@ -7,7 +7,7 @@
     image = "/og-image.png"
   } = $props();
 
-  const schemaMarkup = {
+  const schemaMarkup = $derived({
     "@context": "https://schema.org",
     "@type": type,
     "name": "FinancialAuditor",
@@ -24,7 +24,7 @@
       "@type": "Organization",
       "name": "E-WIN Project"
     }
-  };
+  });
 </script>
 
 <svelte:head>
@@ -46,7 +46,5 @@
   <meta property="twitter:image" content={image} />
 
   <!-- Structured Data -->
-  <script type="application/ld+json">
-    {JSON.stringify(schemaMarkup)}
-  </script>
+  {@html `<script type="application/ld+json">${JSON.stringify(schemaMarkup)}<\/script>`}
 </svelte:head>

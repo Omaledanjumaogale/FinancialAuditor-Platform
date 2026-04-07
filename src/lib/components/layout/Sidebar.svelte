@@ -11,7 +11,9 @@
     CreditCard,
     MessageSquare,
     History,
-    ChevronRight
+    ChevronRight,
+    Sparkles,
+    LayoutGrid
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
 
@@ -31,83 +33,82 @@
   ];
 </script>
 
-<aside class="hidden md:flex flex-col w-72 h-screen fixed left-0 top-0 bg-navy-mid border-r border-white/10 z-50">
-  <!-- Logo -->
-  <div class="p-6 h-[68px] flex items-center border-b border-white/10">
-    <a href="/" class="flex items-center gap-3 group">
-      <div class="w-10 h-10 rounded-xl bg-linear-to-br from-emerald to-emerald-deep flex items-center justify-center shadow-lg shadow-emerald/20 group-hover:scale-105 transition-transform">
-        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5">
-          <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-        </svg>
+<aside class="hidden xl:flex flex-col w-[280px] h-screen fixed left-0 top-0 bg-background border-r border-border z-50">
+  <!-- Sidebar Header -->
+  <div class="h-[72px] flex items-center px-6 border-b border-border">
+    <a href="/" class="flex items-center gap-2.5 group">
+      <div class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/10 group-hover:scale-105 transition-transform duration-300">
+        <Sparkles size={20} class="text-white" />
       </div>
       <div class="flex flex-col">
-        <span class="text-white font-bold text-lg leading-tight tracking-tight font-heading">Financial<span class="text-emerald">Auditor</span></span>
-        <span class="text-emerald text-[0.6rem] font-bold uppercase tracking-[0.2em]">Enterprise AI</span>
+        <span class="text-foreground font-heading font-black text-lg tracking-tighter leading-none">Financial<span class="text-primary">Auditor</span></span>
+        <span class="text-[9px] font-bold text-primary uppercase tracking-[0.2em] leading-tight mt-0.5">Enterprise Hub</span>
       </div>
     </a>
   </div>
 
-  <!-- Navigation -->
-  <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-    <div class="text-[0.65rem] font-bold text-slate-dim uppercase tracking-widest px-3 mb-4">Main Menu</div>
-    {#each menuItems as item}
-      <a 
-        href={item.href} 
-        class={cn(
-          "flex items-center justify-between px-3 py-3 rounded-xl text-sm font-medium transition-all group border border-transparent",
-          page.url.pathname === item.href 
-            ? "bg-emerald/10 text-white border-emerald/20 shadow-lg shadow-emerald/5" 
-            : "text-slate hover:bg-white/5 hover:text-white"
-        )}
-      >
-        <span class="flex items-center gap-3">
-          <span class="text-lg leading-none">{item.name.split(' ')[0]}</span>
-          <span>{item.name.split(' ').slice(1).join(' ')}</span>
-        </span>
-        <ChevronRight size={14} class={cn(
-          "transition-all opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0",
-          page.url.pathname === item.href && "opacity-100 translate-x-0"
-        )} />
-      </a>
-    {/each}
+  <!-- Navigation Content -->
+  <div class="flex-1 flex flex-col overflow-y-auto py-6 px-4 space-y-8">
+    <!-- Platform Section -->
+    <div class="space-y-1.5">
+      <div class="px-3 mb-3 flex items-center justify-between">
+        <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Platform Console</span>
+        <LayoutGrid size={12} class="text-muted-foreground/50" />
+      </div>
+      {#each menuItems as item}
+        <a 
+          href={item.href} 
+          class={cn(
+            "sidebar-link",
+            page.url.pathname === item.href && "sidebar-link-active"
+          )}
+        >
+          <span class="flex items-center gap-3">
+            <span class="text-lg leading-none group-hover:scale-110 transition-transform duration-200">{item.name.split(' ')[0]}</span>
+            <span class="font-semibold">{item.name.split(' ').slice(1).join(' ')}</span>
+          </span>
+          {#if page.url.pathname === item.href}
+            <div class="ml-auto w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
+          {/if}
+        </a>
+      {/each}
+    </div>
 
-    <div class="pt-8">
-      <div class="text-[0.65rem] font-bold text-slate-dim uppercase tracking-widest px-3 mb-4">Platform Admin</div>
+    <!-- Management Section -->
+    <div class="space-y-1.5">
+      <div class="px-3 mb-3 flex items-center justify-between">
+        <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Administration</span>
+        <ShieldCheck size={12} class="text-muted-foreground/50" />
+      </div>
       {#each adminItems as item}
         <a 
           href={item.href} 
           class={cn(
-            "flex items-center justify-between px-3 py-3 rounded-xl text-sm font-medium transition-all group border border-transparent",
-            page.url.pathname === item.href 
-              ? "bg-white text-navy-mid shadow-lg" 
-              : "text-slate hover:bg-white/5 hover:text-white"
+            "sidebar-link",
+            page.url.pathname === item.href && "sidebar-link-active"
           )}
         >
           <span class="flex items-center gap-3">
-            <span class="text-lg leading-none">{item.name.split(' ')[0]}</span>
-            <span>{item.name.split(' ').slice(1).join(' ')}</span>
+            <span class="text-lg leading-none group-hover:scale-110 transition-transform duration-200">{item.name.split(' ')[0]}</span>
+            <span class="font-semibold">{item.name.split(' ').slice(1).join(' ')}</span>
           </span>
-          <ChevronRight size={14} class={cn(
-            "transition-all opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0",
-            page.url.pathname === item.href && "opacity-100 translate-x-0"
-          )} />
         </a>
       {/each}
     </div>
-  </nav>
+  </div>
 
-  <!-- Footer Profile -->
-  <div class="p-4 border-t border-white/10">
-    <div class="bg-navy rounded-2xl p-3 flex items-center gap-3 border border-white/5">
-      <div class="w-10 h-10 rounded-full bg-emerald/20 text-emerald flex items-center justify-center font-bold text-sm border border-emerald/20">
+  <!-- Sidebar Footer -->
+  <div class="p-4 mt-auto border-t border-border bg-muted/20">
+    <div class="bg-background rounded-2xl p-3 flex items-center gap-3 border border-border shadow-sm hover:border-primary/20 transition-colors group cursor-pointer">
+      <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-sm border border-primary/20 group-hover:bg-primary group-hover:text-white transition-all duration-300">
         AO
       </div>
       <div class="flex-1 min-w-0">
-        <div class="text-xs font-bold text-white truncate">Adaeze Okonkwo</div>
-        <div class="text-[0.65rem] text-slate-dim truncate">Pro Plan Member 💎</div>
+        <div class="text-xs font-black text-foreground truncate">Adaeze Okonkwo</div>
+        <div class="text-[10px] text-muted-foreground font-medium truncate">Pro Enterprise Plan</div>
       </div>
-      <button class="text-slate-dim hover:text-danger transition-colors p-2" title="Logout">
-        <LogOut size={18} />
+      <button class="text-muted-foreground hover:text-destructive transition-colors p-2 rounded-lg hover:bg-destructive/5" title="Sign out of console">
+        <LogOut size={16} />
       </button>
     </div>
   </div>
