@@ -1,40 +1,50 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { fade, slide } from 'svelte/transition';
+  import { fade } from 'svelte/transition';
+  import { Plus, Upload, Filter, Download } from 'lucide-svelte';
 
   let { children } = $props();
 
   const user = {
     name: 'Adaeze Okonkwo',
     company: 'AgroFresh Nigeria Ltd',
-    plan: 'Pro Plan · Active',
-    initials: 'AO'
+    plan: 'Pro Plan',
+    status: 'Active'
   };
 </script>
 
-<div class="max-w-7xl mx-auto px-6 py-8">
-  <!-- Dashboard Topbar -->
-  <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+<div class="p-4 md:p-8 lg:p-10 max-w-[1600px] mx-auto pt-20">
+  <!-- Dashboard Header -->
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
     <div in:fade={{ duration: 400 }}>
-      <h1 class="text-3xl font-extrabold text-white mb-2">Good morning, {user.name} 👋</h1>
-      <div class="flex items-center gap-3">
-        <span class="text-slate-dim text-sm">{user.company}</span>
-        <span class="w-1.5 h-1.5 rounded-full bg-emerald"></span>
-        <span class="text-emerald text-xs font-bold uppercase tracking-wider">{user.plan}</span>
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-[10px] font-bold uppercase tracking-widest text-brand-600 bg-brand-50 px-2 py-0.5 rounded border border-brand-100">
+          Client Portal
+        </span>
+        <div class="h-1 w-1 rounded-full bg-surface-300"></div>
+        <span class="text-xs font-medium text-surface-500">{user.company}</span>
       </div>
+      <h1 class="text-3xl font-extrabold text-surface-900 tracking-tight">
+        Welcome back, {user.name.split(' ')[0]} <span class="animate-pulse inline-block">👋</span>
+      </h1>
     </div>
 
-    <div class="flex items-center gap-4" in:fade={{ delay: 200, duration: 400 }}>
-      <a href="/dashboard/upload" class="btn-secondary px-5 py-2.5 text-sm">
-        <span>📤</span> Upload
+    <div class="flex items-center gap-3" in:fade={{ delay: 200, duration: 400 }}>
+      <button class="btn-secondary gap-2 px-4 py-3 min-h-[44px]">
+        <Filter size={16} />
+        <span class="hidden sm:inline">Filters</span>
+      </button>
+      <a href="/dashboard/upload" class="btn-secondary gap-2 px-4 py-3 min-h-[44px]">
+        <Upload size={16} />
+        <span class="hidden sm:inline">Upload</span>
       </a>
-      <a href="/dashboard/new-entry" class="btn-primary px-5 py-2.5 text-sm">
-        <span>➕</span> New Entry
+      <a href="/dashboard/new-audit" class="btn-primary gap-2 px-5 py-3 min-h-[44px]">
+        <Plus size={18} />
+        <span class="hidden sm:inline">New Audit</span>
       </a>
     </div>
   </div>
 
-  <!-- Dashboard Content -->
+  <!-- Main Dashboard View -->
   <div in:fade={{ delay: 400, duration: 600 }}>
     {@render children()}
   </div>

@@ -1,11 +1,13 @@
 <script lang="ts">
+  import { Globe, Mail, Phone, MapPin, ArrowUpRight } from 'lucide-svelte';
+
   const footerLinks = {
     platform: [
       { name: 'Features', href: '#features' },
-      { name: 'Pricing', href: '#pricing' },
+      { name: 'Pricing', href: '/pricing' },
       { name: 'Auditor Marketplace', href: '/marketplace' },
       { name: 'Dashboard', href: '/dashboard' },
-      { name: 'Admin Panel', href: '/admin' }
+      { name: 'Admin Hub', href: '/admin' }
     ],
     services: [
       { name: 'CAC Registration', href: '/services/cac' },
@@ -13,87 +15,108 @@
       { name: 'Foundation Setup', href: '/services/ngo' },
       { name: 'Corporate Documents', href: '/services/docs' },
       { name: 'RaaS Advisory', href: '/services/raas' }
+    ],
+    company: [
+      { name: 'About Us', href: '/about' },
+      { name: 'Contact', href: '/contact' },
+      { name: 'Privacy Policy', href: '/privacy' },
+      { name: 'Terms of Service', href: '/terms' }
     ]
   };
 </script>
 
-<footer class="bg-navy-mid border-t border-white/5 pt-16 pb-8 px-6">
-  <div class="max-w-7xl mx-auto">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-      <!-- Brand -->
-      <div>
-        <div class="flex items-center gap-2 mb-6">
-          <div class="w-10 h-10 rounded-xl bg-emerald flex items-center justify-center text-white text-xl font-bold">
+<footer class="bg-surface-50 border-t border-surface-200 pt-20 pb-10 px-6">
+  <div class="container-custom">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-20">
+      <!-- Brand & Description -->
+      <div class="lg:col-span-2">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center text-white text-xl font-bold shadow-sm">
             FA
           </div>
           <div class="flex flex-col">
-            <span class="text-white font-bold text-lg leading-tight">FinancialAuditor</span>
-            <span class="text-emerald text-[0.65rem] font-medium uppercase tracking-widest">Enterprise AI</span>
+            <span class="text-surface-900 font-bold text-lg leading-tight tracking-tight font-heading">FinancialAuditor</span>
+            <span class="text-brand-600 text-[0.65rem] font-bold uppercase tracking-[0.2em]">Enterprise AI</span>
           </div>
         </div>
-        <p class="text-slate-dim text-sm leading-relaxed mb-6">
-          Nigeria's premier AI-powered financial auditing and compliance platform. FIRS compliant. CAC ready.
+        <p class="text-surface-500 text-sm leading-relaxed max-w-sm mb-8">
+          Nigeria's premier AI-powered financial auditing and compliance platform. We help businesses stay audit-ready and compliant with FIRS and CAC regulations.
         </p>
-        <div class="text-[10px] text-slate-dim font-mono uppercase tracking-widest">
-          RC: 1234567 · Lagos, Nigeria
+        <div class="flex flex-col gap-4">
+          <div class="flex items-center gap-3 text-surface-600 text-sm">
+            <div class="w-8 h-8 rounded-lg bg-white border border-surface-200 flex items-center justify-center text-brand-600">
+              <Mail size={16} />
+            </div>
+            hello@financialauditor.ewinproject.org
+          </div>
+          <div class="flex items-center gap-3 text-surface-600 text-sm">
+            <div class="w-8 h-8 rounded-lg bg-white border border-surface-200 flex items-center justify-center text-brand-600">
+              <Phone size={16} />
+            </div>
+            +234 800 FIN AUDIT
+          </div>
         </div>
       </div>
 
-      <!-- Links: Platform -->
+      <!-- Links Column 1 -->
       <div>
-        <h4 class="text-white font-bold text-xs uppercase tracking-widest mb-6">Platform</h4>
+        <h4 class="text-surface-900 font-bold text-xs uppercase tracking-widest mb-6">Platform</h4>
         <ul class="flex flex-col gap-4">
           {#each footerLinks.platform as link}
             <li>
-              <a href={link.href} class="text-slate-dim text-sm hover:text-white transition-colors">
+              <a href={link.href} class="text-surface-500 text-sm hover:text-brand-600 transition-colors inline-flex items-center gap-1 group">
                 {link.name}
+                <ArrowUpRight size={12} class="opacity-0 group-hover:opacity-100 transition-all" />
               </a>
             </li>
           {/each}
         </ul>
       </div>
 
-      <!-- Links: Services -->
+      <!-- Links Column 2 -->
       <div>
-        <h4 class="text-white font-bold text-xs uppercase tracking-widest mb-6">Services</h4>
+        <h4 class="text-surface-900 font-bold text-xs uppercase tracking-widest mb-6">Services</h4>
         <ul class="flex flex-col gap-4">
           {#each footerLinks.services as link}
             <li>
-              <a href={link.href} class="text-slate-dim text-sm hover:text-white transition-colors">
+              <a href={link.href} class="text-surface-500 text-sm hover:text-brand-600 transition-colors inline-flex items-center gap-1 group">
                 {link.name}
+                <ArrowUpRight size={12} class="opacity-0 group-hover:opacity-100 transition-all" />
               </a>
             </li>
           {/each}
         </ul>
       </div>
 
-      <!-- Contact -->
+      <!-- Links Column 3 -->
       <div>
-        <h4 class="text-white font-bold text-xs uppercase tracking-widest mb-6">Contact</h4>
-        <ul class="flex flex-col gap-4 text-sm text-slate-dim">
-          <li class="flex items-center gap-3">
-            <span>📧</span>
-            <a href="mailto:hello@financialauditor.ng" class="hover:text-white transition-colors">hello@financialauditor.ng</a>
-          </li>
-          <li class="flex items-center gap-3">
-            <span>📞</span>
-            <span>+234 800 FIN AUDIT</span>
-          </li>
-          <li class="flex items-center gap-3">
-            <span>📍</span>
-            <span>Victoria Island, Lagos</span>
-          </li>
+        <h4 class="text-surface-900 font-bold text-xs uppercase tracking-widest mb-6">Company</h4>
+        <ul class="flex flex-col gap-4">
+          {#each footerLinks.company as link}
+            <li>
+              <a href={link.href} class="text-surface-500 text-sm hover:text-brand-600 transition-colors inline-flex items-center gap-1 group">
+                {link.name}
+                <ArrowUpRight size={12} class="opacity-0 group-hover:opacity-100 transition-all" />
+              </a>
+            </li>
+          {/each}
         </ul>
       </div>
     </div>
 
-    <div class="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-      <div class="text-xs text-slate-dim">
-        © 2026 FinancialAuditor AI Platform. All rights reserved.
+    <!-- Bottom Bar -->
+    <div class="pt-10 border-t border-surface-200 flex flex-col md:flex-row justify-between items-center gap-6">
+      <div class="text-xs text-surface-400 font-medium">
+        © 2026 FinancialAuditor Nigeria. All rights reserved. RC: 1234567
       </div>
-      <div class="flex gap-6 text-xs text-slate-dim">
-        <a href="/privacy" class="hover:text-white transition-colors">Privacy Policy</a>
-        <a href="/terms" class="hover:text-white transition-colors">Terms of Service</a>
+      <div class="flex items-center gap-6">
+        <a href="https://financialauditor.ewinproject.org" class="text-surface-400 hover:text-brand-600 transition-colors">
+          <Globe size={18} />
+        </a>
+        <div class="h-4 w-px bg-surface-200"></div>
+        <div class="text-[10px] font-bold text-surface-400 uppercase tracking-[0.2em]">
+          Built for Nigeria 🇳🇬
+        </div>
       </div>
     </div>
   </div>

@@ -6,7 +6,7 @@
   // Use derived for reactivity in Svelte 5
   let fullTitle = $derived(`${title} | ${siteName}`);
   let currentDescription = $derived(description);
-  let currentUrl = $derived(url || "https://financialauditor.ng");
+  let currentUrl = $derived(url || "https://financialauditor.ewinproject.org");
 
   let jsonLd = $derived({
     "@context": "https://schema.org",

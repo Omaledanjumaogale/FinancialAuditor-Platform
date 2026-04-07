@@ -1,38 +1,45 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { fade, slide } from 'svelte/transition';
+  import { fade } from 'svelte/transition';
+  import { Shield, Bell, Send, Settings, Search } from 'lucide-svelte';
 
   let { children } = $props();
 
   const admin = {
     name: 'System Admin',
     role: 'Super Admin',
-    initials: 'SA'
+    status: 'Online'
   };
 </script>
 
-<div class="max-w-7xl mx-auto px-6 py-8">
-  <!-- Admin Topbar -->
-  <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+<div class="p-4 md:p-8 lg:p-10 max-w-[1600px] mx-auto pt-20">
+  <!-- Admin Header -->
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
     <div in:fade={{ duration: 400 }}>
-      <div class="flex items-center gap-3 mb-2">
-        <span class="text-rose text-[10px] font-bold uppercase tracking-[0.2em] border border-rose/30 px-2 py-0.5 rounded bg-rose/10">Admin Console</span>
-        <span class="w-1.5 h-1.5 rounded-full bg-rose animate-pulse"></span>
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-[10px] font-bold uppercase tracking-widest text-danger bg-danger/5 px-2 py-0.5 rounded border border-danger/10">
+          Admin Console
+        </span>
+        <div class="h-1 w-1 rounded-full bg-surface-300"></div>
+        <span class="text-xs font-medium text-surface-500">{admin.role}</span>
       </div>
-      <h1 class="text-3xl font-extrabold text-white">Platform Operations Hub 🛡️</h1>
+      <h1 class="text-3xl font-extrabold text-surface-900 tracking-tight">
+        Platform Intelligence Hub <span class="text-danger animate-pulse inline-block">🛡️</span>
+      </h1>
     </div>
 
-    <div class="flex items-center gap-4" in:fade={{ delay: 200, duration: 400 }}>
-      <button class="btn-secondary px-5 py-2.5 text-sm border-rose text-rose hover:bg-rose/10">
-        <span>📢</span> Broadcast
+    <div class="flex items-center gap-3" in:fade={{ delay: 200, duration: 400 }}>
+      <button class="btn-secondary gap-2 px-4 border-danger/20 text-danger hover:bg-danger/5">
+        <Bell size={16} />
+        <span>System Alerts</span>
       </button>
-      <button class="btn-primary px-5 py-2.5 text-sm bg-gradient-to-r from-rose to-rose-700">
-        <span>📋</span> Requests (8)
+      <button class="btn-primary gap-2 px-5 bg-surface-900 hover:bg-black">
+        <Send size={18} />
+        <span>Broadcast</span>
       </button>
     </div>
   </div>
 
-  <!-- Admin Content -->
+  <!-- Main Admin View -->
   <div in:fade={{ delay: 400, duration: 600 }}>
     {@render children()}
   </div>
