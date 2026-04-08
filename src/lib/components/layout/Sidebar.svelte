@@ -33,16 +33,16 @@
   ];
 </script>
 
-<aside class="hidden xl:flex flex-col w-[280px] h-screen fixed left-0 top-0 bg-background border-r border-border z-50">
+<aside class="hidden xl:flex flex-col w-[280px] h-screen fixed left-0 top-0 bg-surface border-r border-white/5 z-50">
   <!-- Sidebar Header -->
-  <div class="h-[72px] flex items-center px-6 border-b border-border">
-    <a href="/" class="flex items-center gap-2.5 group">
-      <div class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/10 group-hover:scale-105 transition-transform duration-300">
-        <Sparkles size={20} class="text-white" />
+  <div class="h-[68px] flex items-center px-6 border-b border-white/5">
+    <a href="/" class="flex items-center gap-2.5 group decoration-none">
+      <div class="w-9 h-9 bg-gradient-to-br from-emerald to-emerald-deep rounded-lg flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
       </div>
       <div class="flex flex-col">
-        <span class="text-foreground font-heading font-black text-lg tracking-tighter leading-none">Financial<span class="text-primary">Auditor</span></span>
-        <span class="text-[9px] font-bold text-primary uppercase tracking-[0.2em] leading-tight mt-0.5">Enterprise Hub</span>
+        <span class="text-white font-heading font-extrabold text-base tracking-tight leading-none">Financial<span class="text-emerald">Auditor</span></span>
+        <span class="text-[9px] font-mono font-bold text-slate-dim uppercase tracking-widest leading-tight mt-0.5">CONSOLE · NG</span>
       </div>
     </a>
   </div>
@@ -52,8 +52,8 @@
     <!-- Platform Section -->
     <div class="space-y-1.5">
       <div class="px-3 mb-3 flex items-center justify-between">
-        <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Platform Console</span>
-        <LayoutGrid size={12} class="text-muted-foreground/50" />
+        <span class="text-[10px] font-bold text-slate-dim uppercase tracking-[0.2em]">Platform Console</span>
+        <LayoutGrid size={12} class="text-slate-dim/50" />
       </div>
       {#each menuItems as item}
         <a 
@@ -68,7 +68,7 @@
             <span class="font-semibold">{item.name.split(' ').slice(1).join(' ')}</span>
           </span>
           {#if page.url.pathname === item.href}
-            <div class="ml-auto w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
+            <div class="ml-auto w-1.5 h-1.5 rounded-full bg-emerald shadow-[0_0_8px_rgba(0,200,150,0.4)]"></div>
           {/if}
         </a>
       {/each}
@@ -77,8 +77,8 @@
     <!-- Management Section -->
     <div class="space-y-1.5">
       <div class="px-3 mb-3 flex items-center justify-between">
-        <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Administration</span>
-        <ShieldCheck size={12} class="text-muted-foreground/50" />
+        <span class="text-[10px] font-bold text-slate-dim uppercase tracking-[0.2em]">Administration</span>
+        <ShieldCheck size={12} class="text-slate-dim/50" />
       </div>
       {#each adminItems as item}
         <a 
@@ -98,16 +98,16 @@
   </div>
 
   <!-- Sidebar Footer -->
-  <div class="p-4 mt-auto border-t border-border bg-muted/20">
-    <div class="bg-background rounded-2xl p-3 flex items-center gap-3 border border-border shadow-sm hover:border-primary/20 transition-colors group cursor-pointer">
-      <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-sm border border-primary/20 group-hover:bg-primary group-hover:text-white transition-all duration-300">
+  <div class="p-4 mt-auto border-t border-white/5 bg-navy-mid/30">
+    <div class="bg-surface rounded-2xl p-3 flex items-center gap-3 border border-white/5 shadow-sm hover:border-emerald/20 transition-colors group cursor-pointer">
+      <div class="w-10 h-10 rounded-xl bg-emerald/10 text-emerald flex items-center justify-center font-black text-sm border border-emerald/20 group-hover:bg-emerald group-hover:text-white transition-all duration-300">
         AO
       </div>
       <div class="flex-1 min-w-0">
-        <div class="text-xs font-black text-foreground truncate">Adaeze Okonkwo</div>
-        <div class="text-[10px] text-muted-foreground font-medium truncate">Pro Enterprise Plan</div>
+        <div class="text-xs font-black text-white truncate">Adaeze Okonkwo</div>
+        <div class="text-[10px] text-slate-dim font-medium truncate italic">Pro Enterprise Plan</div>
       </div>
-      <button class="text-muted-foreground hover:text-destructive transition-colors p-2 rounded-lg hover:bg-destructive/5" title="Sign out of console">
+      <button class="text-slate-dim hover:text-danger transition-colors p-2 rounded-lg hover:bg-danger/5" title="Sign out of console">
         <LogOut size={16} />
       </button>
     </div>

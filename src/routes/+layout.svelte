@@ -1,4 +1,5 @@
 <script lang="ts">
+  import '../app.css';
   import { onMount } from 'svelte';
   import { fade, fly } from 'svelte/transition';
   import MobileBottomNav from '$lib/components/layout/MobileBottomNav.svelte';
@@ -24,20 +25,16 @@
   });
 </script>
 
-<div class="min-h-screen bg-background text-foreground font-sans selection:bg-primary/10 overflow-x-hidden w-full relative">
-  <!-- Subtle Enterprise Background Elements -->
+<div class="min-h-screen bg-background text-foreground font-sans selection:bg-emerald/20 overflow-x-hidden w-full relative">
+  <!-- Restore Original Hero Gradient -->
   <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-    <div class="absolute top-[-5%] right-[-5%] w-[600px] h-[600px] rounded-full bg-primary/[0.03] blur-[120px] animate-pulse-soft"></div>
-    <div class="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full bg-brand-500/[0.02] blur-[100px]"></div>
-    <div class="absolute inset-0 grid-pattern opacity-[0.03]"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(0,200,150,0.18)_0%,transparent_70%),radial-gradient(ellipse_50%_40%_at_90%_60%,rgba(245,166,35,0.08)_0%,transparent_60%)]"></div>
+    <div class="absolute inset-0 grid-pattern opacity-40"></div>
   </div>
 
   <div class="relative z-10 flex flex-col min-h-screen w-full max-w-[100vw]">
     {@render children()}
   </div>
-
-  <!-- Global Mobile UX Enhancement -->
-  <MobileBottomNav />
 </div>
 
 <style>
