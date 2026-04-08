@@ -4,7 +4,7 @@
     Users, ShieldCheck, FileText, TrendingUp, Search, Filter, 
     MoreHorizontal, UserCheck, ShieldAlert, Activity, Cpu, 
     Database, Globe, Lock, ArrowUpRight, CheckCircle2,
-    Briefcase
+    Briefcase, Sparkles
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
 

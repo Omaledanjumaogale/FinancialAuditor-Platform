@@ -3,7 +3,7 @@
   import { 
     BarChart3, TrendingUp, TrendingDown, ArrowUpRight, 
     ArrowDownRight, Calendar, Download, Filter, 
-    MoreHorizontal, Activity, PieChart, Target
+    MoreHorizontal, Activity, PieChart, Target, ArrowRight
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
 

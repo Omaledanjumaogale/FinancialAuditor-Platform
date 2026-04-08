@@ -3,7 +3,7 @@
   import { 
     User, Mail, ShieldCheck, Bell, CreditCard, Lock, 
     ChevronRight, Save, Camera, Smartphone, Globe,
-    Sparkles, BadgeCheck, Zap, Activity
+    Sparkles, BadgeCheck, Zap, Activity, Settings
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
 

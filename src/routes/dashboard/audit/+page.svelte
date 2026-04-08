@@ -86,7 +86,17 @@
           <div class="flex flex-col items-center gap-4 w-full max-w-xs">
             <label class="btn-primary py-4 px-8 text-lg font-black w-full cursor-pointer shadow-xl shadow-primary/20">
               Browse Local Records
-              <input type="file" class="hidden" multiple onchange={(e) => e.target.files && (files = [...files, ...Array.from(e.target.files)])} />
+              <input 
+                type="file" 
+                class="hidden" 
+                multiple 
+                onchange={(e) => {
+                  const target = e.currentTarget as HTMLInputElement;
+                  if (target.files) {
+                    files = [...files, ...Array.from(target.files)];
+                  }
+                }} 
+              />
             </label>
             <div class="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
               <ShieldCheck size={12} class="text-primary" />
