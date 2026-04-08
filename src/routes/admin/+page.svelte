@@ -1,199 +1,410 @@
 <script lang="ts">
   import { fade, fly } from 'svelte/transition';
   import { 
-    Users, ShieldCheck, FileText, TrendingUp, Search, Filter, 
-    MoreHorizontal, UserCheck, ShieldAlert, Activity, Cpu, 
-    Database, Globe, Lock, ArrowUpRight, CheckCircle2,
-    Briefcase, Sparkles
+    Users, ShieldCheck, Briefcase, FileText, 
+    Settings, Search, Filter, MoreVertical,
+    CheckCircle2, XCircle, AlertTriangle, 
+    ArrowUpRight, TrendingUp, DollarSign,
+    ShieldAlert, Activity, Database
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
+  import { authState } from '$lib/stores/auth.svelte';
+  import { useQuery, useConvexClient } from "convex-svelte";
+  import { api } from "$convex/_generated/api";
+  import { goto } from '$app/navigation';
 
-  const adminStats = [
-    { label: 'Enterprise Revenue', value: '₦42.8M', change: '+24.5%', emoji: '💰', icon: TrendingUp },
-    { label: 'Active Personnel', value: '52,108', change: '+8.2%', emoji: '👥', icon: Users },
-    { label: 'Verified Auditors', value: '542', change: '+12.4%', emoji: '👨‍💼', icon: UserCheck },
-    { label: 'AI Audit Cycles', value: '1,284', change: '+15.2%', emoji: '🤖', icon: Activity }
-  ];
+  // Auth Protection
+  const userQuery = $derived(
+    authState.user ? useQuery(api.users.getByUid, { uid: authState.user.uid }) : null
+  );
+  const currentUser = $derived(userQuery?.data);
 
-  const verificationRequests = [
-    { id: 'REQ-482', name: 'Dr. Chima Eze', firm: 'Eze & Partners', date: '2h ago', status: 'pending', emoji: '👨‍💼', expertise: 'Tax Law' },
-    { id: 'REQ-483', name: 'Sarah Alabi', firm: 'Alabi Audits', date: '4h ago', status: 'pending', emoji: '👩‍💼', expertise: 'Corporate' },
-    { id: 'REQ-484', name: 'Musa Bello', firm: 'Bello & Co', date: '6h ago', status: 'pending', emoji: '👨‍💼', expertise: 'Forensics' }
-  ];
+  $effect(() => {
+    if (currentUser && currentUser.role !== 'admin') {
+      goto('/dashboard');
+    }
+  });
+
+  const client = useConvexClient();
+
+  // Admin Data
+  const allUsersQuery = useQuery(api.users.getAll);
+  const allAuditorsQuery = useQuery(api.auditors.getAll);
+  const allRequestsQuery = useQuery(api.serviceRequests.getAll);
+  
+  const users = $derived(allUsersQuery.data || []);
+  const auditors = $derived(allAuditorsQuery.data || []);
+  const requests = $derived(allRequestsQuery.data || []);
+
+  const stats = $derived([
+    { label: 'Total Clients', value: users.filter(u => u.role === 'client').length, icon: Users, color: 'text-emerald', bg: 'bg-emerald/10' },
+    { label: 'Active Auditors', value: auditors.length, icon: Briefcase, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
+    { label: 'Pending Requests', value: requests.filter(r => r.status === 'pending').length, icon: FileText, color: 'text-gold', bg: 'bg-gold/10' },
+    { label: 'Platform Revenue', value: '₦4.2M', icon: DollarSign, color: 'text-white', bg: 'bg-white/10' }
+  ]);
+
+  let activeTab = $state<'users' | 'auditors' | 'requests' | 'system'>('users');
+
+  async function handleRoleChange(userId: any, newRole: 'client' | 'auditor' | 'admin') {
+    await client.mutation(api.users.updateRole, { id: userId, role: newRole });
+  }
+
+  async function handleVerifyAuditor(auditorId: any, verified: boolean) {
+    await client.mutation(api.auditors.updateVerification, { id: auditorId, isVerified: verified });
+  }
+
+  async function handleRequestAction(requestId: any, status: any) {
+    await client.mutation(api.serviceRequests.updateStatus, { id: requestId, status });
+  }
 </script>
 
-<div class="space-y-10 pb-20" in:fade>
-  <!-- Admin Stats Grid -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    {#each adminStats as stat}
-      <div class="card-premium p-6 group relative overflow-hidden">
-        <div class="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-500">
-          <stat.icon size={80} />
-        </div>
-        <div class="relative z-10 flex flex-col h-full">
-          <div class="flex items-center justify-between mb-5">
-            <div class="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-300">
-              {stat.emoji}
-            </div>
-            <div class="bg-primary/5 text-primary px-2.5 py-1 rounded-full text-[10px] font-black border border-primary/10 tracking-widest">
-              {stat.change}
-            </div>
-          </div>
-          <div class="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-1">{stat.label}</div>
-          <div class="text-3xl font-heading font-black text-foreground tracking-tight">{stat.value}</div>
-        </div>
-      </div>
-    {/each}
+<div class="min-h-screen bg-navy text-white p-8 md:p-12 relative overflow-hidden" in:fade>
+  <!-- Admin Background -->
+  <div class="fixed inset-0 pointer-events-none z-0">
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(0,100,200,0.1)_0%,transparent_70%)]"></div>
+    <div class="absolute inset-0 grid-pattern opacity-10"></div>
   </div>
 
-  <div class="grid lg:grid-cols-3 gap-8">
-    <!-- Platform Activity & Growth -->
-    <div class="lg:col-span-2 space-y-8">
-      <div class="card-premium p-8">
-        <div class="flex items-center justify-between mb-10">
-          <div class="space-y-1">
-            <h3 class="text-2xl font-heading font-black text-foreground flex items-center gap-3">
-              <Activity size={24} class="text-primary" />
-              Global Ingestion Pulse
-            </h3>
-            <p class="text-xs text-muted-foreground font-medium">Real-time data processing across all enterprise nodes.</p>
-          </div>
-          <div class="flex gap-6">
-            <div class="flex items-center gap-2.5 text-[10px] font-black text-primary uppercase tracking-widest">
-              <span class="w-2.5 h-2.5 rounded-full bg-primary shadow-glow"></span> Active Node
-            </div>
-            <div class="flex items-center gap-2.5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-              <span class="w-2.5 h-2.5 rounded-full bg-border"></span> Standby
-            </div>
-          </div>
+  <div class="relative z-10 max-w-[1400px] mx-auto space-y-10">
+    <!-- Admin Header -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-8">
+      <div class="space-y-2">
+        <div class="flex items-center gap-3 text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-1">
+          <ShieldAlert size={14} />
+          Enterprise Admin Control Plane
         </div>
-
-        <div class="h-64 flex items-end gap-2 px-2 relative group">
-          {#each Array(24) as _, i}
-            <div 
-              class="flex-1 bg-muted/50 hover:bg-primary/10 transition-all duration-300 rounded-t-sm cursor-pointer relative h-full flex items-end group/bar"
-            >
-              <div class="w-full bg-primary/30 group-hover/bar:bg-primary rounded-t-sm transition-all duration-500" style={`height: ${Math.random() * 80 + 20}%`}></div>
-              <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-foreground text-background text-[9px] font-black px-2 py-1 rounded-lg opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20">
-                {Math.floor(Math.random() * 100)}% Load
-              </div>
-            </div>
-          {/each}
-        </div>
-        <div class="flex justify-between mt-6 text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-[0.4em] pt-6 border-t border-border px-2">
-          <span>00:00</span>
-          <span>06:00</span>
-          <span>12:00</span>
-          <span>18:00</span>
-          <span>23:59</span>
-        </div>
+        <h1 class="text-3xl md:text-5xl font-heading font-black text-white tracking-tighter leading-tight">System <span class="text-indigo-400">Command</span></h1>
+        <p class="text-slate text-lg font-medium max-w-2xl">High-level oversight of platform users, auditor certifications, and service fulfillment.</p>
       </div>
-
-      <!-- System Security Matrix -->
-      <div class="card-premium p-8">
-        <div class="flex items-center justify-between mb-10">
-          <h3 class="text-2xl font-heading font-black text-foreground flex items-center gap-3">
-            <Lock size={24} class="text-destructive" />
-            Security Intelligence Matrix
-          </h3>
-          <button class="text-xs font-black text-primary uppercase tracking-widest hover:text-primary/70 transition-colors">Audit Full Log</button>
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-[10px] font-black text-slate-dim uppercase tracking-widest">
+          <Activity size={12} class="text-emerald" />
+          System Health: Stable
         </div>
-        <div class="space-y-6">
-          <div class="flex items-center justify-between p-6 bg-muted/30 rounded-[28px] border border-transparent hover:border-destructive/20 transition-all group">
-            <div class="flex items-center gap-5">
-              <div class="w-12 h-12 rounded-2xl bg-destructive/5 text-destructive flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm"><ShieldAlert size={24} /></div>
-              <div class="space-y-0.5">
-                <div class="text-sm font-black text-foreground">Pattern Discrepancy Detected</div>
-                <div class="text-[10px] text-muted-foreground font-mono font-bold tracking-widest">IP: 192.168.1.254 · LOCATION: LAGOS_NODE_04</div>
-              </div>
-            </div>
-            <button class="btn-primary py-2.5 px-6 text-[10px] bg-destructive text-white hover:bg-destructive/90 border-none shadow-lg shadow-destructive/20 font-black uppercase tracking-widest">BLOCK NODE</button>
-          </div>
-          <div class="flex items-center justify-between p-6 bg-muted/30 rounded-[28px] border border-transparent hover:border-primary/20 transition-all group">
-            <div class="flex items-center gap-5">
-              <div class="w-12 h-12 rounded-2xl bg-primary/5 text-primary flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm"><UserCheck size={24} /></div>
-              <div class="space-y-0.5">
-                <div class="text-sm font-black text-foreground">Kernel Environment Update</div>
-                <div class="text-[10px] text-muted-foreground font-mono font-bold tracking-widest">v4.2.1-enterprise · REVISION: SHA-256-EF44</div>
-              </div>
-            </div>
-            <span class="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-[0.2em] bg-primary/5 px-4 py-2 rounded-full border border-primary/10">
-              <CheckCircle2 size={12} />
-              STABLE VERIFIED
-            </span>
-          </div>
-        </div>
+        <button class="p-3 rounded-xl bg-white/5 border border-white/5 text-slate-dim hover:text-white transition-all">
+          <Settings size={20} />
+        </button>
       </div>
     </div>
 
-    <!-- Admin Intelligence Sidebar -->
-    <div class="space-y-8">
-      <!-- Auditor Verification Queue -->
-      <div class="card-premium p-8">
-        <div class="flex items-center justify-between mb-8">
-          <h3 class="text-xl font-heading font-black text-foreground flex items-center gap-3">
-            <Briefcase size={20} class="text-primary" />
-            Expert Verification Queue
-          </h3>
-          <span class="text-[10px] font-black bg-muted text-foreground px-2.5 py-1 rounded-lg border border-border">3 Pending</span>
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {#each stats as stat}
+        <div class="card-premium p-8 bg-surface/50 border-white/5 space-y-4 group hover:border-indigo-400/30 transition-all duration-500">
+          <div class="flex items-center justify-between">
+            <div class={cn("w-12 h-12 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform", stat.bg, stat.color)}>
+              <stat.icon size={24} />
+            </div>
+            <TrendingUp size={16} class="text-emerald opacity-50" />
+          </div>
+          <div>
+            <div class="text-3xl font-heading font-black text-white tracking-tight">{stat.value}</div>
+            <p class="text-xs text-slate-dim font-black uppercase tracking-widest mt-1">{stat.label}</p>
+          </div>
         </div>
-        <div class="space-y-5">
-          {#each verificationRequests as req}
-            <div class="space-y-5 p-6 bg-muted/30 rounded-[32px] border border-transparent hover:border-border transition-all group">
-              <div class="flex gap-4">
-                <div class="w-14 h-14 rounded-2xl bg-background flex items-center justify-center text-3xl shrink-0 shadow-sm group-hover:scale-110 transition-transform duration-300 border border-border">
-                  {req.emoji}
+      {/each}
+    </div>
+
+    <!-- Command Center -->
+    <div class="card-premium bg-surface/40 backdrop-blur-xl border-white/10 overflow-hidden">
+      <!-- Tabs -->
+      <div class="flex border-b border-white/5 overflow-x-auto no-scrollbar bg-white/[0.02]">
+        <button 
+          onclick={() => activeTab = 'users'}
+          class={cn(
+            "px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative",
+            activeTab === 'users' ? "text-indigo-400" : "text-slate-dim hover:text-white"
+          )}
+        >
+          User Management
+          {#if activeTab === 'users'}
+            <div class="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-400" in:fly={{ y: 2 }}></div>
+          {/if}
+        </button>
+        <button 
+          onclick={() => activeTab = 'auditors'}
+          class={cn(
+            "px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative",
+            activeTab === 'auditors' ? "text-indigo-400" : "text-slate-dim hover:text-white"
+          )}
+        >
+          Auditor Directory
+          {#if activeTab === 'auditors'}
+            <div class="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-400" in:fly={{ y: 2 }}></div>
+          {/if}
+        </button>
+        <button 
+          onclick={() => activeTab = 'requests'}
+          class={cn(
+            "px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative",
+            activeTab === 'requests' ? "text-indigo-400" : "text-slate-dim hover:text-white"
+          )}
+        >
+          Service Requests
+          {#if activeTab === 'requests'}
+            <div class="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-400" in:fly={{ y: 2 }}></div>
+          {/if}
+        </button>
+        <button 
+          onclick={() => activeTab = 'system'}
+          class={cn(
+            "px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative",
+            activeTab === 'system' ? "text-indigo-400" : "text-slate-dim hover:text-white"
+          )}
+        >
+          System Engine
+          {#if activeTab === 'system'}
+            <div class="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-400" in:fly={{ y: 2 }}></div>
+          {/if}
+        </button>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="p-8">
+        {#if activeTab === 'users'}
+          <div class="space-y-6">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xl font-heading font-black text-white">Active Platform Users</h3>
+              <div class="flex items-center gap-4">
+                <div class="relative group">
+                  <Search class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-dim group-focus-within:text-indigo-400 transition-colors" size={14} />
+                  <input type="text" placeholder="Search by name or email..." class="bg-white/5 border border-white/10 rounded-lg py-2 pl-9 pr-4 text-xs text-white outline-none focus:border-indigo-400/30 transition-all w-64" />
                 </div>
-                <div class="flex-1 min-w-0">
-                  <div class="text-sm font-black text-foreground truncate group-hover:text-primary transition-colors">{req.name}</div>
-                  <div class="text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-0.5">{req.firm}</div>
-                  <div class="text-[9px] font-bold text-primary uppercase tracking-widest mt-1.5 flex items-center gap-1.5">
-                    <Sparkles size={10} /> {req.expertise}
+              </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-2xl border border-white/5">
+              <table class="w-full text-left border-collapse">
+                <thead class="bg-white/[0.03]">
+                  <tr>
+                    <th class="px-6 py-4 text-[10px] font-black text-slate-dim uppercase tracking-widest">User Entity</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-slate-dim uppercase tracking-widest">Platform Role</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-slate-dim uppercase tracking-widest">Account Status</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-slate-dim uppercase tracking-widest">Verification</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-slate-dim uppercase tracking-widest text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                  {#each users as user}
+                    <tr class="hover:bg-white/[0.01] transition-colors group">
+                      <td class="px-6 py-5">
+                        <div class="flex items-center gap-3">
+                          <div class="w-10 h-10 rounded-xl bg-indigo-400/10 flex items-center justify-center text-lg">
+                            {user.name ? user.name.charAt(0) : 'U'}
+                          </div>
+                          <div>
+                            <div class="text-sm font-bold text-white">{user.name || 'Anonymous User'}</div>
+                            <div class="text-xs text-slate-dim font-medium">{user.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="px-6 py-5">
+                        <select 
+                          class="bg-white/5 border border-white/10 rounded-lg py-1.5 px-3 text-[10px] font-black uppercase tracking-widest text-white outline-none focus:border-indigo-400/30"
+                          value={user.role}
+                          onchange={(e) => handleRoleChange(user._id, (e.target as HTMLSelectElement).value as any)}
+                        >
+                          <option value="client">Client</option>
+                          <option value="auditor">Auditor</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      </td>
+                      <td class="px-6 py-5">
+                        <div class="flex items-center gap-2">
+                          <div class="w-1.5 h-1.5 rounded-full bg-emerald shadow-[0_0_8px_rgba(0,200,150,0.5)]"></div>
+                          <span class="text-[10px] font-black text-white uppercase tracking-widest">Active</span>
+                        </div>
+                      </td>
+                      <td class="px-6 py-5">
+                        {#if user.isVerified}
+                          <div class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald/10 text-emerald border border-emerald/20 text-[9px] font-black uppercase tracking-widest">
+                            <CheckCircle2 size={10} /> Verified
+                          </div>
+                        {:else}
+                          <div class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-gold/10 text-gold border border-gold/20 text-[9px] font-black uppercase tracking-widest">
+                            <AlertTriangle size={10} /> Unverified
+                          </div>
+                        {/if}
+                      </td>
+                      <td class="px-6 py-5 text-right">
+                        <button class="p-2 hover:bg-white/5 rounded-lg text-slate-dim hover:text-white transition-all">
+                          <MoreVertical size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        {:else if activeTab === 'auditors'}
+          <!-- Auditor Directory Implementation -->
+          <div class="space-y-6">
+            <h3 class="text-xl font-heading font-black text-white">Certified Professionals</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {#each auditors as auditor}
+                <div class="card-premium p-6 bg-white/[0.02] border-white/5 space-y-4">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                      <div class="w-12 h-12 rounded-2xl bg-indigo-400/10 flex items-center justify-center text-2xl">
+                        👨‍💼
+                      </div>
+                      <div>
+                        <div class="text-sm font-bold text-white">Verified Auditor</div>
+                        <div class="text-[10px] text-slate-dim font-black uppercase tracking-widest">{auditor.specialization}</div>
+                      </div>
+                    </div>
+                    <button 
+                      onclick={() => handleVerifyAuditor(auditor._id, !auditor.isVerified)}
+                      class={cn(
+                        "p-2 rounded-xl transition-all",
+                        auditor.isVerified ? "bg-emerald/10 text-emerald" : "bg-danger/10 text-danger"
+                      )}
+                    >
+                      {#if auditor.isVerified}<ShieldCheck size={18} />{:else}<ShieldAlert size={18} />{/if}
+                    </button>
+                  </div>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div class="p-3 rounded-xl bg-white/5 border border-white/5">
+                      <div class="text-[9px] font-black text-slate-dim uppercase tracking-widest mb-1">Experience</div>
+                      <div class="text-sm font-bold text-white">{auditor.experience} Years</div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-white/5 border border-white/5">
+                      <div class="text-[9px] font-black text-slate-dim uppercase tracking-widest mb-1">Rating</div>
+                      <div class="text-sm font-bold text-white">⭐ {auditor.rating}</div>
+                    </div>
+                  </div>
+                  <div class="pt-2">
+                    <button class="btn-primary w-full py-2.5 text-xs">View Credentials</button>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          </div>
+        {:else if activeTab === 'requests'}
+          <!-- Service Requests Implementation -->
+          <div class="space-y-6">
+            <h3 class="text-xl font-heading font-black text-white">Pending Platform Requests</h3>
+            <div class="overflow-x-auto rounded-2xl border border-white/5">
+              <table class="w-full text-left border-collapse">
+                <thead class="bg-white/[0.03]">
+                  <tr>
+                    <th class="px-6 py-4 text-[10px] font-black text-slate-dim uppercase tracking-widest">Type</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-slate-dim uppercase tracking-widest">Client</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-slate-dim uppercase tracking-widest">Priority</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-slate-dim uppercase tracking-widest">Budget</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-slate-dim uppercase tracking-widest">Status</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-slate-dim uppercase tracking-widest text-right">Control</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                  {#each requests as request}
+                    <tr class="hover:bg-white/[0.01] transition-colors group">
+                      <td class="px-6 py-5">
+                        <div class="text-sm font-bold text-white uppercase tracking-tight">{request.type}</div>
+                      </td>
+                      <td class="px-6 py-5">
+                        <div class="text-xs text-slate-dim font-medium">Platform Client</div>
+                      </td>
+                      <td class="px-6 py-5">
+                        <div class={cn(
+                          "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest",
+                          request.priority === 'urgent' ? "bg-danger/10 text-danger" : 
+                          request.priority === 'high' ? "bg-orange-500/10 text-orange-500" : "bg-indigo-400/10 text-indigo-400"
+                        )}>
+                          {request.priority}
+                        </div>
+                      </td>
+                      <td class="px-6 py-5 text-sm font-heading font-black text-white">₦{request.budget.toLocaleString()}</td>
+                      <td class="px-6 py-5">
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/5 text-[9px] font-black uppercase tracking-widest">
+                          {request.status}
+                        </div>
+                      </td>
+                      <td class="px-6 py-5 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                          <button 
+                            onclick={() => handleRequestAction(request._id, 'assigned')}
+                            class="p-2 rounded-lg bg-emerald/10 text-emerald border border-emerald/20 hover:scale-110 transition-transform"
+                          >
+                            <CheckCircle2 size={16} />
+                          </button>
+                          <button 
+                            onclick={() => handleRequestAction(request._id, 'cancelled')}
+                            class="p-2 rounded-lg bg-danger/10 text-danger border border-danger/20 hover:scale-110 transition-transform"
+                          >
+                            <XCircle size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        {:else if activeTab === 'system'}
+          <!-- System Engine Implementation -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-6">
+              <h3 class="text-xl font-heading font-black text-white flex items-center gap-3">
+                <Database class="text-indigo-400" />
+                Infrastructure Metrics
+              </h3>
+              <div class="space-y-4">
+                <div class="p-6 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
+                  <div class="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-dim">
+                    <span>Database Load</span>
+                    <span class="text-emerald">Optimal</span>
+                  </div>
+                  <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div class="h-full bg-emerald w-[12%]"></div>
+                  </div>
+                </div>
+                <div class="p-6 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
+                  <div class="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-dim">
+                    <span>API Latency</span>
+                    <span class="text-emerald">12ms</span>
+                  </div>
+                  <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div class="h-full bg-indigo-400 w-[5%]"></div>
                   </div>
                 </div>
               </div>
-              <div class="flex gap-2 pt-2">
-                <button class="flex-1 py-3 bg-primary text-white text-[10px] font-black rounded-xl hover:brightness-110 transition-all shadow-lg shadow-primary/20 uppercase tracking-widest">Approve</button>
-                <button class="flex-1 py-3 bg-background text-muted-foreground text-[10px] font-black rounded-xl border border-border hover:text-foreground transition-all uppercase tracking-widest">View Credentials</button>
+            </div>
+            <div class="space-y-6">
+              <h3 class="text-xl font-heading font-black text-white flex items-center gap-3">
+                <ShieldCheck class="text-emerald" />
+                Security Hardening
+              </h3>
+              <div class="grid grid-cols-2 gap-4">
+                <button class="p-6 rounded-2xl bg-white/[0.02] border border-white/5 text-left hover:bg-white/5 transition-all group">
+                  <div class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2">Auth Logs</div>
+                  <div class="text-sm font-bold text-white group-hover:translate-x-1 transition-transform flex items-center gap-2">
+                    Review Attempts <ArrowUpRight size={14} />
+                  </div>
+                </button>
+                <button class="p-6 rounded-2xl bg-white/[0.02] border border-white/5 text-left hover:bg-white/5 transition-all group">
+                  <div class="text-[10px] font-black text-emerald uppercase tracking-widest mb-2">Firewall</div>
+                  <div class="text-sm font-bold text-white group-hover:translate-x-1 transition-transform flex items-center gap-2">
+                    Active Rules <ArrowUpRight size={14} />
+                  </div>
+                </button>
               </div>
             </div>
-          {/each}
-        </div>
-      </div>
-
-      <!-- Infrastructure Config -->
-      <div class="card-premium p-8 bg-foreground text-background relative overflow-hidden group">
-        <div class="absolute -right-6 -bottom-6 text-8xl opacity-[0.05] group-hover:scale-110 transition-transform duration-700">⚙️</div>
-        <div class="relative z-10 space-y-6">
-          <div class="flex items-center gap-3 text-primary">
-            <Cpu size={20} />
-            <h4 class="text-sm font-black uppercase tracking-widest">Platform Infrastructure</h4>
           </div>
-          <div class="space-y-4">
-            <div class="flex items-center justify-between py-2 border-b border-white/10">
-              <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                <Database size={12} /> Data Engine
-              </span>
-              <span class="text-[10px] font-mono font-black text-white">v8.4.2-PRO</span>
-            </div>
-            <div class="flex items-center justify-between py-2 border-b border-white/10">
-              <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                <Activity size={12} /> Latency
-              </span>
-              <span class="text-[10px] font-mono font-black text-primary">12ms (OPTIMAL)</span>
-            </div>
-            <div class="flex items-center justify-between py-2">
-              <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                <Globe size={12} /> Runtime
-              </span>
-              <span class="text-[10px] font-mono font-black text-white">EDGE_WORKER_NG</span>
-            </div>
-          </div>
-          <button class="w-full py-4 bg-white/5 hover:bg-white/10 text-white text-[10px] font-black rounded-2xl border border-white/10 transition-all uppercase tracking-[0.2em]">
-            Manage Infrastructure
-          </button>
-        </div>
+        {/if}
       </div>
     </div>
   </div>
 </div>
+
+<style>
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>

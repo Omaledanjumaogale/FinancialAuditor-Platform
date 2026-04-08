@@ -3,33 +3,87 @@
   import { 
     User, Mail, ShieldCheck, Bell, CreditCard, Lock, 
     ChevronRight, Save, Camera, Smartphone, Globe,
-    Sparkles, BadgeCheck, Zap, Activity, Settings
+    Sparkles, BadgeCheck, Zap, Activity, Settings,
+    ArrowRight, Loader2, CheckCircle2, LogOut, Building, Phone
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
+  import { authState } from '$lib/stores/auth.svelte';
+  import { auth } from '$lib/firebase';
+  import { updateProfile, signOut } from 'firebase/auth';
+  import { useQuery, useConvexClient } from "convex-svelte";
+  import { api } from "$convex/_generated/api";
+  import { goto } from '$app/navigation';
 
-  let activeTab = $state<'profile' | 'security' | 'billing' | 'notifications'>('profile');
+  const userQuery = $derived(
+    authState.user ? useQuery(api.users.getByUid, { uid: authState.user.uid }) : null
+  );
+  const currentUser = $derived(userQuery?.data);
+
+  const client = useConvexClient();
+
+  let name = $state('');
+  let email = $state('');
   let isSaving = $state(false);
+  let success = $state(false);
 
-  function handleSave() {
+  $effect(() => {
+    if (currentUser) {
+      name = currentUser.name || '';
+      email = currentUser.email || '';
+    }
+  });
+
+  async function handleSave() {
+    if (!currentUser || !authState.user) return;
     isSaving = true;
-    setTimeout(() => isSaving = false, 1500);
+    success = false;
+
+    try {
+      // Update Firebase Profile
+      await updateProfile(authState.user, { displayName: name });
+      
+      // Update Convex
+      await client.mutation(api.users.store, {
+        uid: authState.user.uid,
+        email: email,
+        name: name,
+        role: currentUser.role,
+        plan: currentUser.plan,
+        isVerified: currentUser.isVerified
+      });
+
+      success = true;
+      setTimeout(() => success = false, 3000);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      isSaving = false;
+    }
+  }
+
+  async function handleLogout() {
+    await signOut(auth);
+    goto('/auth');
   }
 </script>
 
-<div class="space-y-10 pb-20" in:fade>
+<div class="space-y-10 pb-20 relative z-10 w-full" in:fade>
   <!-- Page Header -->
-  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
-    <div class="space-y-1">
-      <div class="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-[0.2em]">
-        <Settings size={12} />
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-8">
+    <div class="space-y-2">
+      <div class="flex items-center gap-3 text-[10px] font-black text-emerald uppercase tracking-[0.3em] mb-1">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald"></span>
+        </span>
         Platform Configuration
       </div>
-      <h1 class="text-3xl md:text-4xl font-heading font-black text-foreground tracking-tight">Account Intelligence</h1>
-      <p class="text-muted-foreground font-medium">Manage your personal identity and enterprise platform credentials.</p>
+      <h1 class="text-3xl md:text-5xl font-heading font-black text-white tracking-tighter leading-tight">Account <span class="text-emerald">Intelligence</span></h1>
+      <p class="text-slate text-lg font-medium max-w-2xl">Manage your personal identity and enterprise platform credentials.</p>
     </div>
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-4">
       <button 
-        class="btn-primary py-3 px-8 flex items-center gap-2 shadow-xl shadow-primary/10 disabled:opacity-50"
+        class="btn-primary py-3.5 px-10 text-xs flex items-center gap-3 shadow-glow group disabled:opacity-50 active:scale-95 transition-all"
         onclick={handleSave}
         disabled={isSaving}
       >
@@ -37,7 +91,7 @@
           <Activity size={18} class="animate-spin" />
           Synchronizing...
         {:else}
-          <Save size={18} />
+          <span class="text-lg group-hover:scale-125 transition-transform duration-300">💾</span>
           Save Changes
         {/if}
       </button>
@@ -46,207 +100,184 @@
 
   <div class="grid lg:grid-cols-4 gap-10">
     <!-- Sophisticated Sidebar Tabs -->
-    <div class="lg:col-span-1 space-y-1.5">
-      <div class="px-3 mb-4">
-        <span class="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Settings Menu</span>
+    <div class="lg:col-span-1 space-y-2">
+      <div class="px-4 mb-4">
+        <span class="text-[10px] font-black text-slate-dim uppercase tracking-[0.3em]">Settings Menu</span>
       </div>
+      
       <button 
         class={cn(
-          "w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-300 font-bold text-sm border group",
-          activeTab === 'profile' ? "bg-primary/5 text-primary border-primary/20 shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground border-transparent"
+          "w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-300 font-bold text-sm border group",
+          activeTab === 'profile' ? "bg-emerald/10 text-emerald border-emerald/20 shadow-sm" : "text-slate-dim hover:bg-white/5 hover:text-white border-transparent"
         )}
         onclick={() => activeTab = 'profile'}
       >
-        <div class="flex items-center gap-3.5">
-          <User size={18} />
+        <div class="flex items-center gap-4">
+          <span class="text-xl group-hover:scale-110 transition-transform">👤</span>
           <span>Profile Identity</span>
         </div>
-        <ChevronRight size={14} class={cn("transition-transform", activeTab === 'profile' ? "rotate-90" : "opacity-0 group-hover:opacity-100")} />
+        <ChevronRight size={14} class={cn("transition-transform duration-300", activeTab === 'profile' ? "rotate-90" : "opacity-0 group-hover:opacity-100")} />
       </button>
+
       <button 
         class={cn(
-          "w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-300 font-bold text-sm border group",
-          activeTab === 'security' ? "bg-primary/5 text-primary border-primary/20 shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground border-transparent"
+          "w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-300 font-bold text-sm border group",
+          activeTab === 'security' ? "bg-emerald/10 text-emerald border-emerald/20 shadow-sm" : "text-slate-dim hover:bg-white/5 hover:text-white border-transparent"
         )}
         onclick={() => activeTab = 'security'}
       >
-        <div class="flex items-center gap-3.5">
-          <ShieldCheck size={18} />
+        <div class="flex items-center gap-4">
+          <span class="text-xl group-hover:scale-110 transition-transform">🛡️</span>
           <span>Security & Privacy</span>
         </div>
-        <ChevronRight size={14} class={cn("transition-transform", activeTab === 'security' ? "rotate-90" : "opacity-0 group-hover:opacity-100")} />
+        <ChevronRight size={14} class={cn("transition-transform duration-300", activeTab === 'security' ? "rotate-90" : "opacity-0 group-hover:opacity-100")} />
       </button>
+
       <button 
         class={cn(
-          "w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-300 font-bold text-sm border group",
-          activeTab === 'billing' ? "bg-primary/5 text-primary border-primary/20 shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground border-transparent"
+          "w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-300 font-bold text-sm border group",
+          activeTab === 'billing' ? "bg-emerald/10 text-emerald border-emerald/20 shadow-sm" : "text-slate-dim hover:bg-white/5 hover:text-white border-transparent"
         )}
         onclick={() => activeTab = 'billing'}
       >
-        <div class="flex items-center gap-3.5">
-          <CreditCard size={18} />
+        <div class="flex items-center gap-4">
+          <span class="text-xl group-hover:scale-110 transition-transform">💳</span>
           <span>Billing Hub</span>
         </div>
-        <ChevronRight size={14} class={cn("transition-transform", activeTab === 'billing' ? "rotate-90" : "opacity-0 group-hover:opacity-100")} />
+        <ChevronRight size={14} class={cn("transition-transform duration-300", activeTab === 'billing' ? "rotate-90" : "opacity-0 group-hover:opacity-100")} />
       </button>
+
       <button 
         class={cn(
-          "w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-300 font-bold text-sm border group",
-          activeTab === 'notifications' ? "bg-primary/5 text-primary border-primary/20 shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground border-transparent"
+          "w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-300 font-bold text-sm border group",
+          activeTab === 'notifications' ? "bg-emerald/10 text-emerald border-emerald/20 shadow-sm" : "text-slate-dim hover:bg-white/5 hover:text-white border-transparent"
         )}
         onclick={() => activeTab = 'notifications'}
       >
-        <div class="flex items-center gap-3.5">
-          <Bell size={18} />
-          <span>Alert Preferences</span>
+        <div class="flex items-center gap-4">
+          <span class="text-xl group-hover:scale-110 transition-transform">🔔</span>
+          <span>Notifications</span>
         </div>
-        <ChevronRight size={14} class={cn("transition-transform", activeTab === 'notifications' ? "rotate-90" : "opacity-0 group-hover:opacity-100")} />
+        <ChevronRight size={14} class={cn("transition-transform duration-300", activeTab === 'notifications' ? "rotate-90" : "opacity-0 group-hover:opacity-100")} />
       </button>
     </div>
 
-    <!-- Main Content Console -->
-    <div class="lg:col-span-3">
-      <div class="card-premium p-10 bg-background/50 backdrop-blur-xl border-border/50 shadow-2xl shadow-black/[0.02]">
-        {#if activeTab === 'profile'}
-          <div class="space-y-10" in:fly={{ y: 10, duration: 400 }}>
-            <!-- Avatar Section -->
-            <div class="flex flex-col md:flex-row items-center gap-8 pb-10 border-b border-border">
-              <div class="relative group">
-                <div class="w-28 h-28 rounded-[36px] bg-muted flex items-center justify-center text-4xl font-black text-primary border-2 border-transparent group-hover:border-primary transition-all duration-500 shadow-xl shadow-black/[0.02] overflow-hidden">
-                  AO
-                  <div class="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Camera size={24} class="text-primary" />
-                  </div>
-                </div>
-                <button class="absolute -bottom-2 -right-2 p-2.5 bg-primary text-white rounded-2xl shadow-xl hover:scale-110 active:scale-95 transition-all">
-                  <Camera size={18} />
-                </button>
+    <!-- Content Area -->
+    <div class="lg:col-span-3 space-y-8">
+      {#if activeTab === 'profile'}
+        <div class="card-premium p-10 bg-surface/40 backdrop-blur-sm space-y-12" in:fly={{ y: 20 }}>
+          <div class="flex flex-col md:flex-row items-center gap-10">
+            <div class="relative group cursor-pointer">
+              <div class="w-32 h-32 rounded-[40px] bg-white/5 border-2 border-dashed border-white/20 flex items-center justify-center text-5xl group-hover:bg-white/10 group-hover:border-emerald/40 transition-all duration-500 overflow-hidden">
+                👩‍💼
               </div>
-              <div class="text-center md:text-left space-y-2">
-                <h3 class="text-2xl font-heading font-black text-foreground tracking-tight">Adaeze Okonkwo</h3>
-                <p class="text-muted-foreground font-semibold">CEO & Founder at E-WIN Applications · Lagos, Nigeria</p>
-                <div class="flex flex-wrap justify-center md:justify-start gap-2 pt-1">
-                  <span class="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center gap-1.5">
-                    Pro Enterprise Plan <Sparkles size={10} />
-                  </span>
-                  <span class="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg bg-muted text-muted-foreground border border-border">UID: AUD-8429-NG</span>
-                </div>
+              <div class="absolute -bottom-2 -right-2 w-10 h-10 rounded-2xl bg-emerald text-white flex items-center justify-center shadow-glow-sm border-4 border-navy group-hover:scale-110 transition-transform">
+                <Camera size={18} />
               </div>
             </div>
-
-            <!-- Form Fields -->
-            <div class="grid md:grid-cols-2 gap-8">
-              <div class="space-y-2.5">
-                <label for="full-name" class="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1">Legal Identity</label>
-                <input 
-                  id="full-name"
-                  type="text" 
-                  value="Adaeze Okonkwo"
-                  class="w-full bg-muted/50 border border-transparent rounded-2xl py-4 px-5 text-foreground font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-background focus:border-primary/30 transition-all"
-                />
-              </div>
-              <div class="space-y-2.5">
-                <label for="email" class="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1">Platform Email</label>
-                <input 
-                  id="email"
-                  type="email" 
-                  value="adaeze@ewinproject.org"
-                  class="w-full bg-muted/50 border border-transparent rounded-2xl py-4 px-5 text-foreground font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-background focus:border-primary/30 transition-all"
-                />
-              </div>
-              <div class="space-y-2.5">
-                <label for="company" class="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1">Enterprise Name</label>
-                <input 
-                  id="company"
-                  type="text" 
-                  value="E-WIN Applications Limited"
-                  class="w-full bg-muted/50 border border-transparent rounded-2xl py-4 px-5 text-foreground font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-background focus:border-primary/30 transition-all"
-                />
-              </div>
-              <div class="space-y-2.5">
-                <label for="phone" class="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1">Contact Terminal</label>
-                <input 
-                  id="phone"
-                  type="text" 
-                  value="+234 810 000 0000"
-                  class="w-full bg-muted/50 border border-transparent rounded-2xl py-4 px-5 text-foreground font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-background focus:border-primary/30 transition-all"
-                />
-              </div>
-            </div>
-
-            <!-- Enterprise Capabilities -->
-            <div class="pt-10 border-t border-border">
-              <div class="flex items-center gap-3 mb-6">
-                <BadgeCheck size={20} class="text-primary" />
-                <h4 class="text-sm font-black uppercase tracking-widest">Platform Privileges</h4>
-              </div>
-              <div class="grid md:grid-cols-2 gap-6">
-                <div class="p-6 bg-muted/30 rounded-3xl border border-transparent hover:border-border transition-all space-y-4 group">
-                  <div class="flex items-center gap-4 text-foreground font-bold text-sm">
-                    <div class="w-10 h-10 rounded-xl bg-background flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                      <Smartphone size={18} />
-                    </div>
-                    Multi-Terminal Ready 📱
-                  </div>
-                  <div class="flex items-center gap-4 text-foreground font-bold text-sm">
-                    <div class="w-10 h-10 rounded-xl bg-background flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                      <Globe size={18} />
-                    </div>
-                    Regional Compliance 🌍
-                  </div>
-                </div>
-                <div class="p-6 bg-muted/30 rounded-3xl border border-transparent hover:border-border transition-all space-y-4 group">
-                  <div class="flex items-center gap-4 text-foreground font-bold text-sm">
-                    <div class="w-10 h-10 rounded-xl bg-background flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                      <ShieldCheck size={18} />
-                    </div>
-                    Kernel Encryption 🛡️
-                  </div>
-                  <div class="flex items-center gap-4 text-foreground font-bold text-sm">
-                    <div class="w-10 h-10 rounded-xl bg-background flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                      <Lock size={18} />
-                    </div>
-                    Immutable Audit Trail 📜
-                  </div>
-                </div>
+            <div class="flex-1 space-y-4 text-center md:text-left">
+              <h3 class="text-2xl font-heading font-black text-white tracking-tight">Adaeze Okonkwo</h3>
+              <p class="text-slate text-sm font-medium">Enterprise Administrator · ICAN Certified Auditor</p>
+              <div class="flex flex-wrap justify-center md:justify-start gap-3">
+                <span class="px-3 py-1 rounded-lg bg-emerald/10 text-emerald border border-emerald/20 text-[10px] font-black uppercase tracking-widest">Verified Expert</span>
+                <span class="px-3 py-1 rounded-lg bg-white/5 text-slate-dim border border-white/10 text-[10px] font-black uppercase tracking-widest">Premium Plan</span>
               </div>
             </div>
           </div>
-        {:else if activeTab === 'billing'}
-          <div class="space-y-10" in:fly={{ y: 10, duration: 400 }}>
-            <div class="card-premium p-10 bg-foreground text-background relative overflow-hidden group">
-              <div class="absolute -right-12 -bottom-12 text-9xl opacity-[0.05] transform group-hover:scale-110 transition-transform duration-700">💎</div>
-              <div class="relative z-10 space-y-6">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 text-primary text-[10px] font-black uppercase tracking-widest">
-                  Active Subscription
-                </div>
-                <div class="space-y-1">
-                  <h3 class="text-4xl font-heading font-black text-white tracking-tight">Enterprise Pro</h3>
-                  <p class="text-muted-foreground font-medium">Your next billing cycle executes on <span class="text-white font-black">April 15, 2026</span></p>
-                </div>
-                <div class="flex gap-4 pt-4">
-                  <button class="btn-primary py-4 px-10 text-sm bg-white text-foreground hover:bg-white/90 shadow-2xl shadow-black/20 font-black uppercase tracking-widest">Manage Billing</button>
-                  <button class="btn-secondary py-4 px-10 text-sm border-white/10 text-white hover:bg-white/5 font-black uppercase tracking-widest">Upgrade Tier</button>
-                </div>
-              </div>
-            </div>
 
-            <div class="space-y-6">
-              <h4 class="text-xs font-black text-muted-foreground uppercase tracking-widest ml-1">Payment Infrastructure</h4>
-              <div class="p-6 bg-muted/30 rounded-[32px] border border-border flex items-center justify-between group hover:border-primary/20 transition-all">
-                <div class="flex items-center gap-6">
-                  <div class="w-16 h-10 bg-background rounded-xl flex items-center justify-center font-black text-xs text-muted-foreground border border-border shadow-sm group-hover:text-primary group-hover:border-primary/30 transition-all tracking-tighter">VISA</div>
-                  <div>
-                    <div class="text-sm font-black text-foreground">Corporate Visa · Ending 4242</div>
-                    <div class="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-1">Authorized Exp: 12/26</div>
-                  </div>
-                </div>
-                <button class="text-xs font-black text-primary uppercase tracking-[0.2em] hover:text-primary/70 transition-colors">Edit Card</button>
-              </div>
+          <div class="grid md:grid-cols-2 gap-8 pt-6 border-t border-white/5">
+            <div class="space-y-2">
+              <label for="fullName" class="form-label">Full Legal Name</label>
+              <input type="text" id="fullName" class="form-input" bind:value={name} />
+            </div>
+            <div class="space-y-2">
+              <label for="professionalRole" class="form-label">Professional Role</label>
+              <input type="text" id="professionalRole" class="form-input" value="Senior Financial Auditor" readonly />
+            </div>
+            <div class="space-y-2">
+              <label for="corporateEmail" class="form-label">Corporate Email</label>
+              <input type="email" id="corporateEmail" class="form-input" bind:value={email} />
+            </div>
+            <div class="space-y-2">
+              <label for="phoneConnectivity" class="form-label">Phone Connectivity</label>
+              <input type="tel" id="phoneConnectivity" class="form-input" value="+234 803 000 0000" />
             </div>
           </div>
-        {/if}
-      </div>
+
+          <div class="space-y-4 pt-6">
+            <label for="professionalBio" class="form-label">Professional Bio / Intelligence Context</label>
+            <textarea id="professionalBio" class="form-input min-h-[140px] resize-none" placeholder="Describe your auditing expertise and enterprise context..."></textarea>
+          </div>
+        </div>
+      {:else if activeTab === 'security'}
+        <div class="card-premium p-10 bg-surface/40 backdrop-blur-sm space-y-10" in:fly={{ y: 20 }}>
+          <div class="flex items-center gap-4 mb-2">
+            <div class="w-14 h-14 rounded-2xl bg-emerald/10 flex items-center justify-center text-3xl">
+              🛡️
+            </div>
+            <div>
+              <h3 class="text-2xl font-heading font-black text-white tracking-tight leading-tight">Security Hardening</h3>
+              <p class="text-sm text-slate font-medium">Protect your enterprise identity and audit records.</p>
+            </div>
+          </div>
+
+          <div class="space-y-6">
+            <div class="p-6 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between group hover:bg-white/[0.08] transition-all cursor-pointer">
+              <div class="flex items-center gap-5">
+                <div class="w-12 h-12 rounded-xl bg-navy-light flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                  📱
+                </div>
+                <div>
+                  <div class="text-white font-bold mb-1">Two-Factor Authentication</div>
+                  <p class="text-[11px] text-slate-dim font-medium uppercase tracking-widest">Active · Secure via Authenticator App</p>
+                </div>
+              </div>
+              <button class="text-[10px] font-black text-emerald uppercase tracking-[0.2em] border border-emerald/20 px-4 py-2 rounded-lg hover:bg-emerald/10 transition-all">Configure</button>
+            </div>
+
+            <div class="p-6 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between group hover:bg-white/[0.08] transition-all cursor-pointer">
+              <div class="flex items-center gap-5">
+                <div class="w-12 h-12 rounded-xl bg-navy-light flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                  🔑
+                </div>
+                <div>
+                  <div class="text-white font-bold mb-1">Account Password</div>
+                  <p class="text-[11px] text-slate-dim font-medium uppercase tracking-widest">Last updated 45 days ago</p>
+                </div>
+              </div>
+              <button class="text-[10px] font-black text-white uppercase tracking-[0.2em] border border-white/10 px-4 py-2 rounded-lg hover:bg-white/10 transition-all">Update</button>
+            </div>
+
+            <div class="p-6 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between group hover:bg-white/[0.08] transition-all cursor-pointer">
+              <div class="flex items-center gap-5">
+                <div class="w-12 h-12 rounded-xl bg-navy-light flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                  💻
+                </div>
+                <div>
+                  <div class="text-white font-bold mb-1">Active Sessions</div>
+                  <p class="text-[11px] text-slate-dim font-medium uppercase tracking-widest">2 Sessions in Lagos, NG</p>
+                </div>
+              </div>
+              <button 
+                onclick={handleLogout}
+                class="flex items-center gap-3 px-6 py-3 rounded-xl bg-danger/10 text-danger border border-danger/20 font-black text-[10px] uppercase tracking-widest hover:bg-danger hover:text-white transition-all duration-500"
+              >
+                <LogOut size={16} />
+                Terminate Session
+              </button>
+            </div>
+          </div>
+        </div>
+      {/if}
     </div>
   </div>
 </div>
+
+<style>
+  .shadow-glow {
+    box-shadow: 0 0 30px -5px rgba(0, 200, 150, 0.4);
+  }
+  .shadow-glow-sm {
+    box-shadow: 0 0 15px -2px rgba(0, 200, 150, 0.3);
+  }
+</style>

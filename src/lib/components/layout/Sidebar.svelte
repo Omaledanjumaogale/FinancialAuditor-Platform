@@ -19,10 +19,10 @@
 
   const menuItems = [
     { name: '📊 Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-    { name: '🛒 Marketplace', icon: ShoppingBag, href: '/marketplace' },
-    { name: '🤖 AI Audit', icon: ShieldCheck, href: '/dashboard/audit' },
-    { name: '📈 Analytics', icon: BarChart3, href: '/dashboard/analytics' },
-    { name: '📚 Ledger', icon: BookOpen, href: '/dashboard/ledger' },
+    { name: '🤝 Marketplace', icon: ShoppingBag, href: '/marketplace' },
+    { name: '🛡️ AI Audit', icon: ShieldCheck, href: '/dashboard/audit' },
+    { name: '🧠 Analytics', icon: BarChart3, href: '/dashboard/analytics' },
+    { name: '📖 Ledger', icon: BookOpen, href: '/dashboard/ledger' },
     { name: '💳 Payments', icon: CreditCard, href: '/dashboard/payments' },
     { name: '💬 Messages', icon: MessageSquare, href: '/dashboard/messages' },
     { name: '📜 Logs', icon: History, href: '/dashboard/logs' },

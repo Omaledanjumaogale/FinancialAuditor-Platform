@@ -11,6 +11,19 @@ export const getByUid = query({
   },
 });
 
+export const getAll = query({
+  handler: async (ctx) => {
+    return await ctx.db.query("users").collect();
+  },
+});
+
+export const updateRole = mutation({
+  args: { id: v.id("users"), role: v.union(v.literal("client"), v.literal("auditor"), v.literal("admin")) },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, { role: args.role });
+  },
+});
+
 export const store = mutation({
   args: {
     uid: v.string(),

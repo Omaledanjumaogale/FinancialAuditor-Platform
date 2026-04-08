@@ -6,40 +6,44 @@
     MoreHorizontal, Activity, PieChart, Target, ArrowRight
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
+  import StatCard from '$lib/components/ui/StatCard.svelte';
 
   const metrics = [
-    { label: 'Platform Revenue', value: '₦4.2M', change: '+18.4%', status: 'up', emoji: '💰', icon: TrendingUp },
-    { label: 'Operational Costs', value: '₦2.4M', change: '-5.2%', status: 'down', emoji: '💸', icon: TrendingDown },
-    { label: 'Enterprise Profit', value: '₦1.8M', change: '+12.1%', status: 'up', emoji: '💎', icon: Activity },
-    { label: 'EBITDA Margin', value: '34.5%', change: '+14.5%', status: 'up', emoji: '📊', icon: Target }
+    { label: 'Platform Revenue', value: '₦4.2M', change: '18.4%', trend: 'up' as const, emoji: '💰' },
+    { label: 'Operational Costs', value: '₦2.4M', change: '5.2%', trend: 'down' as const, emoji: '💸' },
+    { label: 'Enterprise Profit', value: '₦1.8M', change: '12.1%', trend: 'up' as const, emoji: '💎' },
+    { label: 'EBITDA Margin', value: '34.5%', change: '14.5%', trend: 'up' as const, emoji: '📊' }
   ];
 
   const categories = [
-    { name: 'Logistics & Supply', amount: '₦450K', percentage: 45, color: 'destructive' },
-    { name: 'Human Capital', amount: '₦850K', percentage: 35, color: 'primary' },
-    { name: 'Growth Marketing', amount: '₦250K', percentage: 15, color: 'brand' },
-    { name: 'Others', amount: '₦150K', percentage: 5, color: 'info' }
+    { name: 'Logistics & Supply', amount: '₦450K', percentage: 45, emoji: '🚚', color: 'emerald' },
+    { name: 'Human Capital', amount: '₦850K', percentage: 35, emoji: '👥', color: 'gold' },
+    { name: 'Growth Marketing', amount: '₦250K', percentage: 15, emoji: '🚀', color: 'emerald' },
+    { name: 'Others', amount: '₦150K', percentage: 5, emoji: '📦', color: 'white' }
   ];
 </script>
 
-<div class="space-y-10 pb-20" in:fade>
+<div class="space-y-10 pb-20 relative z-10 w-full" in:fade>
   <!-- Page Header -->
-  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
-    <div class="space-y-1">
-      <div class="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-[0.2em]">
-        <BarChart3 size={12} />
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-8">
+    <div class="space-y-2">
+      <div class="flex items-center gap-3 text-[10px] font-black text-emerald uppercase tracking-[0.3em] mb-1">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald"></span>
+        </span>
         Performance Intelligence
       </div>
-      <h1 class="text-3xl md:text-4xl font-heading font-black text-foreground tracking-tight">Advanced Analytics</h1>
-      <p class="text-muted-foreground font-medium">Deep-dive into enterprise financial metrics and operational efficiency.</p>
+      <h1 class="text-3xl md:text-5xl font-heading font-black text-white tracking-tighter leading-tight">Advanced <span class="text-emerald">Analytics</span></h1>
+      <p class="text-slate text-lg font-medium max-w-2xl">Deep-dive into enterprise financial metrics and operational efficiency with real-time AI projections.</p>
     </div>
-    <div class="flex items-center gap-3">
-      <button class="btn-secondary py-2.5 px-6 text-sm flex items-center gap-2">
-        <Calendar size={18} />
-        Fiscal Period: Q1 2026
+    <div class="flex items-center gap-4">
+      <button class="btn-secondary py-3 px-6 text-xs flex items-center gap-3 group">
+        <span class="text-lg group-hover:rotate-12 transition-transform duration-300">📅</span>
+        Q1 2026 Analysis
       </button>
-      <button class="btn-primary py-2.5 px-6 text-sm flex items-center gap-2 shadow-lg shadow-primary/10">
-        <Download size={18} />
+      <button class="btn-primary py-3 px-8 text-xs flex items-center gap-3 shadow-glow group">
+        <span class="text-lg group-hover:scale-125 transition-transform duration-300">📥</span>
         Export Dataset
       </button>
     </div>
@@ -47,128 +51,110 @@
 
   <!-- Key Metrics Grid -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    {#each metrics as metric}
-      <div class="card-premium p-6 group relative overflow-hidden">
-        <div class="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-500">
-          <metric.icon size={80} />
-        </div>
-        <div class="relative z-10 space-y-4">
-          <div class="flex justify-between items-start">
-            <div class="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-300">
-              {metric.emoji}
-            </div>
-            <div class={cn(
-              "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black border",
-              metric.status === 'up' ? "bg-primary/5 text-primary border-primary/10" : "bg-destructive/5 text-destructive border-destructive/10"
-            )}>
-              {#if metric.status === 'up'}<ArrowUpRight size={12} />{:else}<ArrowDownRight size={12} />{/if}
-              {metric.change}
-            </div>
-          </div>
-          <div>
-            <div class="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-1">{metric.label}</div>
-            <div class="text-3xl font-heading font-black text-foreground tracking-tight">{metric.value}</div>
-          </div>
-        </div>
-      </div>
+    {#each metrics as metric, i}
+      <StatCard {...metric} delay={100 + (i * 100)} />
     {/each}
   </div>
 
   <div class="grid lg:grid-cols-3 gap-8">
     <!-- Sophisticated Performance Chart Area -->
-    <div class="lg:col-span-2 card-premium p-10">
-      <div class="flex items-center justify-between mb-12">
+    <div class="lg:col-span-2 card-premium p-10 bg-surface/40 backdrop-blur-sm relative overflow-hidden group">
+      <!-- Background Decoration -->
+      <div class="absolute -top-24 -right-24 w-64 h-64 bg-emerald/5 rounded-full blur-3xl pointer-events-none group-hover:bg-emerald/10 transition-all duration-700"></div>
+
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-8 mb-16 relative z-10">
         <div class="space-y-1">
-          <h3 class="text-2xl font-heading font-black text-foreground flex items-center gap-3">
-            <Activity size={24} class="text-primary" />
-            Enterprise Performance Matrix
+          <h3 class="text-2xl font-heading font-black text-white flex items-center gap-3">
+            <span class="text-3xl">📈</span>
+            Performance Matrix
           </h3>
-          <p class="text-xs text-muted-foreground font-medium">Comparative analysis of inflow vs operational outflow.</p>
+          <p class="text-sm text-slate font-medium">Comparative analysis of inflow vs operational outflow.</p>
         </div>
-        <div class="flex gap-6">
-          <div class="flex items-center gap-2.5 text-[10px] font-black text-primary uppercase tracking-widest">
-            <span class="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(16,185,129,0.4)]"></span> Gross Revenue
+        <div class="flex flex-wrap gap-6">
+          <div class="flex items-center gap-2.5 text-[10px] font-black text-emerald uppercase tracking-widest">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald shadow-[0_0_8px_rgba(0,200,150,0.4)]"></span> Gross Revenue
           </div>
-          <div class="flex items-center gap-2.5 text-[10px] font-black text-destructive uppercase tracking-widest">
-            <span class="w-2.5 h-2.5 rounded-full bg-destructive shadow-[0_0_8px_rgba(239,68,68,0.4)]"></span> Operational Burn
+          <div class="flex items-center gap-2.5 text-[10px] font-black text-gold uppercase tracking-widest">
+            <span class="w-2.5 h-2.5 rounded-full bg-gold shadow-[0_0_8px_rgba(245,166,35,0.4)]"></span> Operational Burn
           </div>
         </div>
       </div>
 
-      <div class="h-80 relative flex items-end gap-3 px-2 group">
+      <div class="h-80 relative flex items-end gap-4 px-2 group/chart mb-6">
         {#each Array(12) as _, i}
-          <div class="flex-1 flex flex-col items-center gap-1.5 relative group/bar">
+          <div class="flex-1 flex flex-col items-center gap-2 relative group/bar h-full justify-end">
+            <!-- Burn Bar -->
+            <div 
+              class="w-full bg-gold/10 rounded-t-lg group-hover/bar:bg-gold/30 transition-all duration-700 relative overflow-hidden"
+              style="height: {20 + Math.random() * 40}%"
+            >
+              <div class="absolute inset-0 bg-gradient-to-t from-gold/40 to-transparent opacity-0 group-hover/bar:opacity-100 transition-opacity duration-500"></div>
+            </div>
             <!-- Revenue Bar -->
             <div 
-              class="w-full bg-primary/10 border border-primary/20 rounded-t-lg transition-all duration-500 group-hover/bar:bg-primary/30 group-hover/bar:border-primary group-hover/bar:shadow-glow"
-              style={`height: ${Math.random() * 60 + 30}%`}
-            ></div>
-            <!-- Expense Bar -->
-            <div 
-              class="w-full bg-destructive/10 border border-destructive/20 rounded-t-lg transition-all duration-500 group-hover/bar:bg-destructive/30 group-hover/bar:border-destructive"
-              style={`height: ${Math.random() * 30 + 10}%`}
-            ></div>
-            <!-- Tooltip -->
-            <div class="absolute -top-14 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] font-black px-4 py-2 rounded-xl opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-30 shadow-2xl">
-              <div class="text-primary mb-0.5">IN: ₦{(Math.random() * 500 + 300).toFixed(0)}K</div>
-              <div class="text-destructive">OUT: ₦{(Math.random() * 200 + 100).toFixed(0)}K</div>
+              class="w-full bg-emerald/10 rounded-t-lg group-hover/bar:bg-emerald/30 transition-all duration-700 relative overflow-hidden -mt-1"
+              style="height: {40 + Math.random() * 50}%"
+            >
+              <div class="absolute inset-0 bg-gradient-to-t from-emerald/40 to-transparent opacity-0 group-hover/bar:opacity-100 transition-opacity duration-500"></div>
             </div>
+            <span class="text-[9px] font-black text-slate-dim uppercase tracking-tighter group-hover/bar:text-white transition-colors mt-2">
+              {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'][i]}
+            </span>
           </div>
         {/each}
-      </div>
-      <div class="flex justify-between mt-8 text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-[0.3em] border-t border-border pt-6 px-2">
-        <span>JAN</span><span>FEB</span><span>MAR</span><span>APR</span><span>MAY</span><span>JUN</span><span>JUL</span><span>AUG</span><span>SEP</span><span>OCT</span><span>NOV</span><span>DEC</span>
       </div>
     </div>
 
-    <!-- Enhanced Expense Breakdown -->
-    <div class="card-premium p-10 flex flex-col">
-      <div class="flex items-center justify-between mb-10">
-        <h3 class="text-2xl font-heading font-black text-foreground flex items-center gap-3">
-          <PieChart size={24} class="text-primary" />
-          Burn Analysis
+    <!-- Expenditure Breakdown -->
+    <div class="card-premium p-10 bg-surface/40 backdrop-blur-sm space-y-10 group">
+      <div class="space-y-1">
+        <h3 class="text-2xl font-heading font-black text-white flex items-center gap-3">
+          <span class="text-3xl">🧭</span>
+          Allocation
         </h3>
-        <button class="p-2 hover:bg-muted rounded-lg transition-colors"><MoreHorizontal size={20} /></button>
+        <p class="text-sm text-slate font-medium">Departmental spend analysis.</p>
       </div>
 
-      <div class="space-y-10 flex-1">
+      <div class="space-y-8">
         {#each categories as cat}
-          <div class="space-y-4 group">
-            <div class="flex justify-between items-end">
-              <div class="space-y-0.5">
-                <span class="text-sm font-black text-foreground uppercase tracking-tight group-hover:text-primary transition-colors">{cat.name}</span>
-                <div class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{cat.amount} · {cat.percentage}% Contribution</div>
+          <div class="space-y-3 group/item cursor-pointer">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="text-xl group-hover/item:scale-125 transition-transform duration-300">{cat.emoji}</span>
+                <span class="text-sm font-bold text-white group-hover/item:text-emerald transition-colors">{cat.name}</span>
               </div>
-              <ArrowUpRight size={16} class="text-muted-foreground group-hover:text-primary transition-colors" />
+              <span class="text-sm font-black text-white">{cat.percentage}%</span>
             </div>
-            <div class="h-3 w-full bg-muted rounded-full overflow-hidden border border-border/50">
+            <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden border border-white/5">
               <div 
-                class={cn("h-full rounded-full transition-all duration-[1500ms] ease-out shadow-sm", 
-                  cat.color === 'primary' ? "bg-primary" : 
-                  cat.color === 'destructive' ? "bg-destructive" : 
-                  cat.color === 'brand' ? "bg-brand-500" : "bg-info")} 
-                style={`width: ${cat.percentage}%`}
+                class={cn(
+                  "h-full rounded-full transition-all duration-1000 group-hover/item:brightness-125",
+                  cat.color === 'emerald' ? "bg-emerald shadow-glow-sm" : 
+                  cat.color === 'gold' ? "bg-gold" : "bg-white/20"
+                )}
+                style="width: {cat.percentage}%"
               ></div>
+            </div>
+            <div class="flex justify-between items-center opacity-0 group-hover/item:opacity-100 transition-opacity">
+              <span class="text-[10px] font-black text-slate-dim uppercase tracking-widest">Calculated Burn</span>
+              <span class="text-[10px] font-black text-white">{cat.amount}</span>
             </div>
           </div>
         {/each}
       </div>
 
-      <!-- AI Smart Insight Widget -->
-      <div class="mt-12 p-8 bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 rounded-[32px] relative overflow-hidden group">
-        <div class="absolute -right-4 -bottom-4 text-7xl opacity-[0.05] group-hover:scale-110 transition-transform duration-700">💡</div>
-        <div class="relative z-10 space-y-4">
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 text-primary text-[10px] font-black uppercase tracking-widest">
-            Intelligence Alert
-          </div>
-          <p class="text-sm text-foreground font-semibold leading-relaxed">
-            Consolidating your personnel payments through <span class="text-primary font-black">FinancialAuditor Pay</span> could reduce transaction latency by 45% and save ₦42K monthly.
-          </p>
-          <button class="text-xs font-black text-primary uppercase tracking-[0.2em] flex items-center gap-2 hover:gap-3 transition-all">
-            Execute Optimization <ArrowRight size={14} />
-          </button>
-        </div>
-      </div>
+      <button class="w-full py-4 rounded-xl border border-white/10 text-[10px] font-black text-white uppercase tracking-[0.3em] hover:bg-white/5 hover:border-white/20 transition-all mt-4 group/btn">
+        Full Expense Audit <ArrowRight size={14} class="inline ml-2 group-hover/btn:translate-x-2 transition-transform" />
+      </button>
     </div>
   </div>
 </div>
+
+<style>
+  .shadow-glow {
+    box-shadow: 0 0 30px -5px rgba(0, 200, 150, 0.4);
+  }
+  .shadow-glow-sm {
+    box-shadow: 0 0 15px -2px rgba(0, 200, 150, 0.3);
+  }
+</style>

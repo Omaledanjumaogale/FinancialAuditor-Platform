@@ -29,10 +29,10 @@
     </button>
 
     <!-- Breadcrumbs (Desktop) -->
-    <div class="hidden md:flex items-center gap-2 text-sm font-medium">
+    <div class="hidden md:flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em]">
       <span class="text-slate-dim">Console</span>
       {#each breadcrumbs() as crumb}
-        <ChevronRight size={14} class="text-slate-dim/30" />
+        <span class="text-slate-dim/30">/</span>
         <a href={crumb.href} class="text-white hover:text-emerald transition-colors">{crumb.name}</a>
       {/each}
     </div>
@@ -52,6 +52,10 @@
 
   <!-- Actions -->
   <div class="flex items-center gap-3 md:gap-5">
+    <!-- Search Trigger (Mobile) -->
+    <button class="lg:hidden p-2.5 text-slate-dim hover:text-white hover:bg-white/5 rounded-xl transition-all">
+      <Search size={20} />
+    </button>
     <!-- Language/Region -->
     <button class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-white/5 text-slate-dim hover:text-white transition-all">
       <Globe size={16} />

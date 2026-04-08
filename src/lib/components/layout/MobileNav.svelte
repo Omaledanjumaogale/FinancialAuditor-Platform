@@ -1,27 +1,35 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { LayoutDashboard, ShoppingBag, ShieldCheck, User } from 'lucide-svelte';
+  import { Home, LayoutDashboard, ShieldCheck, ShoppingBag } from 'lucide-svelte';
   import { cn } from '$lib/utils';
 
-  const bottomNavItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-    { name: 'Marketplace', icon: ShoppingBag, href: '/marketplace' },
-    { name: 'AI Audit', icon: ShieldCheck, href: '/dashboard/audit' },
-    { name: 'Profile', icon: User, href: '/dashboard/profile' },
+  const items = [
+    { name: 'Home', icon: Home, href: '/' },
+    { name: 'Console', icon: LayoutDashboard, href: '/dashboard' },
+    { name: 'Audit', icon: ShieldCheck, href: '/dashboard/audit' },
+    { name: 'Market', icon: ShoppingBag, href: '/marketplace' },
   ];
 </script>
 
-<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-surface-200 z-50 flex items-center justify-around px-2 h-16 pb-safe">
-  {#each bottomNavItems as item}
+<div class="xl:hidden fixed bottom-0 left-0 right-0 z-50 bg-navy/80 backdrop-blur-xl border-t border-white/10 px-6 pb-6 pt-3 flex items-center justify-between shadow-[0_-8px_30px_rgba(0,0,0,0.2)]">
+  {#each items as item}
     <a 
-      href={item.href}
+      href={item.href} 
       class={cn(
-        "flex flex-col items-center justify-center flex-1 gap-1 transition-all min-h-[44px] min-w-[44px]",
-        page.url.pathname === item.href ? "text-brand-600" : "text-surface-400"
+        "flex flex-col items-center gap-1.5 transition-all duration-300 relative",
+        page.url.pathname === item.href ? "text-emerald" : "text-slate-dim hover:text-white"
       )}
     >
-      <item.icon size={20} class={cn(page.url.pathname === item.href && "animate-in zoom-in duration-300")} />
-      <span class="text-[0.6rem] font-bold uppercase tracking-tighter">{item.name}</span>
+      {#if page.url.pathname === item.href}
+        <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-1 bg-emerald rounded-full shadow-[0_0_8px_rgba(0,200,150,0.4)]"></div>
+      {/if}
+      <div class={cn(
+        "p-1 rounded-xl transition-all duration-300",
+        page.url.pathname === item.href && "bg-emerald/5 scale-110"
+      )}>
+        <item.icon size={22} strokeWidth={page.url.pathname === item.href ? 2.5 : 2} />
+      </div>
+      <span class="text-[10px] font-black uppercase tracking-widest leading-none">{item.name}</span>
     </a>
   {/each}
-</nav>
+</div>

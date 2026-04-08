@@ -1,12 +1,17 @@
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async () => {
+  const domain = 'https://financialauditor.ewinproject.org';
   const pages = [
     '',
-    '/dashboard',
-    '/marketplace',
     '/auth',
-    '/admin'
+    '/marketplace',
+    '/dashboard',
+    '/dashboard/audit',
+    '/dashboard/analytics',
+    '/dashboard/ledger',
+    '/dashboard/profile',
+    '/admin',
   ];
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
@@ -14,18 +19,19 @@ export const GET: RequestHandler = async () => {
   ${pages
     .map(
       (page) => `
-  <url>
-    <loc>https://financialauditor.ewinproject.org${page}</loc>
-    <changefreq>daily</changefreq>
-    <priority>${page === '' ? '1.0' : '0.8'}</priority>
-  </url>`
+    <url>
+      <loc>${domain}${page}</loc>
+      <changefreq>weekly</changefreq>
+      <priority>${page === '' ? '1.0' : '0.8'}</priority>
+    </url>`
     )
     .join('')}
 </urlset>`;
 
   return new Response(sitemap, {
     headers: {
-      'Content-Type': 'application/xml'
-    }
+      'Content-Type': 'application/xml',
+      'Cache-Control': 'max-age=0, s-maxage=3600',
+    },
   });
 };

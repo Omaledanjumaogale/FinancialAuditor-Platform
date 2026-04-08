@@ -8,5 +8,22 @@ export default defineConfig({
 		port: 5173,
 		strictPort: true,
 		host: true
+	},
+	build: {
+		target: 'esnext',
+		minify: 'esbuild',
+		cssMinify: true,
+		rollupOptions: {
+			output: {
+				manualChunks: (id) => {
+					if (id.includes('node_modules')) {
+						if (id.includes('lucide-svelte')) return 'icons';
+						if (id.includes('firebase')) return 'firebase';
+						if (id.includes('convex')) return 'convex';
+						return 'vendor';
+					}
+				}
+			}
+		}
 	}
 });

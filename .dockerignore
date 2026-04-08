@@ -1,0 +1,14 @@
+node_modules
+.svelte-kit
+build
+.env
+.env.*
+!.env.example
+npm-debug.log
+Dockerfile
+.git
+.github
+tests
+playwright-report
+blob-report
+test-results

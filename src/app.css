@@ -81,10 +81,17 @@
 
 /* Global resets & Base Styles from Backup */
 @layer base {
+  /* Global Scaling Protection & Anti-Overflow */
+  :root {
+    --vh: 1vh;
+    --max-content-width: 1280px;
+  }
+
   * {
     @apply border-border outline-ring/50 box-border;
     margin: 0;
     padding: 0;
+    -webkit-tap-highlight-color: transparent;
   }
   
   html {
@@ -92,12 +99,43 @@
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
     font-size: 16px;
+    height: -webkit-fill-available;
+    width: 100%;
+    overflow-x: hidden;
+    /* Fluid Typography Base */
+    font-size: clamp(14px, 1vw + 10px, 18px);
   }
 
   body {
-    @apply bg-background text-foreground font-sans min-h-screen;
+    @apply bg-background text-foreground font-sans;
     line-height: 1.6;
     overflow-x: hidden;
+    width: 100%;
+    min-height: 100vh;
+    min-height: calc(var(--vh, 1vh) * 100);
+    position: relative;
+    touch-action: manipulation;
+    /* Prevent overscroll bounce on mobile */
+    overscroll-behavior-y: none;
+  }
+
+  /* Prevent text scaling beyond containers */
+  p, h1, h2, h3, h4, h5, h6, span, div {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
+  }
+
+  /* Enterprise Fluid Typography */
+  h1 { font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 900; letter-spacing: -0.04em; }
+  h2 { font-size: clamp(2rem, 6vw, 3.5rem); font-weight: 900; letter-spacing: -0.03em; }
+  h3 { font-size: clamp(1.5rem, 4vw, 2.5rem); font-weight: 800; letter-spacing: -0.02em; }
+  h4 { font-size: clamp(1.1rem, 2.5vw, 1.5rem); font-weight: 700; }
+
+  /* Responsive Spacing Utility */
+  .section-padding {
+    @apply py-12 md:py-24 lg:py-32;
   }
 
   /* Restore Typography from Backup */

@@ -6,208 +6,274 @@
     ArrowUpRight, ArrowDownRight, Search, Filter, 
     MoreHorizontal, Sparkles, Activity, Clock,
     CheckCircle2, AlertTriangle, Briefcase, 
-    LayoutGrid, ShieldCheck, Zap
+    LayoutGrid, ShieldCheck, Zap, Calendar,
+    ArrowRight
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
+  import StatCard from '$lib/components/ui/StatCard.svelte';
+  import { authState } from '$lib/stores/auth.svelte';
+  import { useQuery, useConvexClient } from "convex-svelte";
+  import { api } from "$convex/_generated/api";
+  import { executeAIAnalysis } from '$lib/services/ai';
 
-  const stats = [
-    { label: 'Platform Audits', value: '1,284', change: '+12.5%', icon: FileText, emoji: '📂' },
-    { label: 'Active Personnel', value: '842', change: '+5.2%', icon: Users, emoji: '👥' },
-    { label: 'Detected Anomalies', value: '12', change: '-2.4%', icon: ShieldAlert, emoji: '⚠️' },
-    { label: 'Projected Growth', value: '₦4.2M', change: '+18.4%', icon: TrendingUp, emoji: '📈' }
-  ];
+  // Get current user from Convex
+  const userQuery = $derived(
+    authState.user ? useQuery(api.users.getByUid, { uid: authState.user.uid }) : null
+  );
+  
+  const currentUser = $derived(userQuery?.data);
+  
+  const client = useConvexClient();
 
-  const recentActivities = [
-    { id: 1, title: 'FIRS Audit Report Generated', type: 'Report', time: '2 mins ago', status: 'Completed', emoji: '📄' },
-    { id: 2, title: 'Anomalies detected in Logistics', type: 'Alert', time: '15 mins ago', status: 'Warning', emoji: '🚨' },
-    { id: 3, title: 'New ICAN Auditor Connected', type: 'User', time: '1 hour ago', status: 'Success', emoji: '🤝' },
-    { id: 4, title: 'VAT Calculation Updated', type: 'Tax', time: '3 hours ago', status: 'Completed', emoji: '📊' }
-  ];
+  // Fetch Analytics
+  const analyticsQuery = $derived(
+    currentUser ? useQuery(api.analytics.getLatest, { userId: currentUser._id }) : null
+  );
+  
+  const analytics = $derived(analyticsQuery?.data);
+
+  // Fetch Notifications/Recent Activities
+  const notificationsQuery = $derived(
+    currentUser ? useQuery(api.notifications.getRecent, { userId: currentUser._id, limit: 4 }) : null
+  );
+  
+  const recentActivitiesFromConvex = $derived(notificationsQuery?.data || []);
+
+  const stats = $derived([
+    { label: 'Platform Audits', value: analytics?.metrics?.totalAudits || '0', change: '12.5%', trend: 'up' as const, emoji: '📂' },
+    { label: 'Active Personnel', value: analytics?.metrics?.activePersonnel || '0', change: '5.2%', trend: 'up' as const, emoji: '👥' },
+    { label: 'Detected Anomalies', value: analytics?.metrics?.anomalies || '0', change: '2.4%', trend: 'down' as const, emoji: '⚠️' },
+    { label: 'Projected Growth', value: `₦${(analytics?.revenue || 0) / 1000000}M`, change: '18.4%', trend: 'up' as const, emoji: '📈' }
+  ]);
+
+  const recentActivities = $derived(recentActivitiesFromConvex.map(notif => ({
+    id: notif._id,
+    title: notif.title,
+    type: notif.type.toUpperCase(),
+    time: new Date(notif.createdAt).toLocaleTimeString(),
+    status: notif.read ? 'Read' : 'New',
+    emoji: notif.emoji
+  })));
+
+  // AI Audit Execution
+  let isAuditing = $state(false);
+
+  async function handleAIAudit() {
+    if (isAuditing || !currentUser) return;
+    isAuditing = true;
+    
+    try {
+      // Create a starting notification
+      await client.mutation(api.notifications.create, {
+        userId: currentUser._id,
+        title: "AI Audit Initiated",
+        content: "Scanning system for compliance anomalies...",
+        type: "audit",
+        read: false
+      });
+
+      const result = await executeAIAnalysis({
+        url: window.location.origin,
+        context: "Dashboard overview scan"
+      });
+
+      // Notify completion
+      await client.mutation(api.notifications.create, {
+        userId: currentUser._id,
+        title: "Audit Complete",
+        content: `Scan finished with ${result.anomalies || 0} anomalies found.`,
+        type: "audit",
+        read: false
+      });
+    } catch (err) {
+      await client.mutation(api.notifications.create, {
+        userId: currentUser._id,
+        title: "Audit Failed",
+        content: "There was an error executing the AI audit.",
+        type: "audit",
+        read: false
+      });
+    } finally {
+      isAuditing = false;
+    }
+  }
 </script>
 
-<div class="space-y-10 pb-20 relative z-10" in:fade>
+<div class="space-y-10 pb-20 relative z-10 w-full" in:fade>
   <!-- Welcome Header -->
-  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
-    <div class="space-y-1">
-      <div class="flex items-center gap-2 text-[10px] font-black text-emerald uppercase tracking-[0.2em]">
-        <Activity size={12} />
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-8">
+    <div class="space-y-2">
+      <div class="flex items-center gap-3 text-[10px] font-black text-emerald uppercase tracking-[0.3em] mb-1">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald"></span>
+        </span>
         Live Intelligence Console
       </div>
-      <h1 class="text-3xl md:text-5xl font-heading font-black text-white tracking-tighter">Enterprise Overview</h1>
-      <p class="text-slate font-medium">Welcome back, <span class="text-white font-bold">Adaeze Okonkwo</span>. Your system is <span class="text-emerald">fully compliant</span>.</p>
+      <h1 class="text-3xl md:text-5xl font-heading font-black text-white tracking-tighter leading-tight">Enterprise Overview</h1>
+      <p class="text-slate text-lg font-medium">Welcome back, <span class="text-white font-bold">{currentUser?.name || authState.user?.displayName || 'User'}</span>. Your system is <span class="text-emerald underline decoration-emerald/30 underline-offset-4">{currentUser?.isVerified ? 'fully compliant' : 'pending verification'}</span>.</p>
     </div>
-    <div class="flex items-center gap-3">
-      <button class="btn-secondary py-2.5 px-6 text-xs flex items-center gap-2">
-        <Filter size={14} />
-        Advanced Filters
+    
+    <div class="flex flex-wrap items-center gap-4">
+      <button class="btn-secondary py-3 px-6 text-xs flex items-center gap-3 group">
+        <span class="text-lg group-hover:rotate-12 transition-transform duration-300">📅</span>
+        Fiscal Year 2026
       </button>
-      <button class="btn-primary py-2.5 px-6 text-xs flex items-center gap-2 shadow-lg shadow-emerald/20">
-        <Sparkles size={14} />
-        <span>Execute AI Audit</span>
+      <button 
+        onclick={handleAIAudit}
+        disabled={isAuditing}
+        class="btn-primary py-3 px-8 text-xs flex items-center gap-3 shadow-glow group disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span class={cn("text-lg transition-transform duration-300", isAuditing ? "animate-spin" : "group-hover:scale-125")}>
+          {isAuditing ? '⏳' : '✨'}
+        </span>
+        {isAuditing ? 'Analyzing...' : 'Execute AI Audit'}
       </button>
     </div>
   </div>
 
   <!-- Stats Grid -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    {#each stats as stat}
-      <div class="card-premium p-6 group relative overflow-hidden bg-surface/50">
-        <div class="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity duration-500">
-          <stat.icon size={80} class="text-emerald" />
-        </div>
-        <div class="relative z-10 flex flex-col h-full">
-          <div class="flex items-center justify-between mb-5">
-            <div class="w-10 h-10 rounded-xl bg-navy-light flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-300">
-              {stat.emoji}
-            </div>
-            <div class={cn(
-              "text-[10px] font-black px-2 py-1 rounded-lg border",
-              stat.change.startsWith('+') 
-                ? "bg-emerald/5 text-emerald border-emerald/10" 
-                : "bg-danger/5 text-danger border-danger/10"
-            )}>
-              {stat.change}
-            </div>
-          </div>
-          <div class="text-[10px] font-bold text-slate-dim uppercase tracking-[0.2em] mb-1">{stat.label}</div>
-          <div class="text-3xl font-heading font-black text-white tracking-tight">{stat.value}</div>
-        </div>
-      </div>
+    {#each stats as stat, i}
+      <StatCard {...stat} delay={100 + (i * 100)} />
     {/each}
   </div>
 
   <div class="grid lg:grid-cols-3 gap-8">
     <!-- Main Performance View -->
     <div class="lg:col-span-2 space-y-8">
-      <div class="card-premium p-8 bg-surface/50">
-        <div class="flex items-center justify-between mb-10">
+      <div class="card-premium p-8 bg-surface/50 relative overflow-hidden group">
+        <!-- Background Decoration -->
+        <div class="absolute -top-24 -right-24 w-64 h-64 bg-emerald/5 rounded-full blur-3xl pointer-events-none group-hover:bg-emerald/10 transition-all duration-700"></div>
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12 relative z-10">
           <div class="space-y-1">
-            <h3 class="text-xl font-heading font-black text-white flex items-center gap-2">
-              <TrendingUp size={20} class="text-emerald" />
+            <h3 class="text-2xl font-heading font-black text-white flex items-center gap-3">
+              <span class="text-3xl">📊</span>
               Financial Growth Trajectory
             </h3>
-            <p class="text-xs text-slate-dim font-medium">Real-time revenue vs projected benchmarks.</p>
+            <p class="text-sm text-slate font-medium">Real-time revenue vs projected benchmarks.</p>
           </div>
-          <select class="bg-navy-light border border-white/5 rounded-xl text-[10px] font-black text-slate-dim px-4 py-2 focus:outline-none focus:border-emerald transition-all uppercase tracking-widest outline-none">
-            <option>Q1 2026 Analysis</option>
-            <option>Last 30 Days</option>
-            <option>Fiscal Year 2025</option>
-          </select>
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-4 px-4 py-2 bg-white/5 rounded-xl border border-white/10">
+              <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-emerald"></div>
+                <span class="text-[10px] font-black text-white uppercase tracking-wider">Revenue</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-white/20"></div>
+                <span class="text-[10px] font-black text-slate-dim uppercase tracking-wider">Target</span>
+              </div>
+            </div>
+          </div>
         </div>
         
-        <div class="h-72 flex items-end gap-2.5 relative group px-2">
+        <div class="h-80 flex items-end gap-3 relative group px-2 mb-4">
           {#each Array(12) as _, i}
-            <div 
-              class="flex-1 bg-navy-light rounded-t-lg transition-all duration-300 hover:bg-emerald/10 cursor-pointer relative flex items-end"
-              style={`height: ${Math.random() * 80 + 20}%`}
-            >
-              <div class="w-full bg-emerald/20 rounded-t-lg group-hover:bg-emerald/40 transition-colors" style={`height: ${Math.random() * 60 + 20}%`}></div>
-              <!-- Hover Tooltip -->
-              <div class="absolute -top-12 left-1/2 -translate-x-1/2 bg-white text-navy text-[10px] font-black px-3 py-1.5 rounded-lg opacity-0 hover:opacity-100 transition-opacity whitespace-nowrap shadow-xl z-20">
-                ₦{(Math.random() * 500).toFixed(0)}K · {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'][i]}
+            <div class="flex-1 flex flex-col items-center gap-3 group/bar relative">
+              <div 
+                class="w-full bg-emerald/10 rounded-t-xl group-hover/bar:bg-emerald/30 transition-all duration-700 relative overflow-hidden"
+                style="height: {30 + Math.random() * 60}%"
+              >
+                <div class="absolute inset-0 bg-gradient-to-t from-emerald/40 to-transparent opacity-0 group-hover/bar:opacity-100 transition-opacity duration-500"></div>
               </div>
+              <span class="text-[10px] font-black text-slate-dim uppercase tracking-tighter group-hover/bar:text-white transition-colors">
+                {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'][i]}
+              </span>
             </div>
           {/each}
         </div>
-        <div class="flex justify-between mt-6 text-[10px] font-mono font-bold text-slate-dim uppercase tracking-[0.3em] border-t border-white/5 pt-6 px-2">
-          <span>JAN</span><span>FEB</span><span>MAR</span><span>APR</span><span>MAY</span><span>JUN</span><span>JUL</span><span>AUG</span><span>SEP</span><span>OCT</span><span>NOV</span><span>DEC</span>
-        </div>
       </div>
 
-      <!-- Actionable Insights Grid -->
-      <div class="grid md:grid-cols-2 gap-6">
-        <div class="card-premium p-8 group cursor-pointer relative overflow-hidden bg-gradient-to-br from-emerald/5 to-transparent border-emerald/10 hover:border-emerald/30">
-          <div class="absolute top-0 right-0 p-8 opacity-[0.05] group-hover:scale-110 transition-transform duration-500">
-            <Sparkles size={100} class="text-emerald" />
+      <!-- Compliance Health -->
+      <div class="grid sm:grid-cols-2 gap-8">
+        <div class="card-premium p-8 flex flex-col gap-6 group hover:border-gold/30 transition-all duration-500">
+          <div class="flex items-center justify-between">
+            <div class="w-14 h-14 rounded-2xl bg-gold/10 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-500">
+              🛡️
+            </div>
+            <div class="text-[10px] font-black text-gold border border-gold/20 px-3 py-1 rounded-full uppercase tracking-widest bg-gold/5">
+              Secure
+            </div>
           </div>
-          <div class="w-12 h-12 rounded-2xl bg-emerald text-white flex items-center justify-center text-2xl mb-6 shadow-lg shadow-emerald/20">📤</div>
-          <h4 class="text-xl font-heading font-black text-white mb-2">Platform Ingestion</h4>
-          <p class="text-sm text-slate-dim font-medium mb-6 leading-relaxed">Securely upload invoices, bank statements, or CAC records for instant AI audit processing.</p>
-          <div class="text-emerald text-xs font-black flex items-center gap-2 uppercase tracking-widest">
-            Deploy Data <ArrowUpRight size={14} />
+          <div class="space-y-1">
+            <h4 class="text-xl font-heading font-black text-white group-hover:text-gold transition-colors">System Integrity</h4>
+            <p class="text-sm text-slate">All auditing nodes are operational and synchronized with FIRS database.</p>
           </div>
+          <button class="text-[10px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2 group/btn mt-2">
+            View Details <ArrowRight size={14} class="text-gold group-hover/btn:translate-x-2 transition-transform" />
+          </button>
         </div>
-        <div class="card-premium p-8 group cursor-pointer relative overflow-hidden bg-gradient-to-br from-gold/5 to-transparent border-gold/10 hover:border-gold/30">
-          <div class="absolute top-0 right-0 p-8 opacity-[0.05] group-hover:scale-110 transition-transform duration-500">
-            <Briefcase size={100} class="text-gold" />
+
+        <div class="card-premium p-8 flex flex-col gap-6 group hover:border-emerald/30 transition-all duration-500">
+          <div class="flex items-center justify-between">
+            <div class="w-14 h-14 rounded-2xl bg-emerald/10 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-500">
+              📜
+            </div>
+            <div class="text-[10px] font-black text-emerald border border-emerald/20 px-3 py-1 rounded-full uppercase tracking-widest bg-emerald/5">
+              Verified
+            </div>
           </div>
-          <div class="w-12 h-12 rounded-2xl bg-gold text-navy flex items-center justify-center text-2xl mb-6 shadow-lg shadow-gold/20">🔍</div>
-          <h4 class="text-xl font-heading font-black text-white mb-2">Auditor Network</h4>
-          <p class="text-sm text-slate-dim font-medium mb-6 leading-relaxed">Connect with ICAN certified professionals to verify your platform findings and sign off reports.</p>
-          <div class="text-gold text-xs font-black flex items-center gap-2 uppercase tracking-widest">
-            Browse Experts <ArrowUpRight size={14} />
+          <div class="space-y-1">
+            <h4 class="text-xl font-heading font-black text-white group-hover:text-emerald transition-colors">Tax Compliance</h4>
+            <p class="text-sm text-slate">Your current fiscal cycle meets all regulatory requirements for 2026.</p>
           </div>
+          <button class="text-[10px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2 group/btn mt-2">
+            Download Cert <ArrowRight size={14} class="text-emerald group-hover/btn:translate-x-2 transition-transform" />
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Intelligence Sidebar -->
+    <!-- Sidebar: Activity & Alerts -->
     <div class="space-y-8">
-      <!-- Live Activity Feed -->
-      <div class="card-premium p-8 bg-surface/50">
+      <div class="card-premium p-8 flex flex-col h-full bg-surface/50">
         <div class="flex items-center justify-between mb-8">
-          <h3 class="text-xl font-heading font-black text-white flex items-center gap-2">
-            <Clock size={20} class="text-emerald" />
-            Platform Pulse
+          <h3 class="text-xl font-heading font-black text-white flex items-center gap-3">
+            <span class="text-2xl">⚡</span>
+            Recent Events
           </h3>
-          <button class="text-[10px] font-black text-emerald uppercase tracking-widest hover:text-emerald/70 transition-colors">History</button>
+          <button class="text-[10px] font-black text-slate-dim hover:text-white uppercase tracking-widest transition-colors">
+            Clear All
+          </button>
         </div>
-        <div class="space-y-7">
+
+        <div class="space-y-4">
           {#each recentActivities as activity}
-            <div class="flex gap-4 relative group">
-              <div class="w-11 h-11 rounded-2xl bg-navy-light flex items-center justify-center text-xl shrink-0 group-hover:bg-emerald/10 transition-colors duration-300">
-                {activity.emoji}
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="text-sm font-black text-white truncate group-hover:text-emerald transition-colors">{activity.title}</div>
-                <div class="flex items-center gap-2 text-[10px] font-bold text-slate-dim mt-1 uppercase tracking-widest">
-                  <span class="text-emerald">{activity.type}</span>
-                  <span class="opacity-30">|</span>
-                  <span>{activity.time}</span>
+            <div class="p-5 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 hover:bg-white/[0.08] transition-all duration-300 group cursor-pointer relative overflow-hidden">
+              <div class="flex items-start gap-4 relative z-10">
+                <div class="w-12 h-12 rounded-xl bg-navy-light flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-500">
+                  {activity.emoji}
+                </div>
+                <div class="flex-1 space-y-1">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-black text-emerald uppercase tracking-widest">{activity.type}</span>
+                    <span class="text-[10px] font-bold text-slate-dim">{activity.time}</span>
+                  </div>
+                  <div class="text-sm font-bold text-white leading-tight group-hover:text-emerald transition-colors">{activity.title}</div>
+                  <div class="flex items-center gap-2">
+                    <div class={cn(
+                      "w-1.5 h-1.5 rounded-full",
+                      activity.status === 'Completed' || activity.status === 'Success' ? "bg-emerald" : "bg-gold"
+                    )}></div>
+                    <span class="text-[10px] font-medium text-slate-dim">{activity.status}</span>
+                  </div>
                 </div>
               </div>
-              <button class="text-slate-dim hover:text-white transition-colors p-1">
-                <MoreHorizontal size={16} />
-              </button>
             </div>
           {/each}
         </div>
-        <button class="w-full mt-10 py-4 text-[10px] font-black text-slate-dim hover:text-white border border-white/5 rounded-2xl transition-all hover:bg-navy-light uppercase tracking-[0.2em]">
-          Expand Intelligence Feed
+
+        <button class="w-full mt-8 py-4 rounded-xl border border-white/10 text-[10px] font-black text-white uppercase tracking-[0.3em] hover:bg-white/5 hover:border-white/20 transition-all">
+          View Audit Logs
         </button>
-      </div>
-
-      <!-- AI Advisory Smart Card -->
-      <div class="card-premium p-8 bg-emerald text-navy overflow-hidden relative group border-none shadow-glow">
-        <div class="absolute -right-6 -bottom-6 text-9xl opacity-[0.1] group-hover:scale-110 transition-transform duration-700">🤖</div>
-        <div class="relative z-10">
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-navy/10 text-navy text-[10px] font-black uppercase tracking-widest mb-4">
-            <Sparkles size={12} />
-            AI Advisory Pro
-          </div>
-          <h4 class="text-2xl font-heading font-black text-navy mb-4 leading-tight tracking-tight">Optimization Opportunity.</h4>
-          <p class="text-sm text-navy/70 font-bold mb-8 leading-relaxed">
-            Your logistics expenditure is <span class="text-navy font-black">12.5% higher</span> than the industry average for Lagos-based SMEs.
-          </p>
-          <button class="w-full py-4 bg-navy text-emerald font-black rounded-2xl text-xs hover:brightness-110 transition-all shadow-xl shadow-navy/20 uppercase tracking-[0.2em]">
-            View Optimization Playbook
-          </button>
-        </div>
-      </div>
-
-      <!-- Quick Trust Indicators -->
-      <div class="grid grid-cols-2 gap-4">
-        <div class="card-premium p-5 flex flex-col items-center text-center bg-surface/50">
-          <CheckCircle2 size={24} class="text-emerald mb-3" />
-          <div class="text-[10px] font-black uppercase tracking-widest text-slate-dim">FIRS Status</div>
-          <div class="text-xs font-black text-white mt-1">COMPLIANT</div>
-        </div>
-        <div class="card-premium p-5 flex flex-col items-center text-center bg-surface/50">
-          <AlertTriangle size={24} class="text-gold mb-3" />
-          <div class="text-[10px] font-black uppercase tracking-widest text-slate-dim">Audit Health</div>
-          <div class="text-xs font-black text-white mt-1">EXCELLENT</div>
-        </div>
       </div>
     </div>
   </div>
 </div>
+
+<style>
+  .shadow-glow {
+    box-shadow: 0 0 30px -5px rgba(0, 200, 150, 0.4);
+  }
+</style>
