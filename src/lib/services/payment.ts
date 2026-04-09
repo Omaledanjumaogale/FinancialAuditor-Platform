@@ -1,4 +1,4 @@
-import { PUBLIC_FLUTTERWAVE_KEY, PUBLIC_PAYSTACK_KEY } from "$env/static/public";
+import { env } from "$env/dynamic/public";
 
 type PaymentResponse = {
   status?: string;
@@ -26,7 +26,7 @@ export const initiateFlutterwave = (data: PaymentData) => {
   if (!flwWindow.FlutterwaveCheckout) return;
 
   flwWindow.FlutterwaveCheckout({
-    public_key: PUBLIC_FLUTTERWAVE_KEY,
+    public_key: env.PUBLIC_FLUTTERWAVE_KEY,
     tx_ref: data.reference,
     amount: data.amount,
     currency: "NGN",
@@ -58,7 +58,7 @@ export const initiatePaystack = (data: PaymentData) => {
   if (!psWindow.PaystackPop) return;
 
   const handler = psWindow.PaystackPop.setup({
-    key: PUBLIC_PAYSTACK_KEY,
+    key: env.PUBLIC_PAYSTACK_KEY,
     email: data.email,
     amount: data.amount * 100, // Paystack uses kobo
     currency: "NGN",
