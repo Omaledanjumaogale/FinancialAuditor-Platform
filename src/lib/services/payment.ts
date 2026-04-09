@@ -1,4 +1,11 @@
-import { PUBLIC_FLUTTERWAVE_PUBLIC_KEY, PUBLIC_PAYSTACK_PUBLIC_KEY } from "$env/static/public";
+import { PUBLIC_FLUTTERWAVE_KEY, PUBLIC_PAYSTACK_KEY } from "$env/static/public";
+
+type PaymentResponse = {
+  status?: string;
+  transaction_id?: string;
+  reference?: string;
+  [key: string]: unknown;
+};
 
 export interface PaymentData {
   amount: number;
@@ -6,16 +13,20 @@ export interface PaymentData {
   name: string;
   phone?: string;
   reference: string;
-  onSuccess: (response: any) => void;
+  onSuccess: (response: PaymentResponse) => void;
   onCancel?: () => void;
 }
 
+type FlutterwaveWindow = typeof window & { FlutterwaveCheckout?: (config: Record<string, unknown>) => void };
+type PaystackWindow = typeof window & { PaystackPop?: { setup: (config: Record<string, unknown>) => { openIframe: () => void } } };
+
 export const initiateFlutterwave = (data: PaymentData) => {
   if (typeof window === 'undefined') return;
-  
-  // @ts-ignore
-  window.FlutterwaveCheckout({
-    public_key: PUBLIC_FLUTTERWAVE_PUBLIC_KEY,
+  const flwWindow = window as FlutterwaveWindow;
+  if (!flwWindow.FlutterwaveCheckout) return;
+
+  flwWindow.FlutterwaveCheckout({
+    public_key: PUBLIC_FLUTTERWAVE_KEY,
     tx_ref: data.reference,
     amount: data.amount,
     currency: "NGN",
@@ -30,7 +41,7 @@ export const initiateFlutterwave = (data: PaymentData) => {
       description: "Payment for Audit/Subscription",
       logo: "https://financialauditor.ewinproject.org/logo.png",
     },
-    callback: (response: any) => {
+    callback: (response: PaymentResponse) => {
       console.log("Flutterwave Payment Successful", response);
       data.onSuccess(response);
     },
@@ -43,10 +54,11 @@ export const initiateFlutterwave = (data: PaymentData) => {
 
 export const initiatePaystack = (data: PaymentData) => {
   if (typeof window === 'undefined') return;
+  const psWindow = window as PaystackWindow;
+  if (!psWindow.PaystackPop) return;
 
-  // @ts-ignore
-  const handler = window.PaystackPop.setup({
-    key: PUBLIC_PAYSTACK_PUBLIC_KEY,
+  const handler = psWindow.PaystackPop.setup({
+    key: PUBLIC_PAYSTACK_KEY,
     email: data.email,
     amount: data.amount * 100, // Paystack uses kobo
     currency: "NGN",
@@ -55,7 +67,7 @@ export const initiatePaystack = (data: PaymentData) => {
       console.log("Paystack Payment Closed");
       if (data.onCancel) data.onCancel();
     },
-    callback: (response: any) => {
+    callback: (response: PaymentResponse) => {
       console.log("Paystack Payment Successful", response);
       data.onSuccess(response);
     }

@@ -1,195 +1,195 @@
 <script lang="ts">
-  import { fade, fly } from 'svelte/transition';
-  import { 
-    BookOpen, Search, Filter, Download, Plus, 
-    MoreHorizontal, ArrowUpRight, ArrowDownRight, 
-    FileText, CheckCircle2, Clock, ShieldCheck,
-    Calendar, LayoutGrid, List
-  } from 'lucide-svelte';
+  import { fly } from 'svelte/transition';
+  import { Search, Filter, Download, ChevronLeft, ChevronRight, ArrowUpRight, TrendingUp, TrendingDown, DollarSign, FileText, ShieldCheck } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { authState } from '$lib/stores/auth.svelte';
-  import { useQuery } from "convex-svelte";
-  import { api } from "$convex/_generated/api";
+  import { useQuery } from 'convex-svelte';
+  import { api } from '$convex/_generated/api';
 
   const userQuery = $derived(
     authState.user ? useQuery(api.users.getByUid, { uid: authState.user.uid }) : null
   );
   const currentUser = $derived(userQuery?.data);
 
-  const transactionsQuery = $derived(
-    currentUser ? useQuery(api.transactions.getByUser, { userId: currentUser._id }) : null
+  const ledgerQuery = $derived(
+    currentUser ? useQuery(api.ledger.getByUserId, { userId: currentUser._id }) : null
   );
-  const transactions = $derived(transactionsQuery?.data || []);
+  const allEntries = $derived(ledgerQuery?.data || []);
+  const isLoading  = $derived(!ledgerQuery || ledgerQuery.isLoading);
 
-  const income = $derived(transactions.filter(t => t.type === 'credit').reduce((acc, t) => acc + t.amount, 0));
-  const expenses = $derived(transactions.filter(t => t.type === 'debit').reduce((acc, t) => acc + t.amount, 0));
-  const balance = $derived(income - expenses);
+  let searchQuery  = $state('');
+  let filterType   = $state<'all' | 'credit' | 'debit'>('all');
+  let currentPage  = $state(1);
+  const PAGE_SIZE  = 10;
+
+  const filtered = $derived(
+    allEntries.filter(e => {
+      const matchSearch = !searchQuery ||
+        e.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        e.category?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchType = filterType === 'all' || (filterType === 'credit' ? e.amount >= 0 : e.amount < 0);
+      return matchSearch && matchType;
+    })
+  );
+
+  const totalPages    = $derived(Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)));
+  const paginatedItems = $derived(filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE));
+
+  const summaryCredit = $derived(allEntries.filter(e => e.amount >= 0).reduce((s, e) => s + e.amount, 0));
+  const summaryDebit  = $derived(allEntries.filter(e => e.amount < 0).reduce((s, e) => s + e.amount, 0));
+  const netBalance    = $derived(summaryCredit + summaryDebit);
+
+  // Mock data when database is empty
+  const mockEntries = [
+    { _id: '1', description: 'Client Retainer Fee',     date: Date.now() - 86400000 * 0, category: 'Revenue',  amount: 500000  },
+    { _id: '2', description: 'Paystack Settlement',      date: Date.now() - 86400000 * 1, category: 'Payment',  amount: 145000  },
+    { _id: '3', description: 'FIRS Tax Remittance',      date: Date.now() - 86400000 * 2, category: 'Tax',      amount: -220000 },
+    { _id: '4', description: 'Q3 External Audit Fee',    date: Date.now() - 86400000 * 3, category: 'Audit',    amount: -85000  },
+    { _id: '5', description: 'Office Lease Payment',     date: Date.now() - 86400000 * 4, category: 'Expense',  amount: -60000  },
+    { _id: '6', description: 'Invoice #INV-2024-089',    date: Date.now() - 86400000 * 5, category: 'Revenue',  amount: 320000  },
+    { _id: '7', description: 'CAC Filing Fee',           date: Date.now() - 86400000 * 6, category: 'Tax',      amount: -15000  },
+    { _id: '8', description: 'Auditor Consultation',     date: Date.now() - 86400000 * 7, category: 'Audit',    amount: -45000  },
+  ];
+
+  const displayEntries = $derived(!isLoading && allEntries.length === 0 ? mockEntries : paginatedItems);
 </script>
 
-<div class="space-y-10 pb-20 relative z-10 w-full" in:fade>
-  <!-- Page Header -->
-  <div class="flex flex-col md:flex-row md:items-end justify-between gap-8">
-    <div class="space-y-2">
-      <div class="flex items-center gap-3 text-[10px] font-black text-emerald uppercase tracking-[0.3em] mb-1">
-        <span class="relative flex h-2 w-2">
-          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald"></span>
-        </span>
-        Blockchain Secured Ledger
-      </div>
-      <h1 class="text-3xl md:text-5xl font-heading font-black text-white tracking-tighter leading-tight">Enterprise <span class="text-emerald">Ledger</span></h1>
-      <p class="text-slate text-lg font-medium max-w-2xl">Immutable audit trail of all financial interactions and document processing synchronized in real-time.</p>
+<svelte:head>
+  <title>General Ledger — FinancialAuditor</title>
+</svelte:head>
+
+<div class="space-y-6 pb-10" in:fly={{ y: 10, duration: 300 }}>
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-heading font-bold text-white tracking-tight">General Ledger</h1>
+      <p class="text-sm text-slate-dim mt-0.5">All financial transactions and records</p>
     </div>
-    <div class="flex items-center gap-4">
-      <button class="btn-secondary py-3 px-6 text-xs flex items-center gap-3 group">
-        <span class="text-lg group-hover:rotate-12 transition-transform duration-300">📥</span>
-        Export Audit Log
-      </button>
-      <button class="btn-primary py-3 px-8 text-xs flex items-center gap-3 shadow-glow group">
-        <span class="text-lg group-hover:scale-125 transition-transform duration-300">➕</span>
-        Manual Entry
-      </button>
-    </div>
+    <button class="btn-secondary flex items-center gap-2 py-2 px-4 text-sm rounded-xl border border-white/15 text-slate hover:text-white hover:bg-white/5 transition-all">
+      <Download size={14} aria-hidden="true" />
+      Export CSV
+    </button>
   </div>
 
-  <!-- Search & View Controls -->
-  <div class="flex flex-col lg:flex-row gap-6 items-center">
-    <div class="card-premium p-2 flex items-center gap-2 flex-1 w-full bg-white/5 border-white/10 group focus-within:border-emerald/40 transition-all duration-500">
-      <div class="relative flex-1 group/input">
-        <Search class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-dim group-focus-within/input:text-emerald transition-colors" size={18} />
-        <input 
-          type="text" 
-          placeholder="Search by ID, description, or amount..." 
-          class="w-full bg-transparent border-none py-3 pl-12 pr-4 text-base text-white placeholder:text-slate-dim focus:outline-none font-medium tracking-tight"
-        />
-      </div>
-      <div class="h-8 w-px bg-white/10 hidden sm:block"></div>
-      <button class="btn-ghost py-2.5 px-6 text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-3 hover:text-emerald transition-colors">
-        <Filter size={14} /> Filters
-      </button>
-    </div>
-    <div class="flex gap-4 w-full lg:w-auto">
-      <div class="card-premium p-1.5 flex gap-1 bg-white/5 border-white/10">
-        <button class="p-2.5 bg-emerald/10 shadow-sm rounded-xl text-emerald border border-emerald/20 transition-all"><List size={20} /></button>
-        <button class="p-2.5 text-slate-dim hover:text-white hover:bg-white/5 rounded-xl transition-all"><LayoutGrid size={20} /></button>
-      </div>
-      <button class="card-premium px-6 py-3 bg-white/5 border-white/10 text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-3 flex-1 lg:flex-none justify-center hover:border-emerald/30 transition-all duration-300">
-        <Calendar size={16} class="text-emerald" /> Last 30 Days
-      </button>
-    </div>
-  </div>
-
-  <!-- Enterprise Data Table -->
-  <div class="card-premium overflow-hidden bg-surface/40 backdrop-blur-sm border-white/10 group/table">
-    <div class="overflow-x-auto">
-      <table class="w-full text-left border-collapse">
-        <thead class="bg-white/[0.03] border-b border-white/5">
-          <tr>
-            <th class="px-8 py-6 text-[10px] font-black text-slate-dim uppercase tracking-[0.3em]">Hash / ID</th>
-            <th class="px-6 py-6 text-[10px] font-black text-slate-dim uppercase tracking-[0.3em]">Timestamp</th>
-            <th class="px-6 py-6 text-[10px] font-black text-slate-dim uppercase tracking-[0.3em]">Transaction / Event</th>
-            <th class="px-6 py-6 text-[10px] font-black text-slate-dim uppercase tracking-[0.3em]">Category</th>
-            <th class="px-6 py-6 text-[10px] font-black text-slate-dim uppercase tracking-[0.3em] text-right">Value (NGN)</th>
-            <th class="px-6 py-6 text-[10px] font-black text-slate-dim uppercase tracking-[0.3em] text-center">Status</th>
-            <th class="px-8 py-6 text-[10px] font-black text-slate-dim uppercase tracking-[0.3em] text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-white/5">
-          {#each transactions as trx, i}
-            <tr 
-              class="hover:bg-white/[0.02] transition-all duration-300 group/row"
-              in:fly={{ y: 10, delay: i * 50 }}
-            >
-              <td class="px-8 py-7">
-                <div class="flex flex-col gap-1.5">
-                  <span class="font-mono text-xs text-emerald font-bold tracking-widest">{trx._id.toString().slice(-8).toUpperCase()}</span>
-                  <span class="text-[9px] font-black text-slate-dim uppercase tracking-[0.2em] opacity-0 group-hover/row:opacity-100 transition-opacity">Node: NG-AUTH-01</span>
-                </div>
-              </td>
-              <td class="px-6 py-7">
-                <div class="flex items-center gap-3 text-sm font-bold text-slate group-hover/row:text-white transition-colors">
-                  <Clock size={14} class="text-emerald/60" />
-                  {new Date(trx.date).toLocaleDateString()}
-                </div>
-              </td>
-              <td class="px-6 py-7">
-                <div class="flex items-center gap-4">
-                  <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-xl group-hover/row:scale-110 transition-transform duration-500 group-hover/row:bg-white/10 shadow-sm">
-                    {trx.type === 'credit' ? '💰' : '💸'}
-                  </div>
-                  <span class="text-sm font-bold text-white tracking-tight leading-none group-hover/row:text-emerald transition-colors">{trx.description}</span>
-                </div>
-              </td>
-              <td class="px-6 py-7">
-                <span class={cn(
-                  "px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border",
-                  trx.type === 'credit' ? "bg-emerald/5 text-emerald border-emerald/10" : "bg-white/5 text-slate-dim border-white/10"
-                )}>
-                  {trx.category}
-                </span>
-              </td>
-              <td class="px-6 py-7 text-right">
-                <span class={cn(
-                  "font-heading font-black text-lg tracking-tight transition-colors",
-                  trx.type === 'credit' ? "text-emerald" : "text-white"
-                )}>{trx.type === 'credit' ? '+' : '-'}₦{trx.amount.toLocaleString()}</span>
-              </td>
-              <td class="px-6 py-7">
-                <div class="flex items-center justify-center">
-                  <div class={cn(
-                    "flex items-center gap-2 px-3 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-widest",
-                    trx.status === 'completed' ? "bg-emerald/10 text-emerald border-emerald/20" : 
-                    trx.status === 'pending' ? "bg-gold/10 text-gold border-gold/20" : "bg-danger/10 text-danger border-danger/20"
-                  )}>
-                    <div class={cn("w-1.5 h-1.5 rounded-full", trx.status === 'completed' ? "bg-emerald" : trx.status === 'pending' ? "bg-gold animate-pulse" : "bg-danger")}></div>
-                    {trx.status}
-                  </div>
-                </div>
-              </td>
-              <td class="px-8 py-7 text-right">
-                <button class="p-2.5 rounded-xl hover:bg-white/10 text-slate-dim hover:text-white transition-all duration-300 active:scale-90">
-                  <Download size={20} />
-                </button>
-              </td>
-            </tr>
-          {/each}
-          {#if transactions.length === 0}
-            <tr>
-              <td colspan="7" class="px-8 py-20 text-center">
-                <div class="flex flex-col items-center gap-4">
-                  <div class="w-16 h-16 rounded-3xl bg-white/5 flex items-center justify-center text-3xl">📭</div>
-                  <div class="space-y-1">
-                    <p class="text-white font-bold">No transactions found</p>
-                    <p class="text-xs text-slate-dim">Your financial activities will appear here.</p>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          {/if}
-        </tbody>
-      </table>
-    </div>
-    
-    <!-- Table Footer / Pagination -->
-    <div class="px-8 py-6 bg-white/[0.01] border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-6">
-      <div class="text-[10px] font-black text-slate-dim uppercase tracking-[0.2em]">
-        Showing <span class="text-white">6</span> of <span class="text-white">1,284</span> Transactions
-      </div>
-      <div class="flex items-center gap-3">
-        <button class="btn-secondary py-2.5 px-5 text-[10px] font-black uppercase tracking-widest opacity-50 cursor-not-allowed">Previous</button>
-        <div class="flex items-center gap-1">
-          <button class="w-10 h-10 rounded-xl bg-emerald text-white text-[10px] font-black shadow-glow">1</button>
-          <button class="w-10 h-10 rounded-xl hover:bg-white/5 text-white text-[10px] font-black transition-all">2</button>
-          <button class="w-10 h-10 rounded-xl hover:bg-white/5 text-white text-[10px] font-black transition-all">3</button>
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    {#each [
+      { label: 'Total Credits', value: `₦${(summaryCredit/1000).toFixed(0)}K`, icon: TrendingUp, color: 'text-emerald', bg: 'rgba(16,185,129,0.12)' },
+      { label: 'Total Debits',  value: `₦${(Math.abs(summaryDebit)/1000).toFixed(0)}K`, icon: TrendingDown, color: 'text-red-400', bg: 'rgba(239,68,68,0.12)' },
+      { label: 'Net Balance',   value: `₦${(netBalance/1000).toFixed(0)}K`, icon: DollarSign, color: netBalance >= 0 ? 'text-emerald' : 'text-red-400', bg: 'rgba(16,185,129,0.08)' },
+    ] as card, i (card.label)}
+      <div class="rounded-2xl p-5 border border-white/8 flex items-center gap-4" style="background-color: #111827;" in:fly={{ y: 8, delay: i * 60, duration: 300 }}>
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background: {card.bg}" aria-hidden="true">
+          <card.icon size={18} class={card.color} />
         </div>
-        <button class="btn-secondary py-2.5 px-5 text-[10px] font-black uppercase tracking-widest hover:border-emerald/30 transition-all">Next</button>
+        <div>
+          <p class="text-xs font-semibold text-slate-dim uppercase tracking-wider">{card.label}</p>
+          <p class="{card.color} text-xl font-heading font-bold tabular-nums">{card.value}</p>
+        </div>
       </div>
+    {/each}
+  </div>
+
+  <!-- Filters Row -->
+  <div class="flex flex-col sm:flex-row gap-3">
+    <div class="relative flex-1">
+      <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-dim" size={15} aria-hidden="true" />
+      <input
+        type="search"
+        bind:value={searchQuery}
+        placeholder="Search transactions..."
+        class="w-full py-2.5 pl-10 pr-4 text-sm rounded-xl border border-white/10 text-white placeholder-slate-dim focus:border-emerald/40 focus:outline-none transition-colors"
+        style="background-color: #1f2937;"
+        aria-label="Search ledger entries"
+      />
     </div>
+    <div class="flex gap-2">
+      {#each ['all', 'credit', 'debit'] as type (type)}
+        <button
+          onclick={() => { filterType = type as any; currentPage = 1; }}
+          class={cn('px-4 py-2 text-sm rounded-xl border font-medium capitalize transition-all', filterType === type
+            ? 'bg-emerald text-white border-emerald'
+            : 'border-white/10 text-slate hover:text-white hover:bg-white/5'
+          )}
+        >
+          {type}
+        </button>
+      {/each}
+    </div>
+  </div>
+
+  <!-- Ledger Table -->
+  <div class="rounded-2xl border border-white/8 overflow-hidden" style="background-color: #111827;">
+    {#if isLoading}
+      <div class="space-y-0">
+        {#each [1,2,3,4,5] as _ (_)}
+          <div class="px-6 py-4 border-b border-white/8 flex items-center gap-4">
+            <div class="h-4 rounded flex-1" style="background: rgba(255,255,255,0.05); animation: shimmer 1.5s ease infinite;"></div>
+            <div class="h-4 rounded w-24" style="background: rgba(255,255,255,0.05);"></div>
+          </div>
+        {/each}
+      </div>
+    {:else}
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse" aria-label="Ledger entries">
+          <thead>
+            <tr style="background-color: #1f2937;">
+              <th class="px-6 py-3 text-[10px] font-semibold text-slate-dim uppercase tracking-widest">Description</th>
+              <th class="px-6 py-3 text-[10px] font-semibold text-slate-dim uppercase tracking-widest">Date</th>
+              <th class="px-6 py-3 text-[10px] font-semibold text-slate-dim uppercase tracking-widest">Category</th>
+              <th class="px-6 py-3 text-[10px] font-semibold text-slate-dim uppercase tracking-widest text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each displayEntries as entry (entry._id)}
+              <tr class="border-t border-white/8 hover:bg-white/3 transition-colors">
+                <td class="px-6 py-4 text-sm text-white font-medium">{entry.description}</td>
+                <td class="px-6 py-4 text-xs text-slate-dim">
+                  {new Date(entry.date).toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </td>
+                <td class="px-6 py-4">
+                  <span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg"
+                    style={entry.amount >= 0 ? 'background:rgba(16,185,129,0.15);color:#6ee7b7' : 'background:rgba(239,68,68,0.12);color:#fca5a5'}>
+                    {entry.category}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm font-bold text-right {entry.amount >= 0 ? 'text-emerald' : 'text-red-400'} tabular-nums">
+                  {entry.amount >= 0 ? '+' : ''}₦{Math.abs(entry.amount).toLocaleString()}
+                </td>
+              </tr>
+            {/each}
+            {#if displayEntries.length === 0}
+              <tr>
+                <td colspan="4" class="px-6 py-14 text-center text-sm text-slate-dim">
+                  <FileText size={32} class="mx-auto mb-3 text-slate-dim opacity-40" aria-hidden="true" />
+                  No transactions found.
+                </td>
+              </tr>
+            {/if}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {#if totalPages > 1}
+        <div class="px-6 py-4 border-t border-white/8 flex items-center justify-between">
+          <p class="text-xs text-slate-dim">
+            Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filtered.length)} of {filtered.length}
+          </p>
+          <div class="flex items-center gap-2">
+            <button onclick={() => currentPage = Math.max(1, currentPage - 1)} disabled={currentPage === 1}
+              class="p-1.5 rounded-lg border border-white/10 text-slate hover:text-white hover:bg-white/5 disabled:opacity-40 transition-all" aria-label="Previous page">
+              <ChevronLeft size={15} aria-hidden="true" />
+            </button>
+            <span class="text-xs text-slate font-medium px-2">{currentPage} / {totalPages}</span>
+            <button onclick={() => currentPage = Math.min(totalPages, currentPage + 1)} disabled={currentPage === totalPages}
+              class="p-1.5 rounded-lg border border-white/10 text-slate hover:text-white hover:bg-white/5 disabled:opacity-40 transition-all" aria-label="Next page">
+              <ChevronRight size={15} aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      {/if}
+    {/if}
   </div>
 </div>
-
-<style>
-  .shadow-glow {
-    box-shadow: 0 0 30px -5px rgba(0, 200, 150, 0.4);
-  }
-</style>

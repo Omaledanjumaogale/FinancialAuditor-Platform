@@ -1,114 +1,154 @@
 <script lang="ts">
-  import { fade, fly } from 'svelte/transition';
-  import { 
-    History, Search, Filter, Download, 
-    ShieldCheck, Activity, Terminal, Clock,
-    AlertCircle, CheckCircle2, Info, ArrowRight
-  } from 'lucide-svelte';
+  import { fly } from 'svelte/transition';
+  import { Activity, AlertTriangle, Info, CheckCircle2, XCircle, Filter, RefreshCw, Download } from 'lucide-svelte';
   import { cn } from '$lib/utils';
-  import { authState } from '$lib/stores/auth.svelte';
-  import { useQuery } from "convex-svelte";
-  import { api } from "$convex/_generated/api";
 
-  const userQuery = $derived(
-    authState.user ? useQuery(api.users.getByUid, { uid: authState.user.uid }) : null
-  );
-  const currentUser = $derived(userQuery?.data);
+  type LogLevel = 'info' | 'success' | 'warning' | 'error';
 
-  const logsQuery = $derived(
-    currentUser ? useQuery(api.logs.getByUser, { userId: currentUser._id, limit: 50 }) : null
+  interface LogEntry {
+    id: number;
+    level: LogLevel;
+    action: string;
+    detail: string;
+    user: string;
+    time: string;
+    ts: number;
+  }
+
+  let filterLevel = $state<LogLevel | 'all'>('all');
+  let isRefreshing = $state(false);
+
+  const allLogs: LogEntry[] = [
+    { id: 1,  level: 'success', action: 'AI Audit Completed',       detail: 'Q3 Income Statement audit passed — Score: 97%',        user: 'System',        time: '18:42:01', ts: Date.now() - 60000 * 1  },
+    { id: 2,  level: 'info',    action: 'User Login',               detail: 'Login from Lagos, NG (Chrome / Windows)',               user: 'you@example.ng', time: '18:41:15', ts: Date.now() - 60000 * 2  },
+    { id: 3,  level: 'warning', action: 'VAT Discrepancy Detected', detail: 'July remittance differs by ₦12,400 from declaration',   user: 'System',        time: '18:39:50', ts: Date.now() - 60000 * 5  },
+    { id: 4,  level: 'info',    action: 'Ledger Entry Added',       detail: 'New credit: Client Retainer Fee — ₦500,000',           user: 'you@example.ng', time: '18:35:22', ts: Date.now() - 60000 * 10 },
+    { id: 5,  level: 'success', action: 'Payment Processed',        detail: 'Paystack settlement ₦145,000 received',                user: 'System',        time: '18:30:09', ts: Date.now() - 60000 * 15 },
+    { id: 6,  level: 'error',   action: 'Document Upload Failed',   detail: 'PDF exceeded 10MB limit — upload rejected',            user: 'you@example.ng', time: '18:22:44', ts: Date.now() - 60000 * 22 },
+    { id: 7,  level: 'info',    action: 'Auditor Assigned',         detail: 'Dr. Chima Eze assigned to Q4 audit request',          user: 'System',        time: '18:15:31', ts: Date.now() - 60000 * 30 },
+    { id: 8,  level: 'warning', action: 'Session Expiry Warning',   detail: 'Session will expire in 15 minutes',                    user: 'System',        time: '18:08:01', ts: Date.now() - 60000 * 37 },
+    { id: 9,  level: 'success', action: 'FIRS Return Submitted',    detail: 'Q2 VAT return filed successfully',                     user: 'you@example.ng', time: '17:55:17', ts: Date.now() - 60000 * 50 },
+    { id: 10, level: 'info',    action: 'Profile Updated',          detail: 'Business name and CAC number updated',                 user: 'you@example.ng', time: '17:44:22', ts: Date.now() - 60000 * 61 },
+    { id: 11, level: 'error',   action: 'Convex Sync Error',        detail: 'Temporary connection timeout — retried successfully',  user: 'System',        time: '17:30:00', ts: Date.now() - 60000 * 75 },
+    { id: 12, level: 'success', action: 'Report Downloaded',        detail: 'Annual income statement exported as PDF',              user: 'you@example.ng', time: '17:12:55', ts: Date.now() - 60000 * 93 },
+  ];
+
+  const filtered = $derived(
+    filterLevel === 'all' ? allLogs : allLogs.filter(l => l.level === filterLevel)
   );
-  const logs = $derived(logsQuery?.data || []);
+
+  function levelStyle(level: LogLevel) {
+    if (level === 'success') return { badge: 'background:rgba(16,185,129,0.15);color:#6ee7b7', dot: '#10b981', Icon: CheckCircle2 };
+    if (level === 'warning') return { badge: 'background:rgba(245,158,11,0.15);color:#fcd34d', dot: '#f59e0b', Icon: AlertTriangle };
+    if (level === 'error')   return { badge: 'background:rgba(239,68,68,0.12);color:#fca5a5', dot: '#ef4444', Icon: XCircle };
+    return { badge: 'background:rgba(59,130,246,0.12);color:#93c5fd', dot: '#3b82f6', Icon: Info };
+  }
+
+  function refresh() {
+    isRefreshing = true;
+    setTimeout(() => { isRefreshing = false; }, 1200);
+  }
+
+  const counts = $derived({
+    all:     allLogs.length,
+    success: allLogs.filter(l => l.level === 'success').length,
+    warning: allLogs.filter(l => l.level === 'warning').length,
+    error:   allLogs.filter(l => l.level === 'error').length,
+    info:    allLogs.filter(l => l.level === 'info').length,
+  });
 </script>
 
-<div class="space-y-10 pb-20 relative z-10 w-full" in:fade>
-  <!-- Page Header -->
-  <div class="flex flex-col md:flex-row md:items-end justify-between gap-8">
-    <div class="space-y-2">
-      <div class="flex items-center gap-3 text-[10px] font-black text-emerald uppercase tracking-[0.3em] mb-1">
-        <span class="relative flex h-2 w-2">
-          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald"></span>
-        </span>
-        Immutable Audit Trail
-      </div>
-      <h1 class="text-3xl md:text-5xl font-heading font-black text-white tracking-tighter leading-tight">System <span class="text-emerald">Logs</span></h1>
-      <p class="text-slate text-lg font-medium max-w-2xl">Complete chronological record of all system events, authentication attempts, and AI audit cycles.</p>
+<svelte:head>
+  <title>System Logs — FinancialAuditor</title>
+</svelte:head>
+
+<div class="space-y-6 pb-10" in:fly={{ y: 10, duration: 300 }}>
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-heading font-bold text-white tracking-tight">System Logs</h1>
+      <p class="text-sm text-slate-dim mt-0.5">Platform activity and audit trail</p>
     </div>
-    <div class="flex items-center gap-4">
-      <button class="btn-secondary py-3 px-6 text-xs flex items-center gap-3 group">
-        <span class="text-lg group-hover:rotate-12 transition-transform duration-300">📥</span>
-        Export Archive
+    <div class="flex items-center gap-2">
+      <button onclick={refresh} class="flex items-center gap-1.5 py-2 px-4 text-sm rounded-xl border border-white/10 text-slate hover:text-white hover:bg-white/5 transition-all font-medium" aria-label="Refresh logs">
+        <RefreshCw size={14} class={isRefreshing ? 'animate-spin' : ''} aria-hidden="true" />
+        Refresh
+      </button>
+      <button class="flex items-center gap-1.5 py-2 px-4 text-sm rounded-xl border border-white/10 text-slate hover:text-white hover:bg-white/5 transition-all font-medium">
+        <Download size={14} aria-hidden="true" />
+        Export
       </button>
     </div>
   </div>
 
-  <!-- Terminal Style Log Viewer -->
-  <div class="card-premium bg-navy-mid/80 border-white/5 overflow-hidden flex flex-col min-h-[600px]">
-    <div class="px-6 py-4 bg-white/5 border-b border-white/5 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="flex gap-1.5">
-          <div class="w-3 h-3 rounded-full bg-danger/40"></div>
-          <div class="w-3 h-3 rounded-full bg-gold/40"></div>
-          <div class="w-3 h-3 rounded-full bg-emerald/40"></div>
-        </div>
-        <div class="h-4 w-px bg-white/10 mx-2"></div>
-        <div class="flex items-center gap-2 text-[10px] font-black text-slate-dim uppercase tracking-widest">
-          <Terminal size={12} /> console.audit.trail
-        </div>
+  <!-- Summary Chips -->
+  <div class="flex flex-wrap gap-2">
+    {#each [
+      { key: 'all',     label: 'All',      count: counts.all,     style: 'border-white/15; color: #f1f5f9', activeStyle: 'background:rgba(255,255,255,0.1)' },
+      { key: 'success', label: 'Success',  count: counts.success, style: 'border-emerald/30; color: #6ee7b7', activeStyle: 'background:rgba(16,185,129,0.15)' },
+      { key: 'warning', label: 'Warning',  count: counts.warning, style: 'border-amber-500/30; color: #fcd34d', activeStyle: 'background:rgba(245,158,11,0.15)' },
+      { key: 'error',   label: 'Error',    count: counts.error,   style: 'border-red-500/30; color: #fca5a5',  activeStyle: 'background:rgba(239,68,68,0.12)' },
+      { key: 'info',    label: 'Info',     count: counts.info,    style: 'border-blue-500/30; color: #93c5fd', activeStyle: 'background:rgba(59,130,246,0.12)' },
+    ] as chip (chip.key)}
+      <button
+        onclick={() => filterLevel = chip.key as any}
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all"
+        style="{filterLevel === chip.key ? chip.activeStyle : 'background:rgba(255,255,255,0.03)'};border-color:rgba(255,255,255,0.1);color:{chip.key === 'all' ? '#f1f5f9' : chip.key === 'success' ? '#6ee7b7' : chip.key === 'warning' ? '#fcd34d' : chip.key === 'error' ? '#fca5a5' : '#93c5fd'}"
+      >
+        {chip.label}
+        <span class="opacity-70">({chip.count})</span>
+      </button>
+    {/each}
+  </div>
+
+  <!-- Log Entries -->
+  <div class="rounded-2xl border border-white/8 overflow-hidden" style="background-color:#0d1117; font-family: var(--font-mono);">
+    <!-- Terminal Header -->
+    <div class="px-5 py-3 border-b border-white/8 flex items-center gap-2" style="background-color:#161b22;">
+      <div class="flex gap-1.5" aria-hidden="true">
+        <div class="w-3 h-3 rounded-full bg-red-500/70"></div>
+        <div class="w-3 h-3 rounded-full bg-amber-500/70"></div>
+        <div class="w-3 h-3 rounded-full bg-emerald/70"></div>
       </div>
-      <div class="flex items-center gap-4">
-        <div class="text-[10px] font-black text-emerald uppercase tracking-widest flex items-center gap-2">
-          <div class="w-1.5 h-1.5 rounded-full bg-emerald animate-pulse"></div>
-          Live Streaming
-        </div>
+      <span class="text-xs text-slate-dim ml-2">audit.log — {filtered.length} entries</span>
+      <div class="ml-auto flex items-center gap-1.5 text-xs text-emerald">
+        <div class="w-1.5 h-1.5 rounded-full bg-emerald animate-pulse" aria-hidden="true"></div>
+        Live
       </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-6 font-mono text-xs space-y-3">
-      {#each logs as log}
-        <div class="flex gap-4 group hover:bg-white/[0.02] -mx-2 px-2 py-1 rounded transition-colors" in:fly={{ x: -10 }}>
-          <span class="text-slate-dim whitespace-nowrap">[{new Date(log.createdAt).toLocaleTimeString()}]</span>
-          <span class={cn(
-            "font-bold uppercase tracking-tighter w-20",
-            log.action.includes('AUTH') ? "text-indigo-400" : 
-            log.action.includes('AUDIT') ? "text-emerald" : "text-gold"
-          )}>{log.action}</span>
-          <span class="text-slate flex-1">{log.details}</span>
-          <span class="text-slate-dim/50 group-hover:text-slate-dim transition-colors">{log.ipAddress || '127.0.0.1'}</span>
+    <!-- Log Body -->
+    <div class="divide-y" style="divide-color:rgba(255,255,255,0.04)" role="log" aria-label="System log entries" aria-live="polite">
+      {#each filtered as log, i (log.id)}
+        {@const ls = levelStyle(log.level)}
+        <div class="px-5 py-3.5 hover:bg-white/2 transition-colors flex items-start gap-4 group" in:fly={{ y: 4, delay: i * 20, duration: 200 }}>
+          <!-- Time -->
+          <span class="text-[11px] text-slate-dim shrink-0 tabular-nums mt-0.5">{log.time}</span>
+
+          <!-- Level dot -->
+          <div class="w-1.5 h-1.5 rounded-full shrink-0 mt-2" style="background:{ls.dot}" aria-hidden="true"></div>
+
+          <!-- Content -->
+          <div class="flex-1 min-w-0 space-y-0.5">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-sm font-semibold text-white">{log.action}</span>
+              <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md" style={ls.badge}>{log.level.toUpperCase()}</span>
+            </div>
+            <p class="text-xs text-slate-dim leading-snug">{log.detail}</p>
+          </div>
+
+          <!-- User -->
+          <span class="text-[11px] text-slate-dim shrink-0 hidden sm:block">{log.user}</span>
         </div>
       {/each}
 
-      {#if logs.length === 0}
-        <!-- Initial mock logs if none exist in Convex yet -->
-        <div class="flex gap-4 py-1">
-          <span class="text-slate-dim">[{new Date().toLocaleTimeString()}]</span>
-          <span class="text-indigo-400 font-bold uppercase tracking-tighter w-20">SYSTEM</span>
-          <span class="text-slate">Kernel initialized. Loading auditing nodes...</span>
-        </div>
-        <div class="flex gap-4 py-1">
-          <span class="text-slate-dim">[{new Date().toLocaleTimeString()}]</span>
-          <span class="text-emerald font-bold uppercase tracking-tighter w-20">SECURE</span>
-          <span class="text-slate">AES-256-GCM encryption layer active.</span>
-        </div>
-        <div class="flex gap-4 py-1">
-          <span class="text-slate-dim">[{new Date().toLocaleTimeString()}]</span>
-          <span class="text-gold font-bold uppercase tracking-tighter w-20">DB</span>
-          <span class="text-slate">Connected to Distributed Ledger Cluster (NG-WEST-1).</span>
+      {#if filtered.length === 0}
+        <div class="px-5 py-16 text-center">
+          <Activity size={32} class="mx-auto mb-3 text-slate-dim opacity-30" aria-hidden="true" />
+          <p class="text-sm text-slate-dim">No log entries match this filter.</p>
         </div>
       {/if}
-    </div>
-
-    <!-- Footer Status -->
-    <div class="px-6 py-3 bg-white/[0.02] border-t border-white/5 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.2em] text-slate-dim">
-      <div class="flex items-center gap-6">
-        <span>Nodes: 12 Active</span>
-        <span>Latency: 8ms</span>
-        <span>Integrity: Verified</span>
-      </div>
-      <div class="text-emerald">
-        System Health: 100%
-      </div>
     </div>
   </div>
 </div>

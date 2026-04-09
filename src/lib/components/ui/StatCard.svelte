@@ -1,84 +1,92 @@
 <script lang="ts">
-  import { cn } from '$lib/utils';
   import { fly } from 'svelte/transition';
+  import { TrendingUp, TrendingDown, Minus } from 'lucide-svelte';
 
   interface Props {
     label: string;
-    value: string;
+    value: string | number;
     change?: string;
     trend?: 'up' | 'down' | 'neutral';
-    emoji: string;
+    icon?: any;
+    color?: 'brand' | 'accent' | 'info' | 'danger' | 'neutral';
+    prefix?: string;
+    suffix?: string;
     delay?: number;
-    class?: string;
+    loading?: boolean;
   }
 
-  let { 
-    label, 
-    value, 
-    change, 
-    trend = 'neutral', 
-    emoji, 
+  let {
+    label,
+    value,
+    change,
+    trend = 'neutral' as 'up' | 'down' | 'neutral',
+    icon: Icon,
+    color = 'brand' as 'brand' | 'accent' | 'info' | 'danger' | 'neutral',
+    prefix = '',
+    suffix = '',
     delay = 0,
-    class: className 
-  } = $props<Props>();
+    loading = false,
+  } = $props();
+
+  // Pure inline-style color map — no dark: Tailwind classes needed
+  const iconStyleMap = {
+    brand:   'background:rgba(16,185,129,0.12);color:#10b981',
+    accent:  'background:rgba(245,158,11,0.12);color:#f59e0b',
+    info:    'background:rgba(59,130,246,0.12);color:#60a5fa',
+    danger:  'background:rgba(239,68,68,0.12);color:#f87171',
+    neutral: 'background:rgba(255,255,255,0.06);color:#94a3b8',
+  };
+
+  const trendStyleMap = {
+    up:      { Icon: TrendingUp,   badge: 'background:rgba(16,185,129,0.12);color:#6ee7b7' },
+    down:    { Icon: TrendingDown, badge: 'background:rgba(239,68,68,0.12);color:#fca5a5' },
+    neutral: { Icon: Minus,        badge: 'background:rgba(255,255,255,0.06);color:#94a3b8' },
+  };
+
+  const iconStyle   = $derived((iconStyleMap as Record<string, string>)[color]);
+  const trendConfig = $derived((trendStyleMap as Record<string, { Icon: typeof TrendingUp | typeof TrendingDown | typeof Minus; badge: string }>)[trend]);
+  const TrendIcon   = $derived(trendConfig.Icon);
 </script>
 
-<div 
-  class={cn(
-    "card-premium p-6 group relative overflow-hidden transition-all duration-500",
-    "hover:border-emerald/30 hover:-translate-y-1.5 hover:shadow-glow",
-    className
-  )}
-  in:fly={{ y: 20, delay, duration: 600 }}
+<div
+  class="rounded-2xl p-5 border border-white/8 hover:border-white/15 hover:-translate-y-0.5 transition-all duration-200 flex flex-col gap-4"
+  style="background-color:#111827;"
+  in:fly={{ y: 12, delay, duration: 300 }}
 >
-  <!-- Background Decoration from Original Design -->
-  <div class="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-700 pointer-events-none">
-    <span class="text-8xl select-none">{emoji}</span>
-  </div>
-
-  <div class="relative z-10 flex flex-col h-full space-y-4">
-    <div class="flex items-center justify-between">
-      <div class="w-12 h-12 rounded-[18px] bg-white/5 border border-white/10 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-500 group-hover:bg-emerald/10 group-hover:border-emerald/20 shadow-sm">
-        {emoji}
+  {#if loading}
+    <!-- Skeleton -->
+    <div class="space-y-3 animate-pulse">
+      <div class="h-3 w-24 rounded" style="background:rgba(255,255,255,0.06)"></div>
+      <div class="h-8 w-32 rounded" style="background:rgba(255,255,255,0.06)"></div>
+      <div class="h-2 w-20 rounded" style="background:rgba(255,255,255,0.06)"></div>
+    </div>
+  {:else}
+    <!-- Header row -->
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.08em] mb-1" style="color:#475569">{label}</p>
+        <div class="flex items-baseline gap-1.5 mt-1">
+          {#if prefix}<span class="text-base font-semibold" style="color:#64748b">{prefix}</span>{/if}
+          <span class="text-2xl font-heading font-bold text-white tabular-nums">{value}</span>
+          {#if suffix}<span class="text-base font-semibold" style="color:#64748b">{suffix}</span>{/if}
+        </div>
       </div>
-      
-      {#if change}
-        <div class={cn(
-          "px-2.5 py-1 rounded-full text-[10px] font-black border tracking-widest uppercase transition-colors duration-300",
-          trend === 'up' ? "bg-emerald/5 text-emerald border-emerald/10 group-hover:bg-emerald/10" : 
-          trend === 'down' ? "bg-destructive/5 text-destructive border-destructive/10 group-hover:bg-destructive/10" : 
-          "bg-white/5 text-slate-dim border-white/10"
-        )}>
-          {trend === 'up' ? '↑' : trend === 'down' ? '↓' : ''} {change}
+      {#if Icon}
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={iconStyle} aria-hidden="true">
+          <Icon size={18} />
         </div>
       {/if}
     </div>
 
-    <div>
-      <div class="text-[10px] font-bold text-slate-dim uppercase tracking-[0.2em] mb-1.5 group-hover:text-emerald transition-colors duration-300">
-        {label}
+    <!-- Trend Badge -->
+    {#if change}
+      <div class="flex items-center gap-2 mt-auto pt-3 border-t" style="border-color:rgba(255,255,255,0.06)">
+        <div class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold" style={trendConfig.badge}>
+          <TrendIcon size={11} aria-hidden="true" />
+          <span>{change}</span>
+        </div>
+        <span class="text-xs" style="color:#475569">vs last period</span>
       </div>
-      <div class="text-3xl font-heading font-black text-white tracking-tight group-hover:scale-[1.02] origin-left transition-transform duration-300">
-        {value}
-      </div>
-    </div>
-
-    <!-- Progress bar from Original Dashboard -->
-    <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 mt-auto">
-      <div 
-        class={cn(
-          "h-full rounded-full transition-all duration-1000 ease-out",
-          trend === 'up' ? "bg-emerald shadow-[0_0_8px_rgba(0,200,150,0.4)]" : 
-          trend === 'down' ? "bg-destructive shadow-[0_0_8px_rgba(255,77,109,0.4)]" : "bg-slate-dim"
-        )}
-        style="width: 65%"
-      ></div>
-    </div>
-  </div>
+    {/if}
+  {/if}
 </div>
-
-<style>
-  .shadow-glow {
-    box-shadow: 0 0 20px -5px rgba(0, 200, 150, 0.3);
-  }
-</style>

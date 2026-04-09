@@ -1,279 +1,248 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { fade, fly } from 'svelte/transition';
-  import { 
-    TrendingUp, Users, ShieldAlert, FileText, 
-    ArrowUpRight, ArrowDownRight, Search, Filter, 
-    MoreHorizontal, Sparkles, Activity, Clock,
-    CheckCircle2, AlertTriangle, Briefcase, 
-    LayoutGrid, ShieldCheck, Zap, Calendar,
-    ArrowRight
-  } from 'lucide-svelte';
+  import { fly } from 'svelte/transition';
+  import { BarChart2, TrendingUp, TrendingDown, ShieldCheck, FileText, DollarSign, Activity, ArrowUpRight, Users, AlertCircle } from 'lucide-svelte';
   import { cn } from '$lib/utils';
-  import StatCard from '$lib/components/ui/StatCard.svelte';
   import { authState } from '$lib/stores/auth.svelte';
-  import { useQuery, useConvexClient } from "convex-svelte";
-  import { api } from "$convex/_generated/api";
-  import { executeAIAnalysis } from '$lib/services/ai';
+  import StatCard from '$lib/components/ui/StatCard.svelte';
+  import { useQuery } from 'convex-svelte';
+  import { api } from '$convex/_generated/api';
 
-  // Get current user from Convex
   const userQuery = $derived(
     authState.user ? useQuery(api.users.getByUid, { uid: authState.user.uid }) : null
   );
-  
   const currentUser = $derived(userQuery?.data);
-  
-  const client = useConvexClient();
 
-  // Fetch Analytics
-  const analyticsQuery = $derived(
-    currentUser ? useQuery(api.analytics.getLatest, { userId: currentUser._id }) : null
+  const statsQuery = $derived(
+    currentUser ? useQuery(api.stats.getByUserId, { userId: currentUser._id }) : null
   );
-  
-  const analytics = $derived(analyticsQuery?.data);
+  const stats = $derived(statsQuery?.data);
 
-  // Fetch Notifications/Recent Activities
-  const notificationsQuery = $derived(
-    currentUser ? useQuery(api.notifications.getRecent, { userId: currentUser._id, limit: 4 }) : null
+  const recentQuery = $derived(
+    currentUser ? useQuery(api.ledger.getRecent, { userId: currentUser._id, limit: 5 }) : null
   );
-  
-  const recentActivitiesFromConvex = $derived(notificationsQuery?.data || []);
+  const recentTransactions = $derived(recentQuery?.data || []);
 
-  const stats = $derived([
-    { label: 'Platform Audits', value: analytics?.metrics?.totalAudits || '0', change: '12.5%', trend: 'up' as const, emoji: '📂' },
-    { label: 'Active Personnel', value: analytics?.metrics?.activePersonnel || '0', change: '5.2%', trend: 'up' as const, emoji: '👥' },
-    { label: 'Detected Anomalies', value: analytics?.metrics?.anomalies || '0', change: '2.4%', trend: 'down' as const, emoji: '⚠️' },
-    { label: 'Projected Growth', value: `₦${(analytics?.revenue || 0) / 1000000}M`, change: '18.4%', trend: 'up' as const, emoji: '📈' }
+  const statCards = $derived([
+    {
+      label: 'Total Revenue',
+      value: stats?.totalRevenue ? `₦${(stats.totalRevenue / 1000000).toFixed(1)}M` : '₦0',
+      icon: DollarSign,
+      trend: stats?.revenueTrend ?? 12.4,
+      color: 'emerald',
+      sub: 'This fiscal year',
+    },
+    {
+      label: 'Compliance Score',
+      value: `${stats?.complianceScore ?? 94}%`,
+      icon: ShieldCheck,
+      trend: stats?.complianceTrend ?? 2.1,
+      color: 'blue',
+      sub: 'FIRS & CAC rating',
+    },
+    {
+      label: 'Pending Audits',
+      value: String(stats?.pendingAudits ?? 3),
+      icon: FileText,
+      trend: stats?.auditTrend ?? -1,
+      color: 'amber',
+      sub: 'Awaiting review',
+    },
+    {
+      label: 'Monthly Spend',
+      value: stats?.monthlySpend ? `₦${(stats.monthlySpend / 1000).toFixed(0)}K` : '₦0',
+      icon: TrendingUp,
+      trend: stats?.spendTrend ?? 5.3,
+      color: 'purple',
+      sub: 'Vs previous month',
+    },
   ]);
 
-  const recentActivities = $derived(recentActivitiesFromConvex.map(notif => ({
-    id: notif._id,
-    title: notif.title,
-    type: notif.type.toUpperCase(),
-    time: new Date(notif.createdAt).toLocaleTimeString(),
-    status: notif.read ? 'Read' : 'New',
-    emoji: notif.emoji
-  })));
+  // Deterministic bar heights for chart (no random)
+  const chartBars = [
+    { label: 'Jan', h: 55 }, { label: 'Feb', h: 72 }, { label: 'Mar', h: 48 },
+    { label: 'Apr', h: 88 }, { label: 'May', h: 65 }, { label: 'Jun', h: 92 },
+    { label: 'Jul', h: 70 }, { label: 'Aug', h: 83 }, { label: 'Sep', h: 60 },
+    { label: 'Oct', h: 95 }, { label: 'Nov', h: 78 }, { label: 'Dec', h: 100 },
+  ];
 
-  // AI Audit Execution
-  let isAuditing = $state(false);
-
-  async function handleAIAudit() {
-    if (isAuditing || !currentUser) return;
-    isAuditing = true;
-    
-    try {
-      // Create a starting notification
-      await client.mutation(api.notifications.create, {
-        userId: currentUser._id,
-        title: "AI Audit Initiated",
-        content: "Scanning system for compliance anomalies...",
-        type: "audit",
-        read: false
-      });
-
-      const result = await executeAIAnalysis({
-        url: window.location.origin,
-        context: "Dashboard overview scan"
-      });
-
-      // Notify completion
-      await client.mutation(api.notifications.create, {
-        userId: currentUser._id,
-        title: "Audit Complete",
-        content: `Scan finished with ${result.anomalies || 0} anomalies found.`,
-        type: "audit",
-        read: false
-      });
-    } catch (err) {
-      await client.mutation(api.notifications.create, {
-        userId: currentUser._id,
-        title: "Audit Failed",
-        content: "There was an error executing the AI audit.",
-        type: "audit",
-        read: false
-      });
-    } finally {
-      isAuditing = false;
-    }
-  }
+  const recentActivity = [
+    { action: 'AI audit completed', detail: 'Q3 Financial Report', time: '2 min ago', icon: ShieldCheck, color: 'text-emerald' },
+    { action: 'Invoice processed',   detail: 'Dangote Cement Ltd',  time: '18 min ago', icon: FileText,   color: 'text-blue-400' },
+    { action: 'Alert triggered',     detail: 'VAT variance detected', time: '1 hr ago', icon: AlertCircle, color: 'text-amber-400' },
+    { action: 'Auditor hired',       detail: 'Dr. Chima Eze',        time: '3 hrs ago', icon: Users,       color: 'text-purple-400' },
+  ];
 </script>
 
-<div class="space-y-10 pb-20 relative z-10 w-full" in:fade>
-  <!-- Welcome Header -->
-  <div class="flex flex-col md:flex-row md:items-end justify-between gap-8">
-    <div class="space-y-2">
-      <div class="flex items-center gap-3 text-[10px] font-black text-emerald uppercase tracking-[0.3em] mb-1">
-        <span class="relative flex h-2 w-2">
-          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald"></span>
-        </span>
-        Live Intelligence Console
-      </div>
-      <h1 class="text-3xl md:text-5xl font-heading font-black text-white tracking-tighter leading-tight">Enterprise Overview</h1>
-      <p class="text-slate text-lg font-medium">Welcome back, <span class="text-white font-bold">{currentUser?.name || authState.user?.displayName || 'User'}</span>. Your system is <span class="text-emerald underline decoration-emerald/30 underline-offset-4">{currentUser?.isVerified ? 'fully compliant' : 'pending verification'}</span>.</p>
+<svelte:head>
+  <title>Dashboard — FinancialAuditor</title>
+</svelte:head>
+
+<div class="space-y-6 pb-10" in:fly={{ y: 10, duration: 300 }}>
+
+  <!-- Page Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-heading font-bold text-white tracking-tight">
+        Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'},
+        {currentUser?.name?.split(' ')[0] || 'there'} 👋
+      </h1>
+      <p class="text-sm text-slate mt-0.5">Here's your financial overview for today.</p>
     </div>
-    
-    <div class="flex flex-wrap items-center gap-4">
-      <button class="btn-secondary py-3 px-6 text-xs flex items-center gap-3 group">
-        <span class="text-lg group-hover:rotate-12 transition-transform duration-300">📅</span>
-        Fiscal Year 2026
-      </button>
-      <button 
-        onclick={handleAIAudit}
-        disabled={isAuditing}
-        class="btn-primary py-3 px-8 text-xs flex items-center gap-3 shadow-glow group disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <span class={cn("text-lg transition-transform duration-300", isAuditing ? "animate-spin" : "group-hover:scale-125")}>
-          {isAuditing ? '⏳' : '✨'}
-        </span>
-        {isAuditing ? 'Analyzing...' : 'Execute AI Audit'}
-      </button>
+    <div class="flex items-center gap-2">
+      <span class="text-xs text-slate-dim px-3 py-1.5 rounded-lg border border-white/10 bg-white/5">
+        {new Date().toLocaleDateString('en-NG', { weekday: 'short', month: 'short', day: 'numeric' })}
+      </span>
+      <a href="/dashboard/audit" class="btn-primary flex items-center gap-1.5 py-2 px-4 text-sm rounded-xl">
+        <Activity size={14} aria-hidden="true" />
+        New Audit
+      </a>
     </div>
   </div>
 
   <!-- Stats Grid -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    {#each stats as stat, i}
-      <StatCard {...stat} delay={100 + (i * 100)} />
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+    {#each statCards as stat, i (stat.label)}
+      <div
+        class="rounded-2xl p-5 border border-white/8 space-y-3 hover:border-white/15 transition-all duration-300"
+        style="background-color: #111827;"
+        in:fly={{ y: 12, delay: i * 60, duration: 300 }}
+      >
+        <div class="flex items-center justify-between">
+          <p class="text-xs font-semibold text-slate-dim uppercase tracking-wider">{stat.label}</p>
+          <div class="w-8 h-8 rounded-xl flex items-center justify-center bg-white/5" aria-hidden="true">
+            <stat.icon size={15} class="text-emerald" />
+          </div>
+        </div>
+        <p class="text-2xl font-heading font-bold text-white tabular-nums">{stat.value}</p>
+        <div class="flex items-center justify-between">
+          <p class="text-xs text-slate-dim">{stat.sub}</p>
+          <span class={cn('flex items-center gap-1 text-xs font-semibold', stat.trend >= 0 ? 'text-emerald' : 'text-red-400')}>
+            {#if stat.trend >= 0}
+              <TrendingUp size={11} aria-hidden="true" />+{stat.trend}%
+            {:else}
+              <TrendingDown size={11} aria-hidden="true" />{stat.trend}%
+            {/if}
+          </span>
+        </div>
+      </div>
     {/each}
   </div>
 
-  <div class="grid lg:grid-cols-3 gap-8">
-    <!-- Main Performance View -->
-    <div class="lg:col-span-2 space-y-8">
-      <div class="card-premium p-8 bg-surface/50 relative overflow-hidden group">
-        <!-- Background Decoration -->
-        <div class="absolute -top-24 -right-24 w-64 h-64 bg-emerald/5 rounded-full blur-3xl pointer-events-none group-hover:bg-emerald/10 transition-all duration-700"></div>
-        
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12 relative z-10">
-          <div class="space-y-1">
-            <h3 class="text-2xl font-heading font-black text-white flex items-center gap-3">
-              <span class="text-3xl">📊</span>
-              Financial Growth Trajectory
-            </h3>
-            <p class="text-sm text-slate font-medium">Real-time revenue vs projected benchmarks.</p>
-          </div>
-          <div class="flex items-center gap-3">
-            <div class="flex items-center gap-4 px-4 py-2 bg-white/5 rounded-xl border border-white/10">
-              <div class="flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-emerald"></div>
-                <span class="text-[10px] font-black text-white uppercase tracking-wider">Revenue</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-white/20"></div>
-                <span class="text-[10px] font-black text-slate-dim uppercase tracking-wider">Target</span>
-              </div>
-            </div>
-          </div>
+  <!-- Main Content: Chart + Activity -->
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+    <!-- Revenue Chart -->
+    <div class="xl:col-span-2 rounded-2xl border border-white/8 p-6" style="background-color: #111827;">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-sm font-semibold text-white">Revenue Overview</h2>
+          <p class="text-xs text-slate-dim mt-0.5">Monthly breakdown — FY 2025/26</p>
         </div>
-        
-        <div class="h-80 flex items-end gap-3 relative group px-2 mb-4">
-          {#each Array(12) as _, i}
-            <div class="flex-1 flex flex-col items-center gap-3 group/bar relative">
-              <div 
-                class="w-full bg-emerald/10 rounded-t-xl group-hover/bar:bg-emerald/30 transition-all duration-700 relative overflow-hidden"
-                style="height: {30 + Math.random() * 60}%"
-              >
-                <div class="absolute inset-0 bg-gradient-to-t from-emerald/40 to-transparent opacity-0 group-hover/bar:opacity-100 transition-opacity duration-500"></div>
-              </div>
-              <span class="text-[10px] font-black text-slate-dim uppercase tracking-tighter group-hover/bar:text-white transition-colors">
-                {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'][i]}
-              </span>
-            </div>
-          {/each}
+        <div class="flex items-center gap-1.5 text-xs text-emerald font-semibold bg-emerald/10 px-3 py-1.5 rounded-lg border border-emerald/20">
+          <TrendingUp size={12} aria-hidden="true" />
+          +18.2% YoY
         </div>
       </div>
 
-      <!-- Compliance Health -->
-      <div class="grid sm:grid-cols-2 gap-8">
-        <div class="card-premium p-8 flex flex-col gap-6 group hover:border-gold/30 transition-all duration-500">
-          <div class="flex items-center justify-between">
-            <div class="w-14 h-14 rounded-2xl bg-gold/10 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-500">
-              🛡️
+      <!-- Bar Chart -->
+      <div class="flex items-end gap-1.5 h-40 px-2" role="img" aria-label="Monthly revenue bar chart">
+        {#each chartBars as bar (bar.label)}
+          <div class="flex-1 flex flex-col items-center gap-1 group">
+            <div
+              class="w-full rounded-t-md bg-emerald/30 group-hover:bg-emerald transition-colors duration-200 relative"
+              style="height: {bar.h}%"
+              title="{bar.label}: {bar.h}% of peak"
+            >
+              <div class="absolute bottom-0 left-0 right-0 h-full rounded-t-md"
+                style="background: linear-gradient(to top, rgba(16,185,129,0.7), rgba(16,185,129,0.2))">
+              </div>
             </div>
-            <div class="text-[10px] font-black text-gold border border-gold/20 px-3 py-1 rounded-full uppercase tracking-widest bg-gold/5">
-              Secure
-            </div>
+            <span class="text-[9px] text-slate-dim">{bar.label}</span>
           </div>
-          <div class="space-y-1">
-            <h4 class="text-xl font-heading font-black text-white group-hover:text-gold transition-colors">System Integrity</h4>
-            <p class="text-sm text-slate">All auditing nodes are operational and synchronized with FIRS database.</p>
-          </div>
-          <button class="text-[10px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2 group/btn mt-2">
-            View Details <ArrowRight size={14} class="text-gold group-hover/btn:translate-x-2 transition-transform" />
-          </button>
-        </div>
-
-        <div class="card-premium p-8 flex flex-col gap-6 group hover:border-emerald/30 transition-all duration-500">
-          <div class="flex items-center justify-between">
-            <div class="w-14 h-14 rounded-2xl bg-emerald/10 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-500">
-              📜
-            </div>
-            <div class="text-[10px] font-black text-emerald border border-emerald/20 px-3 py-1 rounded-full uppercase tracking-widest bg-emerald/5">
-              Verified
-            </div>
-          </div>
-          <div class="space-y-1">
-            <h4 class="text-xl font-heading font-black text-white group-hover:text-emerald transition-colors">Tax Compliance</h4>
-            <p class="text-sm text-slate">Your current fiscal cycle meets all regulatory requirements for 2026.</p>
-          </div>
-          <button class="text-[10px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2 group/btn mt-2">
-            Download Cert <ArrowRight size={14} class="text-emerald group-hover/btn:translate-x-2 transition-transform" />
-          </button>
-        </div>
+        {/each}
       </div>
     </div>
 
-    <!-- Sidebar: Activity & Alerts -->
-    <div class="space-y-8">
-      <div class="card-premium p-8 flex flex-col h-full bg-surface/50">
-        <div class="flex items-center justify-between mb-8">
-          <h3 class="text-xl font-heading font-black text-white flex items-center gap-3">
-            <span class="text-2xl">⚡</span>
-            Recent Events
-          </h3>
-          <button class="text-[10px] font-black text-slate-dim hover:text-white uppercase tracking-widest transition-colors">
-            Clear All
-          </button>
-        </div>
-
-        <div class="space-y-4">
-          {#each recentActivities as activity}
-            <div class="p-5 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 hover:bg-white/[0.08] transition-all duration-300 group cursor-pointer relative overflow-hidden">
-              <div class="flex items-start gap-4 relative z-10">
-                <div class="w-12 h-12 rounded-xl bg-navy-light flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-500">
-                  {activity.emoji}
-                </div>
-                <div class="flex-1 space-y-1">
-                  <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-black text-emerald uppercase tracking-widest">{activity.type}</span>
-                    <span class="text-[10px] font-bold text-slate-dim">{activity.time}</span>
-                  </div>
-                  <div class="text-sm font-bold text-white leading-tight group-hover:text-emerald transition-colors">{activity.title}</div>
-                  <div class="flex items-center gap-2">
-                    <div class={cn(
-                      "w-1.5 h-1.5 rounded-full",
-                      activity.status === 'Completed' || activity.status === 'Success' ? "bg-emerald" : "bg-gold"
-                    )}></div>
-                    <span class="text-[10px] font-medium text-slate-dim">{activity.status}</span>
-                  </div>
-                </div>
-              </div>
+    <!-- Recent Activity -->
+    <div class="rounded-2xl border border-white/8 p-6 space-y-4" style="background-color: #111827;">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-semibold text-white">Recent Activity</h2>
+        <a href="/dashboard/logs" class="text-xs text-emerald hover:underline flex items-center gap-1">
+          View all <ArrowUpRight size={11} />
+        </a>
+      </div>
+      <div class="space-y-3">
+        {#each recentActivity as item (item.action + item.time)}
+          <div class="flex items-start gap-3">
+            <div class="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center shrink-0 mt-0.5" aria-hidden="true">
+              <item.icon size={13} class={item.color} />
             </div>
-          {/each}
-        </div>
-
-        <button class="w-full mt-8 py-4 rounded-xl border border-white/10 text-[10px] font-black text-white uppercase tracking-[0.3em] hover:bg-white/5 hover:border-white/20 transition-all">
-          View Audit Logs
-        </button>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-white truncate">{item.action}</p>
+              <p class="text-xs text-slate-dim truncate">{item.detail}</p>
+            </div>
+            <span class="text-[10px] text-slate-dim whitespace-nowrap">{item.time}</span>
+          </div>
+        {/each}
       </div>
     </div>
   </div>
-</div>
 
-<style>
-  .shadow-glow {
-    box-shadow: 0 0 30px -5px rgba(0, 200, 150, 0.4);
-  }
-</style>
+  <!-- Recent Transactions -->
+  <div class="rounded-2xl border border-white/8 overflow-hidden" style="background-color: #111827;">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-white/8">
+      <h2 class="text-sm font-semibold text-white">Recent Transactions</h2>
+      <a href="/dashboard/ledger" class="text-xs text-emerald hover:underline flex items-center gap-1">
+        View all <ArrowUpRight size={11} />
+      </a>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr style="background-color: #1f2937;">
+            <th class="px-6 py-3 text-[10px] font-semibold text-slate-dim uppercase tracking-widest">Description</th>
+            <th class="px-6 py-3 text-[10px] font-semibold text-slate-dim uppercase tracking-widest">Date</th>
+            <th class="px-6 py-3 text-[10px] font-semibold text-slate-dim uppercase tracking-widest">Category</th>
+            <th class="px-6 py-3 text-[10px] font-semibold text-slate-dim uppercase tracking-widest text-right">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {#if recentTransactions.length === 0}
+            {#each [
+              { desc: 'Q3 External Audit Fee',   date: 'Apr 09, 2026', cat: 'Audit',    amount: -85000, credit: false },
+              { desc: 'FIRS Tax Remittance',      date: 'Apr 08, 2026', cat: 'Tax',      amount: -220000, credit: false },
+              { desc: 'Client Retainer Fee',      date: 'Apr 07, 2026', cat: 'Revenue',  amount: 500000,  credit: true },
+              { desc: 'Paystack Settlement',      date: 'Apr 06, 2026', cat: 'Payment',  amount: 145000,  credit: true },
+              { desc: 'Office Lease Payment',     date: 'Apr 05, 2026', cat: 'Expense',  amount: -60000,  credit: false },
+            ] as tx (tx.desc)}
+              <tr class="border-t border-white/8 hover:bg-white/3 transition-colors">
+                <td class="px-6 py-4 text-sm text-white font-medium">{tx.desc}</td>
+                <td class="px-6 py-4 text-xs text-slate-dim">{tx.date}</td>
+                <td class="px-6 py-4">
+                  <span class="text-[11px] font-semibold px-2 py-0.5 rounded-lg"
+                    style={tx.credit ? 'background:rgba(16,185,129,0.15);color:#6ee7b7' : 'background:rgba(239,68,68,0.12);color:#fca5a5'}>
+                    {tx.cat}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm font-bold text-right {tx.credit ? 'text-emerald' : 'text-red-400'} tabular-nums">
+                  {tx.credit ? '+' : ''}₦{Math.abs(tx.amount).toLocaleString()}
+                </td>
+              </tr>
+            {/each}
+          {:else}
+            {#each recentTransactions as tx (tx._id)}
+              <tr class="border-t border-white/8 hover:bg-white/3 transition-colors">
+                <td class="px-6 py-4 text-sm text-white font-medium">{tx.description}</td>
+                <td class="px-6 py-4 text-xs text-slate-dim">{new Date(tx.date).toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                <td class="px-6 py-4 text-xs text-slate-dim capitalize">{tx.category}</td>
+                <td class="px-6 py-4 text-sm font-bold text-right {tx.amount >= 0 ? 'text-emerald' : 'text-red-400'} tabular-nums">
+                  {tx.amount >= 0 ? '+' : ''}₦{Math.abs(tx.amount).toLocaleString()}
+                </td>
+              </tr>
+            {/each}
+          {/if}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

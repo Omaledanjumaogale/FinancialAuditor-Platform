@@ -1,24 +1,28 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { ShieldCheck, LogOut, LayoutGrid } from 'lucide-svelte';
+  import {
+    LayoutDashboard, ShoppingBag, ShieldCheck,
+    BarChart3, BookOpen, CreditCard, MessageSquare,
+    Clock, LogOut, Sparkles, BarChart2
+  } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { authState } from '$lib/stores/auth.svelte';
   import { auth } from '$lib/firebase';
   import { signOut } from 'firebase/auth';
 
   const menuItems = [
-    { name: '📊 Dashboard',   href: '/dashboard' },
-    { name: '🤝 Marketplace', href: '/marketplace' },
-    { name: '🛡️ AI Audit',    href: '/dashboard/audit' },
-    { name: '🧠 Analytics',   href: '/dashboard/analytics' },
-    { name: '📖 Ledger',      href: '/dashboard/ledger' },
-    { name: '💳 Payments',    href: '/dashboard/payments' },
-    { name: '💬 Messages',    href: '/dashboard/messages' },
-    { name: '📜 Logs',        href: '/dashboard/logs' },
+    { name: 'Dashboard',    href: '/dashboard',           icon: LayoutDashboard },
+    { name: 'Marketplace',  href: '/marketplace',         icon: ShoppingBag },
+    { name: 'AI Audit',     href: '/dashboard/audit',     icon: ShieldCheck },
+    { name: 'Analytics',    href: '/dashboard/analytics', icon: BarChart3 },
+    { name: 'Ledger',       href: '/dashboard/ledger',    icon: BookOpen },
+    { name: 'Payments',     href: '/dashboard/payments',  icon: CreditCard },
+    { name: 'Messages',     href: '/dashboard/messages',  icon: MessageSquare },
+    { name: 'Activity Log', href: '/dashboard/logs',      icon: Clock },
   ];
 
   const adminItems = [
-    { name: '🛡️ Admin Hub', href: '/admin' },
+    { name: 'Admin Panel', href: '/admin', icon: ShieldCheck },
   ];
 
   const displayName = $derived(
@@ -27,114 +31,151 @@
   const displayInitials = $derived(
     displayName.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
   );
-  const displayPlan = $derived(() => {
-    const email = authState.user?.email ?? '';
-    if (email.includes('enterprise')) return 'Enterprise Plan';
-    if (email.includes('pro')) return 'Pro Plan';
-    return 'Starter Plan';
-  });
+  const userEmail = $derived(authState.user?.email || '');
 
   async function handleSignOut() {
-    try {
-      await signOut(auth);
-      // Use window.location for sign-out to clear SvelteKit cache fully
-      window.location.href = '/auth';
-    } catch (err) {
-      console.error('Sign out failed:', err);
-    }
+    try { await signOut(auth); } catch (err) { console.error('Sign out failed:', err); }
+    window.location.href = '/auth';
   }
 </script>
 
 <aside
-  class="hidden xl:flex flex-col w-[280px] h-screen fixed left-0 top-0 bg-surface border-r border-white/5 z-50"
-  aria-label="Main navigation sidebar"
+  class="hidden xl:flex flex-col w-[240px] h-screen fixed left-0 top-0 z-50"
+  style="background-color:#0f2040; border-right:1px solid rgba(255,255,255,0.08);"
+  aria-label="Dashboard sidebar navigation"
 >
-  <!-- Logo -->
-  <div class="h-[68px] flex items-center px-6 border-b border-white/5">
-    <a href="/" class="flex items-center gap-2.5 group no-underline" aria-label="Go to FinancialAuditor home">
-      <div class="w-9 h-9 bg-linear-to-br from-emerald to-emerald-deep rounded-lg flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300" aria-hidden="true">
-        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5">
-          <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-        </svg>
+  <!-- Logo / Brand -->
+  <div class="h-16 flex items-center px-5 shrink-0" style="border-bottom:1px solid rgba(255,255,255,0.08)">
+    <a href="/" class="flex items-center gap-2.5 group" aria-label="Go to FinancialAuditor home">
+      <div
+        class="w-8 h-8 rounded-lg flex items-center justify-center shadow-[0_4px_12px_rgba(16,185,129,0.35)] group-hover:scale-105 transition-all duration-300 shrink-0"
+        style="background-color:#10b981;"
+        aria-hidden="true"
+      >
+        <BarChart2 size={16} class="text-white" />
       </div>
-      <div class="flex flex-col">
-        <span class="text-white font-heading font-extrabold text-base tracking-tight leading-none">
-          Financial<span class="text-emerald">Auditor</span>
-        </span>
-        <span class="text-[9px] font-mono font-bold text-slate-dim uppercase tracking-widest leading-tight mt-0.5">
-          CONSOLE · NG
-        </span>
+      <div>
+        <div class="font-heading font-bold text-sm text-white leading-none">
+          Financial<span style="color:#10b981">Auditor</span>
+        </div>
+        <div class="text-[9px] tracking-widest uppercase mt-0.5" style="color:#64748b">Enterprise</div>
       </div>
     </a>
   </div>
 
   <!-- Navigation -->
-  <nav class="flex-1 flex flex-col overflow-y-auto py-6 px-4 space-y-8" aria-label="Dashboard navigation">
+  <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-5" aria-label="Dashboard navigation">
 
-    <!-- Platform Group -->
-    <div class="space-y-1" role="group" aria-labelledby="nav-platform-label">
-      <div id="nav-platform-label" class="px-3 mb-3 flex items-center justify-between">
-        <span class="text-[10px] font-bold text-slate-dim uppercase tracking-[0.2em]">Platform Console</span>
-        <LayoutGrid size={12} class="text-slate-dim/50" aria-hidden="true" />
+    <!-- Main -->
+    <div role="group" aria-labelledby="sidebar-main-label">
+      <div id="sidebar-main-label" class="text-[10px] font-semibold uppercase tracking-[0.12em] px-2 mb-1.5" style="color:#475569">
+        Main
       </div>
-      {#each menuItems as item (item.href)}
-        {@const isActive = page.url.pathname === item.href}
-        <a
-          href={item.href}
-          class={cn('sidebar-link', isActive && 'sidebar-link-active')}
-          aria-current={isActive ? 'page' : undefined}
-        >
-          <span class="flex items-center gap-3 flex-1">
-            <span class="text-lg leading-none" aria-hidden="true">{item.name.split(' ')[0]}</span>
-            <span class="font-semibold">{item.name.split(' ').slice(1).join(' ')}</span>
-          </span>
-          {#if isActive}
-            <div class="w-1.5 h-1.5 rounded-full bg-emerald shadow-[0_0_8px_rgba(0,200,150,0.4)]" aria-hidden="true"></div>
-          {/if}
-        </a>
-      {/each}
+      <div class="space-y-0.5">
+        {#each menuItems as item (item.href)}
+          {@const isActive = page.url.pathname === item.href}
+          {@const Icon = item.icon}
+          <a
+            href={item.href}
+            class={cn('flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl text-sm font-medium transition-all border border-transparent', isActive ? '' : 'hover:bg-white/5')}
+            style={isActive
+              ? 'background:rgba(16,185,129,0.12); color:#10b981; border-color:rgba(16,185,129,0.2);'
+              : 'color:#94a3b8;'}
+            aria-current={isActive ? 'page' : undefined}
+          >
+            <div
+              class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors"
+              style={isActive ? 'background:#10b981; color:#fff;' : 'background:rgba(255,255,255,0.05); color:#64748b;'}
+              aria-hidden="true"
+            >
+              <Icon size={14} />
+            </div>
+            <span class="truncate">{item.name}</span>
+            {#if isActive}
+              <div
+                class="w-1.5 h-1.5 rounded-full ml-auto shrink-0"
+                style="background:#10b981; box-shadow:0 0 6px rgba(16,185,129,0.6);"
+                aria-hidden="true"
+              ></div>
+            {/if}
+          </a>
+        {/each}
+      </div>
     </div>
 
-    <!-- Admin Group -->
-    <div class="space-y-1" role="group" aria-labelledby="nav-admin-label">
-      <div id="nav-admin-label" class="px-3 mb-3 flex items-center justify-between">
-        <span class="text-[10px] font-bold text-slate-dim uppercase tracking-[0.2em]">Administration</span>
-        <ShieldCheck size={12} class="text-slate-dim/50" aria-hidden="true" />
+    <!-- Admin -->
+    <div role="group" aria-labelledby="sidebar-admin-label">
+      <div id="sidebar-admin-label" class="text-[10px] font-semibold uppercase tracking-[0.12em] px-2 mb-1.5" style="color:#475569">
+        Admin
       </div>
-      {#each adminItems as item (item.href)}
-        {@const isActive = page.url.pathname === item.href}
-        <a
-          href={item.href}
-          class={cn('sidebar-link', isActive && 'sidebar-link-active')}
-          aria-current={isActive ? 'page' : undefined}
-        >
-          <span class="flex items-center gap-3">
-            <span class="text-lg leading-none" aria-hidden="true">{item.name.split(' ')[0]}</span>
-            <span class="font-semibold">{item.name.split(' ').slice(1).join(' ')}</span>
-          </span>
-        </a>
-      {/each}
+      <div class="space-y-0.5">
+        {#each adminItems as item (item.href)}
+          {@const isActive = page.url.pathname === item.href}
+          {@const Icon = item.icon}
+          <a
+            href={item.href}
+            class={cn('flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl text-sm font-medium transition-all border border-transparent', isActive ? '' : 'hover:bg-white/5')}
+            style={isActive ? 'background:rgba(16,185,129,0.12); color:#10b981; border-color:rgba(16,185,129,0.2);' : 'color:#94a3b8;'}
+            aria-current={isActive ? 'page' : undefined}
+          >
+            <div
+              class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors"
+              style={isActive ? 'background:#10b981; color:#fff;' : 'background:rgba(255,255,255,0.05); color:#64748b;'}
+              aria-hidden="true"
+            >
+              <Icon size={14} />
+            </div>
+            <span class="truncate">{item.name}</span>
+          </a>
+        {/each}
+      </div>
     </div>
   </nav>
 
-  <!-- User Card -->
-  <div class="p-4 border-t border-white/5 bg-navy-mid/30">
-    <div class="bg-surface rounded-2xl p-3 flex items-center gap-3 border border-white/5 shadow-sm hover:border-emerald/20 transition-colors group">
+  <!-- Upgrade CTA -->
+  <div class="px-3 pb-2">
+    <div class="rounded-xl p-3" style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2);">
+      <div class="flex items-center gap-2 mb-1.5">
+        <Sparkles size={13} style="color:#10b981;" aria-hidden="true" />
+        <span class="text-xs font-semibold" style="color:#10b981;">Upgrade to Pro</span>
+      </div>
+      <p class="text-xs leading-snug mb-2.5" style="color:#64748b;">
+        Unlock AI audits, priority support &amp; analytics.
+      </p>
+      <a href="/dashboard/payments" class="flex items-center justify-center w-full py-1.5 px-3 rounded-lg text-xs font-semibold text-white transition-all"
+        style="background:#10b981; box-shadow:0 2px 8px rgba(16,185,129,0.3);">
+        Upgrade Now
+      </a>
+    </div>
+  </div>
+
+  <!-- User Profile Footer -->
+  <div class="px-3 py-3 shrink-0" style="border-top:1px solid rgba(255,255,255,0.08);">
+    <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors group">
+      <!-- Avatar -->
       <div
-        class="w-10 h-10 rounded-xl bg-emerald/10 text-emerald flex items-center justify-center font-black text-sm border border-emerald/20 group-hover:bg-emerald group-hover:text-white transition-all duration-300 shrink-0 select-none"
+        class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 select-none text-white"
+        style="background:linear-gradient(135deg,#059669,#0f2040);"
         aria-hidden="true"
       >{displayInitials}</div>
+
+      <!-- Info -->
       <div class="flex-1 min-w-0">
-        <div class="text-xs font-black text-white truncate">{displayName}</div>
-        <div class="text-[10px] text-slate-dim font-medium truncate">{displayPlan()}</div>
+        <div class="text-xs font-semibold text-white truncate leading-tight">{displayName}</div>
+        <div class="text-[10px] truncate" style="color:#64748b;">{userEmail}</div>
       </div>
+
+      <!-- Sign Out -->
       <button
         onclick={handleSignOut}
-        class="text-slate-dim hover:text-danger transition-colors p-2 rounded-lg hover:bg-danger/5 shrink-0"
-        aria-label="Sign out of console"
+        class="p-1.5 rounded-lg transition-colors shrink-0"
+        style="color:#64748b;"
+        onmouseenter={e => (e.currentTarget as HTMLElement).style.color = '#f87171'}
+        onmouseleave={e => (e.currentTarget as HTMLElement).style.color = '#64748b'}
+        aria-label="Sign out"
         title="Sign out"
       >
-        <LogOut size={16} aria-hidden="true" />
+        <LogOut size={14} aria-hidden="true" />
       </button>
     </div>
   </div>

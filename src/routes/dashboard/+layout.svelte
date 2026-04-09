@@ -1,43 +1,45 @@
 <script lang="ts">
-  import Header from '$lib/components/layout/Header.svelte';
+  import { fade } from 'svelte/transition';
   import Sidebar from '$lib/components/layout/Sidebar.svelte';
   import TopBar from '$lib/components/layout/TopBar.svelte';
-  import { onMount } from 'svelte';
-  import { fade, fly } from 'svelte/transition';
+
   let { children } = $props();
-
-  let isMobileMenuOpen = $state(false);
-
-  function toggleMobileMenu() {
-    isMobileMenuOpen = !isMobileMenuOpen;
-  }
+  let mobileSidebarOpen = $state(false);
 </script>
 
-<div class="flex min-h-screen bg-navy overflow-hidden relative">
-  <!-- Sidebar is only visible on large desktop screens -->
-  <Sidebar />
-  
-  <div class="flex-1 flex flex-col xl:pl-[280px] w-full transition-all duration-300">
-    <!-- Header is handled within the layout for the dashboard -->
-    <TopBar onMenuClick={toggleMobileMenu} />
-    
-    <main class="flex-1 overflow-y-auto w-full relative">
-      <!-- Background Decorations specific to dashboard -->
-      <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div class="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(0,200,150,0.08)_0%,transparent_70%)]"></div>
-        <div class="absolute inset-0 grid-pattern opacity-20"></div>
-      </div>
+<!-- Dashboard Shell -->
+<div class="flex min-h-screen" style="background-color:#0a1628;">
 
-      <div class="container-custom py-8 md:py-12 relative z-10">
-        {@render children()}
-      </div>
+  <!-- Sidebar — desktop always visible -->
+  <Sidebar />
+
+  <!-- Mobile Sidebar Overlay -->
+  {#if mobileSidebarOpen}
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div
+      class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 xl:hidden"
+      onclick={() => (mobileSidebarOpen = false)}
+      transition:fade={{ duration: 200 }}
+      aria-hidden="true"
+    ></div>
+    <div
+      class="fixed inset-y-0 left-0 w-[240px] z-50 xl:hidden overflow-y-auto"
+      style="background-color:#0f2040; border-right:1px solid rgba(255,255,255,0.08);"
+    >
+      <Sidebar />
+    </div>
+  {/if}
+
+  <!-- Main Content Area -->
+  <div class="flex-1 flex flex-col xl:ml-[240px] min-w-0">
+    <TopBar onMenuClick={() => (mobileSidebarOpen = !mobileSidebarOpen)} />
+    <main
+      class="flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden"
+      id="main-content"
+      style="background-color:#0a1628;"
+    >
+      {@render children()}
     </main>
   </div>
 </div>
-
-<style>
-  :global(.grid-pattern) {
-    background-image: radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0);
-    background-size: 32px 32px;
-  }
-</style>

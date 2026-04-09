@@ -1,160 +1,245 @@
 <script lang="ts">
-  import { fade, fly } from 'svelte/transition';
-  import { 
-    BarChart3, TrendingUp, TrendingDown, ArrowUpRight, 
-    ArrowDownRight, Calendar, Download, Filter, 
-    MoreHorizontal, Activity, PieChart, Target, ArrowRight
+  import { fly } from 'svelte/transition';
+  import {
+    BarChart3, TrendingUp, TrendingDown, PieChart,
+    Calendar, Download, ArrowRight, DollarSign,
+    Flame, Target, Activity
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
-  import StatCard from '$lib/components/ui/StatCard.svelte';
 
   const metrics = [
-    { label: 'Platform Revenue', value: '₦4.2M', change: '18.4%', trend: 'up' as const, emoji: '💰' },
-    { label: 'Operational Costs', value: '₦2.4M', change: '5.2%', trend: 'down' as const, emoji: '💸' },
-    { label: 'Enterprise Profit', value: '₦1.8M', change: '12.1%', trend: 'up' as const, emoji: '💎' },
-    { label: 'EBITDA Margin', value: '34.5%', change: '14.5%', trend: 'up' as const, emoji: '📊' }
+    { label: 'Platform Revenue',  value: '₦4.2M',  change: '+18.4%', up: true,  icon: DollarSign, iconStyle: 'background:rgba(16,185,129,0.12);color:#10b981' },
+    { label: 'Operational Costs', value: '₦2.4M',  change: '-5.2%',  up: false, icon: Flame,      iconStyle: 'background:rgba(239,68,68,0.12);color:#f87171' },
+    { label: 'Enterprise Profit', value: '₦1.8M',  change: '+12.1%', up: true,  icon: TrendingUp,  iconStyle: 'background:rgba(16,185,129,0.12);color:#10b981' },
+    { label: 'EBITDA Margin',     value: '34.5%',   change: '+14.5%', up: true,  icon: Target,     iconStyle: 'background:rgba(59,130,246,0.12);color:#60a5fa' },
   ];
 
   const categories = [
-    { name: 'Logistics & Supply', amount: '₦450K', percentage: 45, emoji: '🚚', color: 'emerald' },
-    { name: 'Human Capital', amount: '₦850K', percentage: 35, emoji: '👥', color: 'gold' },
-    { name: 'Growth Marketing', amount: '₦250K', percentage: 15, emoji: '🚀', color: 'emerald' },
-    { name: 'Others', amount: '₦150K', percentage: 5, emoji: '📦', color: 'white' }
+    { name: 'Logistics & Supply', amount: '₦450K', percentage: 45, color: '#10b981' },
+    { name: 'Human Capital',      amount: '₦850K', percentage: 35, color: '#f59e0b' },
+    { name: 'Growth Marketing',   amount: '₦250K', percentage: 15, color: '#3b82f6' },
+    { name: 'Other Expenses',     amount: '₦150K', percentage: 5,  color: '#64748b' },
   ];
+
+  // Deterministic chart data — no Math.random()
+  const revenueData   = [42, 58, 48, 71, 55, 68, 52, 80, 65, 49, 75, 88];
+  const operatingData = [22, 30, 25, 38, 28, 35, 26, 42, 33, 25, 38, 44];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  // KPI trend sparkline (last 6 months, deterministic)
+  const sparkData = [
+    [60, 65, 58, 72, 68, 88],
+    [80, 75, 82, 70, 78, 72],
+    [40, 52, 45, 60, 55, 72],
+    [55, 60, 58, 66, 62, 75],
+  ];
+
+  // Normalize sparkline point to SVG path
+  function sparkPath(data: number[]) {
+    const max = Math.max(...data);
+    const min = Math.min(...data);
+    const range = max - min || 1;
+    const w = 60, h = 24;
+    return data.map((v, i) => {
+      const x = (i / (data.length - 1)) * w;
+      const y = h - ((v - min) / range) * h;
+      return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+  }
 </script>
 
-<div class="space-y-10 pb-20 relative z-10 w-full" in:fade>
-  <!-- Page Header -->
-  <div class="flex flex-col md:flex-row md:items-end justify-between gap-8">
-    <div class="space-y-2">
-      <div class="flex items-center gap-3 text-[10px] font-black text-emerald uppercase tracking-[0.3em] mb-1">
-        <span class="relative flex h-2 w-2">
-          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald"></span>
-        </span>
-        Performance Intelligence
+<svelte:head>
+  <title>Analytics — FinancialAuditor</title>
+</svelte:head>
+
+<div class="space-y-6 pb-12" in:fly={{ y: 12, duration: 300 }}>
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <Activity size={13} style="color:#10b981" aria-hidden="true" />
+        <span class="text-xs font-semibold uppercase tracking-wider" style="color:#10b981">Performance Intelligence</span>
       </div>
-      <h1 class="text-3xl md:text-5xl font-heading font-black text-white tracking-tighter leading-tight">Advanced <span class="text-emerald">Analytics</span></h1>
-      <p class="text-slate text-lg font-medium max-w-2xl">Deep-dive into enterprise financial metrics and operational efficiency with real-time AI projections.</p>
+      <h1 class="text-2xl font-heading font-bold text-white tracking-tight">
+        Advanced <span style="color:#10b981">Analytics</span>
+      </h1>
+      <p class="text-sm mt-1" style="color:#64748b">Real-time financial metrics and AI-powered operational insights.</p>
     </div>
-    <div class="flex items-center gap-4">
-      <button class="btn-secondary py-3 px-6 text-xs flex items-center gap-3 group">
-        <span class="text-lg group-hover:rotate-12 transition-transform duration-300">📅</span>
-        Q1 2026 Analysis
+    <div class="flex items-center gap-3 shrink-0">
+      <button class="flex items-center gap-2 py-2 px-4 text-sm rounded-xl border border-white/10 font-medium transition-all"
+        style="color:#94a3b8; background:rgba(255,255,255,0.03);"
+        onmouseenter={e => (e.currentTarget as HTMLElement).style.color = '#f1f5f9'}
+        onmouseleave={e => (e.currentTarget as HTMLElement).style.color = '#94a3b8'}>
+        <Calendar size={14} aria-hidden="true" />
+        Q1 2026
       </button>
-      <button class="btn-primary py-3 px-8 text-xs flex items-center gap-3 shadow-glow group">
-        <span class="text-lg group-hover:scale-125 transition-transform duration-300">📥</span>
-        Export Dataset
+      <button class="flex items-center gap-2 py-2 px-4 text-sm rounded-xl font-semibold text-white transition-all"
+        style="background:#10b981; box-shadow:0 2px 10px rgba(16,185,129,0.3);">
+        <Download size={14} aria-hidden="true" />
+        Export Data
       </button>
     </div>
   </div>
 
-  <!-- Key Metrics Grid -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    {#each metrics as metric, i}
-      <StatCard {...metric} delay={100 + (i * 100)} />
+  <!-- KPI Metric Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+    {#each metrics as m, i (m.label)}
+      <div class="rounded-2xl p-5 border border-white/8 space-y-3 hover:border-white/15 transition-all duration-300"
+        style="background-color:#111827;" in:fly={{ y: 10, delay: i * 60, duration: 280 }}>
+        <div class="flex items-center justify-between">
+          <p class="text-xs font-semibold uppercase tracking-wider" style="color:#475569">{m.label}</p>
+          <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={m.iconStyle} aria-hidden="true">
+            <m.icon size={15} />
+          </div>
+        </div>
+        <div class="flex items-end justify-between gap-2">
+          <p class="text-2xl font-heading font-bold text-white tabular-nums">{m.value}</p>
+          <!-- Sparkline -->
+          <svg width="60" height="24" viewBox="0 0 60 24" aria-hidden="true" class="shrink-0 mb-1">
+            <path d={sparkPath(sparkData[i])} fill="none"
+              stroke={m.up ? '#10b981' : '#f87171'} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class={cn('flex items-center gap-1 text-xs font-semibold w-fit px-2 py-0.5 rounded-lg',
+          m.up ? '' : '')}
+          style={m.up
+            ? 'background:rgba(16,185,129,0.12);color:#6ee7b7;'
+            : 'background:rgba(239,68,68,0.12);color:#fca5a5;'}>
+          {#if m.up}<TrendingUp size={11} aria-hidden="true" />{:else}<TrendingDown size={11} aria-hidden="true" />{/if}
+          {m.change}
+        </span>
+      </div>
     {/each}
   </div>
 
-  <div class="grid lg:grid-cols-3 gap-8">
-    <!-- Sophisticated Performance Chart Area -->
-    <div class="lg:col-span-2 card-premium p-10 bg-surface/40 backdrop-blur-sm relative overflow-hidden group">
-      <!-- Background Decoration -->
-      <div class="absolute -top-24 -right-24 w-64 h-64 bg-emerald/5 rounded-full blur-3xl pointer-events-none group-hover:bg-emerald/10 transition-all duration-700"></div>
+  <!-- Chart Grid -->
+  <div class="grid lg:grid-cols-3 gap-6">
 
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-8 mb-16 relative z-10">
-        <div class="space-y-1">
-          <h3 class="text-2xl font-heading font-black text-white flex items-center gap-3">
-            <span class="text-3xl">📈</span>
+    <!-- Grouped Bar Chart -->
+    <div class="lg:col-span-2 rounded-2xl border border-white/8 p-6" style="background-color:#111827;">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-sm font-semibold text-white flex items-center gap-2">
+            <BarChart3 size={15} style="color:#10b981" aria-hidden="true" />
             Performance Matrix
-          </h3>
-          <p class="text-sm text-slate font-medium">Comparative analysis of inflow vs operational outflow.</p>
+          </h2>
+          <p class="text-xs mt-0.5" style="color:#64748b">Inflow vs operational outflow by month</p>
         </div>
-        <div class="flex flex-wrap gap-6">
-          <div class="flex items-center gap-2.5 text-[10px] font-black text-emerald uppercase tracking-widest">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald shadow-[0_0_8px_rgba(0,200,150,0.4)]"></span> Gross Revenue
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-1.5">
+            <div class="w-2 h-2 rounded-full bg-emerald" aria-hidden="true"></div>
+            <span class="text-xs font-medium" style="color:#64748b">Revenue</span>
           </div>
-          <div class="flex items-center gap-2.5 text-[10px] font-black text-gold uppercase tracking-widest">
-            <span class="w-2.5 h-2.5 rounded-full bg-gold shadow-[0_0_8px_rgba(245,166,35,0.4)]"></span> Operational Burn
+          <div class="flex items-center gap-1.5">
+            <div class="w-2 h-2 rounded-full" style="background:#f59e0b" aria-hidden="true"></div>
+            <span class="text-xs font-medium" style="color:#64748b">Costs</span>
           </div>
         </div>
       </div>
 
-      <div class="h-80 relative flex items-end gap-4 px-2 group/chart mb-6">
-        {#each Array(12) as _, i}
-          <div class="flex-1 flex flex-col items-center gap-2 relative group/bar h-full justify-end">
-            <!-- Burn Bar -->
-            <div 
-              class="w-full bg-gold/10 rounded-t-lg group-hover/bar:bg-gold/30 transition-all duration-700 relative overflow-hidden"
-              style="height: {20 + Math.random() * 40}%"
-            >
-              <div class="absolute inset-0 bg-gradient-to-t from-gold/40 to-transparent opacity-0 group-hover/bar:opacity-100 transition-opacity duration-500"></div>
+      <div class="h-52 flex items-end gap-1.5" role="img" aria-label="Revenue vs costs bar chart by month">
+        {#each months as month, i (month)}
+          <div class="flex-1 flex flex-col items-center gap-1 group">
+            <div class="w-full flex items-end gap-0.5 h-44">
+              <!-- Revenue bar -->
+              <div class="flex-1 rounded-t-sm transition-colors duration-200 hover:opacity-90"
+                style="height:{revenueData[i]}%; background:rgba(16,185,129,0.25); hover:background:rgba(16,185,129,0.5)"
+                title="{month} Revenue: {revenueData[i]}%"
+              ></div>
+              <!-- Cost bar -->
+              <div class="flex-1 rounded-t-sm transition-colors duration-200"
+                style="height:{operatingData[i]}%; background:rgba(245,158,11,0.25);"
+                title="{month} Costs: {operatingData[i]}%"
+              ></div>
             </div>
-            <!-- Revenue Bar -->
-            <div 
-              class="w-full bg-emerald/10 rounded-t-lg group-hover/bar:bg-emerald/30 transition-all duration-700 relative overflow-hidden -mt-1"
-              style="height: {40 + Math.random() * 50}%"
-            >
-              <div class="absolute inset-0 bg-gradient-to-t from-emerald/40 to-transparent opacity-0 group-hover/bar:opacity-100 transition-opacity duration-500"></div>
-            </div>
-            <span class="text-[9px] font-black text-slate-dim uppercase tracking-tighter group-hover/bar:text-white transition-colors mt-2">
-              {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'][i]}
-            </span>
+            <span class="text-[9px] font-semibold uppercase" style="color:#475569">{month}</span>
           </div>
         {/each}
       </div>
     </div>
 
-    <!-- Expenditure Breakdown -->
-    <div class="card-premium p-10 bg-surface/40 backdrop-blur-sm space-y-10 group">
-      <div class="space-y-1">
-        <h3 class="text-2xl font-heading font-black text-white flex items-center gap-3">
-          <span class="text-3xl">🧭</span>
-          Allocation
-        </h3>
-        <p class="text-sm text-slate font-medium">Departmental spend analysis.</p>
+    <!-- Budget Allocation -->
+    <div class="rounded-2xl border border-white/8 p-6 space-y-5" style="background-color:#111827;">
+      <div>
+        <h2 class="text-sm font-semibold text-white flex items-center gap-2">
+          <PieChart size={15} style="color:#10b981" aria-hidden="true" />
+          Budget Allocation
+        </h2>
+        <p class="text-xs mt-0.5" style="color:#64748b">Departmental spend breakdown</p>
       </div>
 
-      <div class="space-y-8">
-        {#each categories as cat}
-          <div class="space-y-3 group/item cursor-pointer">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <span class="text-xl group-hover/item:scale-125 transition-transform duration-300">{cat.emoji}</span>
-                <span class="text-sm font-bold text-white group-hover/item:text-emerald transition-colors">{cat.name}</span>
+      <div class="space-y-4">
+        {#each categories as cat (cat.name)}
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between text-sm">
+              <div class="flex items-center gap-2">
+                <div class="w-2.5 h-2.5 rounded-full shrink-0" style="background:{cat.color}" aria-hidden="true"></div>
+                <span class="font-medium text-white text-xs">{cat.name}</span>
               </div>
-              <span class="text-sm font-black text-white">{cat.percentage}%</span>
+              <div class="flex items-center gap-3 text-xs">
+                <span style="color:#64748b">{cat.amount}</span>
+                <span class="font-semibold text-white tabular-nums w-8 text-right">{cat.percentage}%</span>
+              </div>
             </div>
-            <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden border border-white/5">
-              <div 
-                class={cn(
-                  "h-full rounded-full transition-all duration-1000 group-hover/item:brightness-125",
-                  cat.color === 'emerald' ? "bg-emerald shadow-glow-sm" : 
-                  cat.color === 'gold' ? "bg-gold" : "bg-white/20"
-                )}
-                style="width: {cat.percentage}%"
+            <div class="w-full h-1.5 rounded-full overflow-hidden" style="background:rgba(255,255,255,0.06)">
+              <div class="h-full rounded-full transition-all duration-700"
+                style="width:{cat.percentage}%; background:{cat.color}; opacity:0.75"
               ></div>
-            </div>
-            <div class="flex justify-between items-center opacity-0 group-hover/item:opacity-100 transition-opacity">
-              <span class="text-[10px] font-black text-slate-dim uppercase tracking-widest">Calculated Burn</span>
-              <span class="text-[10px] font-black text-white">{cat.amount}</span>
             </div>
           </div>
         {/each}
       </div>
 
-      <button class="w-full py-4 rounded-xl border border-white/10 text-[10px] font-black text-white uppercase tracking-[0.3em] hover:bg-white/5 hover:border-white/20 transition-all mt-4 group/btn">
-        Full Expense Audit <ArrowRight size={14} class="inline ml-2 group-hover/btn:translate-x-2 transition-transform" />
-      </button>
+      <a href="/dashboard/ledger"
+        class="flex items-center justify-between w-full p-3 rounded-xl border border-white/8 hover:border-white/20 hover:bg-white/3 text-sm font-medium transition-all group"
+        style="color:#94a3b8;"
+        onmouseenter={e => (e.currentTarget as HTMLElement).style.color = '#10b981'}
+        onmouseleave={e => (e.currentTarget as HTMLElement).style.color = '#94a3b8'}
+      >
+        Full Expense Audit
+        <ArrowRight size={14} class="group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+      </a>
+    </div>
+  </div>
+
+  <!-- Bottom KPI Table -->
+  <div class="rounded-2xl border border-white/8 overflow-hidden" style="background-color:#111827;">
+    <div class="px-6 py-4 border-b border-white/8">
+      <h2 class="text-sm font-semibold text-white">Financial KPI Summary</h2>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse" aria-label="Financial KPI summary">
+        <thead>
+          <tr style="background-color:#1f2937;">
+            {#each ['Metric', 'Q1 2026', 'Q4 2025', 'Change', 'Status'] as col (col)}
+              <th class="px-6 py-3 text-[10px] font-semibold uppercase tracking-widest" style="color:#475569">{col}</th>
+            {/each}
+          </tr>
+        </thead>
+        <tbody>
+          {#each [
+            { metric: 'Revenue',        q1: '₦4.2M',  q4: '₦3.5M',  change: '+20%',  ok: true  },
+            { metric: 'Gross Margin',   q1: '68.4%',  q4: '65.1%',  change: '+3.3%', ok: true  },
+            { metric: 'OpEx',           q1: '₦2.4M',  q4: '₦2.5M',  change: '-4%',   ok: true  },
+            { metric: 'Net Profit',     q1: '₦1.8M',  q4: '₦1.0M',  change: '+80%',  ok: true  },
+            { metric: 'Cash Burn Rate', q1: '₦201K',  q4: '₦240K',  change: '-16%',  ok: true  },
+            { metric: 'FIRS Liability', q1: '₦580K',  q4: '₦620K',  change: '-6.5%', ok: true  },
+          ] as row (row.metric)}
+            <tr class="border-t hover:bg-white/3 transition-colors" style="border-color:rgba(255,255,255,0.06)">
+              <td class="px-6 py-3.5 text-sm font-medium text-white">{row.metric}</td>
+              <td class="px-6 py-3.5 text-sm text-white tabular-nums font-semibold">{row.q1}</td>
+              <td class="px-6 py-3.5 text-sm tabular-nums" style="color:#64748b">{row.q4}</td>
+              <td class="px-6 py-3.5">
+                <span class="text-xs font-bold tabular-nums" style={row.ok ? 'color:#6ee7b7' : 'color:#fca5a5'}>{row.change}</span>
+              </td>
+              <td class="px-6 py-3.5">
+                <span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg" style="background:rgba(16,185,129,0.12);color:#6ee7b7">On Track</span>
+              </td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
-
-<style>
-  .shadow-glow {
-    box-shadow: 0 0 30px -5px rgba(0, 200, 150, 0.4);
-  }
-  .shadow-glow-sm {
-    box-shadow: 0 0 15px -2px rgba(0, 200, 150, 0.3);
-  }
-</style>

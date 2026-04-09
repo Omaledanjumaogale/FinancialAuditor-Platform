@@ -1,184 +1,212 @@
 <script lang="ts">
-  import { fade, fly } from 'svelte/transition';
-  import { 
-    Search, MoreHorizontal, Send, Paperclip, 
-    Smile, ShieldCheck, CheckCircle2, Clock,
-    User, Phone, Mail, Globe, Sparkles
-  } from 'lucide-svelte';
+  import { fly } from 'svelte/transition';
+  import { Send, Search, Lock, MoreVertical, Circle } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { authState } from '$lib/stores/auth.svelte';
-  import { useQuery, useConvexClient } from "convex-svelte";
-  import { api } from "$convex/_generated/api";
 
-  const userQuery = $derived(
-    authState.user ? useQuery(api.users.getByUid, { uid: authState.user.uid }) : null
-  );
-  const currentUser = $derived(userQuery?.data);
+  let activeContact = $state(0);
+  let messageText   = $state('');
 
-  const client = useConvexClient();
-
-  // For now, we'll just mock a contact list
   const contacts = [
-    { id: '1', name: 'Dr. Chima Eze', role: 'Tax Auditor', status: 'online', emoji: '👨‍💼', lastMsg: 'The FIRS report is ready for review.' },
-    { id: '2', name: 'Sarah Alabi', role: 'Compliance Officer', status: 'offline', emoji: '👩‍💼', lastMsg: 'Please sign the CAC documents.' },
-    { id: '3', name: 'Musa Bello', role: 'Legal Consultant', status: 'online', emoji: '👨‍💻', lastMsg: 'Audit trail verified successfully.' }
+    { id: 1, name: 'Dr. Chima Eze',     role: 'ICAN Auditor',        initials: 'CE', online: true,  unread: 2, lastMsg: 'I have reviewed your Q3 reports...' },
+    { id: 2, name: 'FIRS Support',       role: 'Government Agency',   initials: 'FS', online: false, unread: 0, lastMsg: 'Your submission has been received.' },
+    { id: 3, name: 'Ada Okonkwo CPA',    role: 'Tax Consultant',      initials: 'AO', online: true,  unread: 5, lastMsg: 'Please upload the bank statement' },
+    { id: 4, name: 'Platform Support',   role: 'FinancialAuditor',    initials: 'PS', online: true,  unread: 0, lastMsg: 'Welcome! How can we help?' },
   ];
 
-  let selectedContactId = $state(contacts[0].id);
-  const selectedContact = $derived(contacts.find(c => c.id === selectedContactId));
+  const threads: Record<number, Array<{ from: 'me' | 'them'; text: string; time: string }>> = {
+    1: [
+      { from: 'them', text: 'Good afternoon. I have completed the initial review of your Q3 financial statements.', time: '2:14 PM' },
+      { from: 'me',   text: 'Thank you Dr. Eze. What are the key findings?', time: '2:17 PM' },
+      { from: 'them', text: 'There are minor VAT discrepancies in July. I will send a detailed report shortly.', time: '2:19 PM' },
+      { from: 'me',   text: 'Understood. Please include the FIRS reconciliation notes.', time: '2:22 PM' },
+      { from: 'them', text: 'Will do. Report will be ready by end of day.', time: '2:25 PM' },
+    ],
+    2: [
+      { from: 'them', text: 'Your VAT return submission for Q3 2025 has been received and is under review.', time: '10:01 AM' },
+      { from: 'me',   text: 'Thank you. How long does the review typically take?', time: '10:04 AM' },
+      { from: 'them', text: 'Processing takes 5–7 business days. You will receive a confirmation via email.', time: '10:06 AM' },
+    ],
+    3: [
+      { from: 'them', text: 'Hello! Please upload the latest bank statement so I can reconcile the accounts.', time: 'Yesterday' },
+      { from: 'me',   text: 'I will upload it this afternoon.', time: 'Yesterday' },
+      { from: 'them', text: 'Perfect. Also, could you confirm the opening balance for January?', time: 'Yesterday' },
+    ],
+    4: [
+      { from: 'them', text: 'Welcome to FinancialAuditor! 🎉 Your account is fully set up.', time: 'Apr 1' },
+      { from: 'them', text: 'If you need any help navigating the platform, feel free to ask here.', time: 'Apr 1' },
+    ],
+  };
 
-  let newMessage = $state('');
+  let searchQuery = $state('');
+  const filteredContacts = $derived(
+    contacts.filter(c => !searchQuery || c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
-  async function handleSend() {
-    if (!newMessage.trim() || !currentUser) return;
-    
-    // In a real app, we'd have the receiverId from the selected contact
-    // For this demo, we'll just log it or simulate sending
-    // await client.mutation(api.messages.send, { senderId: currentUser._id, receiverId: ..., content: newMessage });
-    newMessage = '';
+  function sendMessage() {
+    if (!messageText.trim()) return;
+    const thread = threads[contacts[activeContact].id];
+    if (thread) {
+      thread.push({ from: 'me', text: messageText.trim(), time: 'Now' });
+    }
+    messageText = '';
   }
+
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+
+  const currentThread = $derived(threads[contacts[activeContact]?.id] || []);
+  const currentContact = $derived(contacts[activeContact]);
 </script>
 
-<div class="h-[calc(100vh-180px)] flex gap-8 relative z-10" in:fade>
-  <!-- Contacts Sidebar -->
-  <div class="w-80 flex flex-col gap-6 h-full">
-    <div class="space-y-2">
-      <h2 class="text-2xl font-heading font-black text-white tracking-tight">Intelligence <span class="text-emerald">Chat</span></h2>
-      <p class="text-xs text-slate-dim font-medium uppercase tracking-widest">Secure Auditor Connectivity</p>
-    </div>
+<svelte:head>
+  <title>Secure Messages — FinancialAuditor</title>
+</svelte:head>
 
-    <div class="card-premium p-2 bg-surface/50 border-white/5 flex items-center gap-3">
-      <Search class="ml-3 text-slate-dim" size={16} />
-      <input type="text" placeholder="Search contacts..." class="w-full bg-transparent border-none py-2.5 text-sm text-white placeholder:text-slate-dim focus:outline-none" />
-    </div>
-
-    <div class="flex-1 overflow-y-auto card-premium bg-surface/40 backdrop-blur-sm border-white/10 p-2 space-y-1">
-      {#each contacts as contact}
-        <button 
-          onclick={() => selectedContactId = contact.id}
-          class={cn(
-            "w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 group",
-            selectedContactId === contact.id ? "bg-emerald/10 border border-emerald/20" : "hover:bg-white/5 border border-transparent"
-          )}
-        >
-          <div class="relative">
-            <div class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-              {contact.emoji}
-            </div>
-            {#if contact.status === 'online'}
-              <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald rounded-full border-4 border-navy shadow-sm"></div>
-            {/if}
-          </div>
-          <div class="flex-1 text-left min-w-0">
-            <div class="text-sm font-bold text-white truncate">{contact.name}</div>
-            <div class="text-[10px] text-slate-dim font-medium uppercase tracking-wider truncate">{contact.role}</div>
-          </div>
-        </button>
-      {/each}
-    </div>
+<div class="pb-10" in:fly={{ y: 10, duration: 300 }}>
+  <div class="mb-5">
+    <h1 class="text-2xl font-heading font-bold text-white tracking-tight">Secure Messages</h1>
+    <p class="text-sm text-slate-dim mt-0.5">End-to-end encrypted communication with auditors</p>
   </div>
 
-  <!-- Chat Area -->
-  <div class="flex-1 flex flex-col card-premium bg-surface/40 backdrop-blur-xl border-white/10 overflow-hidden relative">
-    <!-- Chat Header -->
-    <div class="px-8 py-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-      <div class="flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-emerald/10 flex items-center justify-center text-2xl">
-          {selectedContact?.emoji}
-        </div>
-        <div>
-          <h3 class="text-lg font-heading font-black text-white leading-tight">{selectedContact?.name}</h3>
-          <div class="flex items-center gap-2">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald"></span>
-            <span class="text-[10px] font-black text-emerald uppercase tracking-widest">Active Intelligence Node</span>
-          </div>
+  <div class="rounded-2xl border border-white/8 overflow-hidden flex" style="background-color:#111827; height: calc(100vh - 220px); min-height: 480px;">
+
+    <!-- Contacts Sidebar -->
+    <div class="w-72 shrink-0 flex flex-col border-r border-white/8">
+      <!-- Search -->
+      <div class="p-3 border-b border-white/8">
+        <div class="relative">
+          <Search class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-dim" size={14} aria-hidden="true" />
+          <input
+            type="search"
+            bind:value={searchQuery}
+            placeholder="Search conversations..."
+            class="w-full py-2 pl-9 pr-3 text-sm rounded-xl border border-white/8 text-white placeholder-slate-dim focus:border-emerald/40 focus:outline-none transition-colors"
+            style="background-color:#1f2937;"
+            aria-label="Search contacts"
+          />
         </div>
       </div>
-      <div class="flex items-center gap-3">
-        <button class="p-2.5 rounded-xl bg-white/5 text-slate-dim hover:text-white transition-all border border-white/5">
-          <Phone size={18} />
-        </button>
-        <button class="p-2.5 rounded-xl bg-white/5 text-slate-dim hover:text-white transition-all border border-white/5">
-          <MoreHorizontal size={18} />
-        </button>
+
+      <!-- Contact List -->
+      <div class="flex-1 overflow-y-auto" role="navigation" aria-label="Conversations">
+        {#each filteredContacts as contact, i (contact.id)}
+          <button
+            onclick={() => activeContact = i}
+            class={cn(
+              'w-full text-left px-4 py-3.5 flex items-center gap-3 transition-all border-b border-white/5',
+              activeContact === i ? 'bg-emerald/10' : 'hover:bg-white/3'
+            )}
+            aria-label="Open conversation with {contact.name}"
+            aria-current={activeContact === i ? 'true' : undefined}
+          >
+            <!-- Avatar -->
+            <div class="relative shrink-0">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm text-white"
+                style="background: linear-gradient(135deg, #059669, #0f2040)">
+                {contact.initials}
+              </div>
+              {#if contact.online}
+                <div class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald border-2" style="border-color:#111827" aria-label="Online"></div>
+              {/if}
+            </div>
+            <!-- Info -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <p class="text-sm font-semibold text-white truncate">{contact.name}</p>
+                {#if contact.unread > 0}
+                  <span class="text-[10px] font-bold bg-emerald text-white rounded-full w-4 h-4 flex items-center justify-center shrink-0 ml-1">{contact.unread}</span>
+                {/if}
+              </div>
+              <p class="text-xs text-slate-dim truncate mt-0.5">{contact.lastMsg}</p>
+            </div>
+          </button>
+        {/each}
       </div>
     </div>
 
-    <!-- Messages -->
-    <div class="flex-1 overflow-y-auto p-8 space-y-8">
-      <div class="flex flex-col items-center gap-4 py-10">
-        <div class="px-4 py-1.5 rounded-full bg-white/5 border border-white/5 text-[10px] font-black text-slate-dim uppercase tracking-widest">
-          End-to-End Encrypted Secure Channel
-        </div>
-      </div>
-
-      <!-- Mock Messages -->
-      <div class="flex gap-4 max-w-[80%]">
-        <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-lg flex-shrink-0">
-          {selectedContact?.emoji}
-        </div>
-        <div class="space-y-2">
-          <div class="bg-white/5 border border-white/10 p-4 rounded-2xl rounded-tl-none text-slate text-sm font-medium leading-relaxed">
-            Hello Adaeze, I've analyzed the Q1 logistics data. There's a slight discrepancy in the VAT calculations for the Lagos deliveries.
+    <!-- Chat Area -->
+    <div class="flex-1 flex flex-col min-w-0">
+      <!-- Chat Header -->
+      <div class="px-5 py-4 border-b border-white/8 flex items-center justify-between shrink-0" style="background-color:#111827;">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm text-white shrink-0"
+            style="background: linear-gradient(135deg, #059669, #0f2040)">
+            {currentContact?.initials}
           </div>
-          <span class="text-[9px] font-black text-slate-dim uppercase tracking-widest ml-1">10:24 AM</span>
-        </div>
-      </div>
-
-      <div class="flex gap-4 max-w-[80%] ml-auto flex-row-reverse">
-        <div class="w-8 h-8 rounded-lg bg-emerald/10 flex items-center justify-center text-lg flex-shrink-0 text-emerald">
-          👩‍💼
-        </div>
-        <div class="space-y-2 text-right">
-          <div class="bg-emerald text-navy p-4 rounded-2xl rounded-tr-none text-sm font-bold leading-relaxed shadow-glow">
-            Thanks for the heads up, Chima. Is it something the AI can automatically reconcile or do we need manual intervention?
+          <div>
+            <p class="text-sm font-semibold text-white">{currentContact?.name}</p>
+            <p class="text-xs text-slate-dim">{currentContact?.role} · {currentContact?.online ? 'Online' : 'Offline'}</p>
           </div>
-          <span class="text-[9px] font-black text-slate-dim uppercase tracking-widest mr-1">10:26 AM</span>
         </div>
-      </div>
-
-      <div class="flex gap-4 max-w-[80%]">
-        <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-lg flex-shrink-0">
-          {selectedContact?.emoji}
-        </div>
-        <div class="space-y-2">
-          <div class="bg-white/5 border border-white/10 p-4 rounded-2xl rounded-tl-none text-slate text-sm font-medium leading-relaxed">
-            The AI can handle it. I've just pushed the reconciliation script. You should see an updated audit trail in the Ledger section in about 5 minutes.
+        <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1 text-xs text-emerald font-medium bg-emerald/10 px-2.5 py-1 rounded-lg border border-emerald/20">
+            <Lock size={11} aria-hidden="true" />
+            Encrypted
           </div>
-          <span class="text-[9px] font-black text-slate-dim uppercase tracking-widest ml-1">10:30 AM</span>
+          <button class="p-1.5 rounded-lg text-slate hover:text-white hover:bg-white/5 transition-colors" aria-label="More options">
+            <MoreVertical size={16} aria-hidden="true" />
+          </button>
         </div>
       </div>
-    </div>
 
-    <!-- Input Area -->
-    <div class="p-6 bg-white/[0.02] border-t border-white/5">
-      <div class="card-premium p-2 bg-surface/80 border-white/10 flex items-center gap-2 group focus-within:border-emerald/40 transition-all duration-500">
-        <button class="p-3 text-slate-dim hover:text-white transition-colors">
-          <Paperclip size={20} />
-        </button>
-        <input 
-          type="text" 
-          bind:value={newMessage}
-          placeholder="Type your message to the auditor..." 
-          class="flex-1 bg-transparent border-none py-3 text-base text-white placeholder:text-slate-dim focus:outline-none font-medium tracking-tight"
-          onkeydown={(e) => e.key === 'Enter' && handleSend()}
-        />
-        <button class="p-3 text-slate-dim hover:text-white transition-colors">
-          <Smile size={20} />
-        </button>
-        <button 
-          onclick={handleSend}
-          class="bg-emerald text-navy p-3.5 rounded-xl shadow-glow hover:scale-105 active:scale-95 transition-all"
-        >
-          <Send size={20} />
-        </button>
+      <!-- Messages -->
+      <div class="flex-1 overflow-y-auto px-5 py-5 space-y-4" role="log" aria-label="Message thread" aria-live="polite">
+        {#each currentThread as msg, i (i)}
+          <div class={cn('flex', msg.from === 'me' ? 'justify-end' : 'justify-start')} in:fly={{ y: 6, duration: 200 }}>
+            <!-- Sender label -->
+            {#if msg.from === 'them'}
+              <div class="flex items-end gap-2 max-w-[75%]">
+                <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 mb-0.5"
+                  style="background: linear-gradient(135deg, #059669, #0f2040)" aria-hidden="true">
+                  {currentContact?.initials}
+                </div>
+                <div>
+                  <div class="rounded-2xl rounded-bl-sm px-4 py-3 text-sm text-white" style="background-color:#1f2937; border: 1px solid rgba(255,255,255,0.08)">
+                    {msg.text}
+                  </div>
+                  <p class="text-[10px] text-slate-dim mt-1 pl-1">{msg.time}</p>
+                </div>
+              </div>
+            {:else}
+              <div class="max-w-[75%]">
+                <div class="rounded-2xl rounded-br-sm px-4 py-3 text-sm text-white" style="background: linear-gradient(135deg, #059669, #047857)">
+                  {msg.text}
+                </div>
+                <p class="text-[10px] text-slate-dim mt-1 pr-1 text-right">{msg.time}</p>
+              </div>
+            {/if}
+          </div>
+        {/each}
+      </div>
+
+      <!-- Input -->
+      <div class="px-5 py-4 border-t border-white/8 shrink-0" style="background-color:#111827;">
+        <div class="flex items-end gap-3">
+          <textarea
+            bind:value={messageText}
+            onkeydown={handleKeydown}
+            placeholder="Type a secure message..."
+            rows={1}
+            class="flex-1 py-3 px-4 text-sm rounded-xl border border-white/10 text-white placeholder-slate-dim focus:border-emerald/40 focus:outline-none resize-none transition-colors"
+            style="background-color:#1f2937; max-height:120px;"
+            aria-label="Message input"
+          ></textarea>
+          <button
+            onclick={sendMessage}
+            disabled={!messageText.trim()}
+            class="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald text-white disabled:opacity-40 hover:bg-emerald-deep transition-all shrink-0 shadow-[0_4px_12px_rgba(16,185,129,0.35)]"
+            aria-label="Send message"
+          >
+            <Send size={16} aria-hidden="true" />
+          </button>
+        </div>
+        <p class="text-[10px] text-slate-dim mt-2 flex items-center gap-1">
+          <Lock size={9} aria-hidden="true" />
+          All messages are end-to-end encrypted
+        </p>
       </div>
     </div>
   </div>
 </div>
-
-<style>
-  .shadow-glow {
-    box-shadow: 0 0 20px -5px rgba(0, 200, 150, 0.4);
-  }
-</style>
