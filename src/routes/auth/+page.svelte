@@ -1,10 +1,9 @@
 <script lang="ts">
-  import { fade, fly, slide } from 'svelte/transition';
-  import { 
-    Mail, Lock, User, ArrowRight, Sparkles, 
-    ShieldCheck, CheckCircle2, ChevronLeft, Loader2
+  import { fly, slide } from 'svelte/transition';
+  import {
+    Mail, Lock, User, ArrowRight, Sparkles,
+    ShieldCheck, ShieldAlert, CheckCircle2, Loader2
   } from 'lucide-svelte';
-  import { cn } from '$lib/utils';
   import { auth } from '$lib/firebase';
   import { 
     signInWithEmailAndPassword, 
@@ -40,21 +39,22 @@
     try {
       if (mode === 'login') {
         await signInWithEmailAndPassword(auth, email, password);
-        goto('/dashboard');
+        window.location.href = '/dashboard';
       } else if (mode === 'signup') {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         if (name) {
           await updateProfile(userCredential.user, { displayName: name });
         }
-        goto('/dashboard');
+        window.location.href = '/dashboard';
       } else {
         await sendPasswordResetEmail(auth, email);
         error = 'Reset link sent to your email.';
         mode = 'login';
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      error = err.message || 'An error occurred during authentication.';
+      const msg = err instanceof Error ? err.message : 'An error occurred during authentication.';
+      error = msg;
     } finally {
       loading = false;
     }
@@ -71,10 +71,11 @@
 
     try {
       await signInWithPopup(auth, provider);
-      goto('/dashboard');
-    } catch (err: any) {
+      window.location.href = '/dashboard';
+    } catch (err: unknown) {
       console.error(err);
-      error = err.message || `Failed to sign in with ${providerName}.`;
+      const msg = err instanceof Error ? err.message : `Failed to sign in with ${providerName}.`;
+      error = msg;
     } finally {
       loading = false;
     }
@@ -83,7 +84,7 @@
   // Redirect if already logged in
   $effect(() => {
     if (authState.user && !authState.loading) {
-      goto('/dashboard');
+      window.location.href = '/dashboard';
     }
   });
 </script>
@@ -99,7 +100,7 @@
     <!-- Left Side: Branding & Trust -->
     <div class="hidden lg:flex flex-col space-y-10" in:fly={{ x: -50, duration: 800 }}>
       <a href="/" class="flex items-center gap-3 group decoration-none">
-        <div class="w-12 h-12 bg-gradient-to-br from-emerald to-emerald-deep rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
+        <div class="w-12 h-12 bg-linear-to-br from-emerald to-emerald-deep rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
           <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
         </div>
         <div class="flex flex-col">
@@ -205,7 +206,7 @@
           <div class="mt-10 pt-8 border-t border-white/5 space-y-6">
             <div class="relative flex items-center justify-center">
               <span class="absolute px-4 bg-surface text-[10px] font-black text-slate-dim uppercase tracking-[0.3em]">Or Continue With</span>
-              <div class="w-full h-[1px] bg-white/5"></div>
+              <div class="w-full h-px bg-white/5"></div>
             </div>
 
             <div class="grid grid-cols-2 gap-4">

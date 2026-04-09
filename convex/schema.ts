@@ -62,14 +62,6 @@ export default defineSchema({
   }).index("by_client", ["clientId"])
     .index("by_status", ["status"]),
 
-  serviceRequests: defineTable({
-    userId: v.id("users"),
-    serviceType: v.string(), // "cac_registration", "firs_filing", "ngo_setup"
-    status: v.union(v.literal("pending"), v.literal("processing"), v.literal("completed")),
-    data: v.any(),
-    createdAt: v.number(),
-  }).index("by_user", ["userId"]),
-
   notifications: defineTable({
     userId: v.id("users"),
     title: v.string(),
