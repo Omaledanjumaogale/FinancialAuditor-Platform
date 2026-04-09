@@ -1,4 +1,4 @@
 import { ConvexClient } from "convex/browser";
-import { PUBLIC_CONVEX_URL } from "$env/static/public";
+import { env } from "$env/dynamic/public";
 
-export const convexClient = new ConvexClient(PUBLIC_CONVEX_URL);
+export const convexClient = new ConvexClient(env.PUBLIC_CONVEX_URL as string);

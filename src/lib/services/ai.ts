@@ -1,4 +1,4 @@
-import { PUBLIC_AI_AGENT_URL } from "$env/static/public";
+import { env } from "$env/dynamic/public";
 
 export interface ScanRequest {
   url: string;
@@ -7,7 +7,7 @@ export interface ScanRequest {
 
 export const executeAIAnalysis = async (request: ScanRequest) => {
   try {
-    const response = await fetch(`${PUBLIC_AI_AGENT_URL}/analyze`, {
+    const response = await fetch(`${env.PUBLIC_AI_AGENT_URL}/analyze`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

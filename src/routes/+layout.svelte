@@ -5,7 +5,7 @@
   import MobileBottomNav from '$lib/components/layout/MobileBottomNav.svelte';
   import { setupConvex, useConvexClient } from "convex-svelte";
   import Toast from '$lib/components/ui/Toast.svelte';
-  import { PUBLIC_CONVEX_URL } from "$env/static/public";
+  import { env } from "$env/dynamic/public";
   import { authState } from '$lib/stores/auth.svelte';
   import { api } from "$convex/_generated/api";
 
@@ -13,7 +13,7 @@
   let toast: any = $state();
   
   // Initialize Convex
-  setupConvex(PUBLIC_CONVEX_URL);
+  setupConvex(env.PUBLIC_CONVEX_URL as string);
   const client = useConvexClient();
   
   // Sync Firebase user with Convex
