@@ -3,17 +3,14 @@ import type { Handle } from '@sveltejs/kit';
 export const handle: Handle = async ({ event, resolve }) => {
   const response = await resolve(event);
 
-  // Cloudflare Workers return immutable Response objects.
-  // We must clone all headers into a new mutable Headers instance
-  // before adding security headers — otherwise a TypeError is thrown
-  // on the edge runtime, which causes the 500 Internal Server Error.
-  const headers = new Headers(response.headers);
-
-  headers.set('X-Frame-Options', 'DENY');
-  headers.set('X-Content-Type-Options', 'nosniff');
-  headers.set('X-XSS-Protection', '1; mode=block');
-  headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  headers.set(
+// SvelteKit returns a mutable Response from resolve(event).
+  // Reconstructing a new Response with response.body can throw a TypeError
+  // if the body stream is locked on the Edge runtime, causing a 500.
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set(
     'Content-Security-Policy',
     [
       "default-src 'self'",
@@ -27,11 +24,7 @@ export const handle: Handle = async ({ event, resolve }) => {
       "form-action 'self'"
     ].join('; ')
   );
-  headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
-  return new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers
-  });
+  return response;
 };

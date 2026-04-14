@@ -18,7 +18,12 @@ const firebaseConfig = {
   appId: PUBLIC_FIREBASE_APP_ID
 };
 
+import { browser } from '$app/environment';
+
 // Singleton guard: prevents "Firebase app already exists" errors
 // on hot-reload or multiple module evaluations on the edge runtime
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+
+// Initialize Firebase Auth ONLY on the client to avoid 
+// crashing Cloudflare Edge SSR (which lacks DOM APIs like IndexedDB)
+export const auth = browser ? getAuth(app) : null;

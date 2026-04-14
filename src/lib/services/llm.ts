@@ -303,6 +303,8 @@ export async function generateFinancialAdvisory(
   }
 }
 
+import { PUBLIC_CRAWL4AI_API_URL } from '$env/static/public';
+
 /**
  * Crawl4AI enhanced document analysis — scrapes a URL then audits.
  * Falls back to LLM-only if Crawl4AI is unavailable.
@@ -311,7 +313,7 @@ export async function analyseUrlWithCrawl4AI(
   url: string,
   context: string
 ): Promise<{ content: string; analysis: string }> {
-  const crawlUrl = env.PUBLIC_CRAWL4AI_API_URL || '';
+  const crawlUrl = PUBLIC_CRAWL4AI_API_URL || '';
   const crawlSecret = env.CRAWL4AI_API_SECRET || '';
 
   let crawledContent = '';
