@@ -1,6 +1,7 @@
 <script lang="ts">
   import { fly } from 'svelte/transition';
   import { onMount } from 'svelte';
+  import { Users, DollarSign, ShieldCheck, Target } from 'lucide-svelte';
   import Header from '$lib/components/layout/Header.svelte';
   import Footer from '$lib/components/layout/Footer.svelte';
   import StatCard from '$lib/components/ui/StatCard.svelte';
@@ -10,10 +11,10 @@
 
   // ── Stats ──────────────────────────────────────────────
   const stats = [
-    { label: 'Businesses Served', value: '50,000+', change: '22%', trend: 'up' as const, emoji: '🏢' },
-    { label: 'Value Audited', value: '₦2.1B+', change: '18%', trend: 'up' as const, emoji: '💰' },
-    { label: 'Certified Auditors', value: '500+', change: '12%', trend: 'up' as const, emoji: '👨‍💼' },
-    { label: 'Accuracy Rate', value: '99.7%', change: '0.3%', trend: 'up' as const, emoji: '🎯' },
+    { label: 'Businesses Served', value: '50,000+', change: '22%', trend: 'up' as const, icon: Users },
+    { label: 'Value Audited',     value: '₦2.1B+',  change: '18%', trend: 'up' as const, icon: DollarSign },
+    { label: 'Certified Auditors', value: '500+',   change: '12%', trend: 'up' as const, icon: ShieldCheck },
+    { label: 'Accuracy Rate',     value: '99.7%',   change: '0.3%', trend: 'up' as const, icon: Target },
   ];
 
   // ── Features ───────────────────────────────────────────

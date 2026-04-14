@@ -26,7 +26,7 @@
     emoji,
     delay = 0,
     class: className 
-  } = $props<Props>();
+  }: Props = $props();
 </script>
 
 <div 

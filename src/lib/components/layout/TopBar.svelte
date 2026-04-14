@@ -6,7 +6,7 @@
   import { signOut } from 'firebase/auth';
 
   interface Props { onMenuClick: () => void; }
-  let { onMenuClick } = $props() as Props;
+  let { onMenuClick }: Props = $props();
 
   const displayName = $derived(
     authState.user?.displayName || authState.user?.email?.split('@')[0] || 'User'
@@ -41,14 +41,19 @@
   <button
     type="button"
     onclick={onMenuClick}
-    class="xl:hidden p-2 rounded-xl transition-colors"
+    class="xl:hidden flex items-center justify-center w-11 h-11 rounded-xl transition-colors touch-manipulation shrink-0"
     style="color:#94a3b8;"
     onmouseenter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; (e.currentTarget as HTMLElement).style.color = '#f1f5f9'; }}
     onmouseleave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#94a3b8'; }}
-    aria-label="Toggle sidebar"
+    aria-label="Toggle sidebar menu"
   >
     <Menu size={20} aria-hidden="true" />
   </button>
+
+  <!-- Mobile Page Title (shown only on mobile where breadcrumbs are hidden) -->
+  <span class="xl:hidden flex-1 text-sm font-semibold text-white truncate" aria-live="polite">
+    {breadcrumbs.length > 0 ? breadcrumbs[breadcrumbs.length - 1].name : 'Dashboard'}
+  </span>
 
   <!-- Breadcrumbs -->
   <nav class="hidden md:flex items-center gap-1.5 text-sm flex-1 min-w-0" aria-label="Breadcrumb">

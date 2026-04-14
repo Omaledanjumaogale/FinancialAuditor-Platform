@@ -6,6 +6,16 @@
   import { useQuery } from 'convex-svelte';
   import { api } from '$convex/_generated/api';
 
+  interface Payment {
+    _id: string;
+    description: string;
+    date: number;
+    amount: number;
+    status: string;
+    reference: string;
+    method: string;
+  }
+
   const userQuery = $derived(
     authState.user ? useQuery(api.users.getByUid, { uid: authState.user.uid }) : null
   );
@@ -14,7 +24,7 @@
   const paymentsQuery = $derived(
     currentUser ? useQuery(api.payments.getByUserId, { userId: currentUser._id }) : null
   );
-  const payments  = $derived(paymentsQuery?.data || []);
+  const payments  = $derived<Payment[]>(paymentsQuery?.data || []);
   const isLoading = $derived(!paymentsQuery || paymentsQuery.isLoading);
 
   let searchQuery = $state('');
@@ -35,9 +45,9 @@
 
   const displayPayments = $derived(!isLoading && payments.length === 0 ? mockPayments : filtered);
 
-  const totalSpend     = $derived(displayPayments.filter(p => p.status === 'completed').reduce((s, p) => s + p.amount, 0));
-  const pendingCount   = $derived(displayPayments.filter(p => p.status === 'pending').length);
-  const completedCount = $derived(displayPayments.filter(p => p.status === 'completed').length);
+  const totalSpend     = $derived(displayPayments.filter((p: Payment) => p.status === 'completed').reduce((s: number, p: Payment) => s + p.amount, 0));
+  const pendingCount   = $derived(displayPayments.filter((p: Payment) => p.status === 'pending').length);
+  const completedCount = $derived(displayPayments.filter((p: Payment) => p.status === 'completed').length);
 
   function statusIcon(status: string) {
     if (status === 'completed') return CheckCircle2;

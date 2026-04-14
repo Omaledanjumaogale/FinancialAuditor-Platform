@@ -1,7 +1,6 @@
 <script lang="ts">
   import '../app.css';
   import { onMount } from 'svelte';
-  import { fade, fly } from 'svelte/transition';
   import MobileBottomNav from '$lib/components/layout/MobileBottomNav.svelte';
   import { setupConvex, useConvexClient } from "convex-svelte";
   import Toast from '$lib/components/ui/Toast.svelte';
@@ -101,6 +100,9 @@
   <div class="relative z-10 flex flex-col min-h-screen w-full max-w-[100vw]">
     {@render children()}
   </div>
+
+  <!-- Mobile Bottom Nav — shows on all pages below md breakpoint -->
+  <MobileBottomNav />
 
   <Toast bind:this={toast} />
 </div>

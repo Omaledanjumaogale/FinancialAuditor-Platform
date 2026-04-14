@@ -6,6 +6,14 @@
   import { useQuery } from 'convex-svelte';
   import { api } from '$convex/_generated/api';
 
+  interface LedgerEntry {
+    _id: string;
+    description: string;
+    date: number;
+    category: string;
+    amount: number;
+  }
+
   const userQuery = $derived(
     authState.user ? useQuery(api.users.getByUid, { uid: authState.user.uid }) : null
   );
@@ -14,7 +22,7 @@
   const ledgerQuery = $derived(
     currentUser ? useQuery(api.ledger.getByUserId, { userId: currentUser._id }) : null
   );
-  const allEntries = $derived(ledgerQuery?.data || []);
+  const allEntries = $derived<LedgerEntry[]>(ledgerQuery?.data || []);
   const isLoading  = $derived(!ledgerQuery || ledgerQuery.isLoading);
 
   let searchQuery  = $state('');
@@ -35,8 +43,8 @@
   const totalPages    = $derived(Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)));
   const paginatedItems = $derived(filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE));
 
-  const summaryCredit = $derived(allEntries.filter(e => e.amount >= 0).reduce((s, e) => s + e.amount, 0));
-  const summaryDebit  = $derived(allEntries.filter(e => e.amount < 0).reduce((s, e) => s + e.amount, 0));
+  const summaryCredit = $derived(allEntries.filter((e: LedgerEntry) => e.amount >= 0).reduce((s: number, e: LedgerEntry) => s + e.amount, 0));
+  const summaryDebit  = $derived(allEntries.filter((e: LedgerEntry) => e.amount < 0).reduce((s: number, e: LedgerEntry) => s + e.amount, 0));
   const netBalance    = $derived(summaryCredit + summaryDebit);
 
   // Mock data when database is empty

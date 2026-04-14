@@ -13,7 +13,7 @@
     class?: string;
   }
 
-  let { items, class: className } = $props<Props>();
+  let { items, class: className }: Props = $props();
   let openIndex = $state<number | null>(null);
 
   function toggle(index: number) {
@@ -35,7 +35,7 @@
     {@const isOpen = openIndex === i}
     <div
       class={cn(
-        "card-premium overflow-hidden transition-all duration-300",
+        "card-premium transition-all duration-300",
         isOpen ? "border-emerald/40 bg-emerald/2" : "hover:border-white/20"
       )}
       role="listitem"
@@ -44,9 +44,10 @@
         id={buttonId}
         onclick={() => toggle(i)}
         onkeydown={(e) => handleKeydown(e, i)}
-        class="w-full px-6 py-5 flex items-center justify-between text-left group focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald focus-visible:ring-offset-2 focus-visible:ring-offset-navy rounded-t-xl"
+        class="w-full px-6 py-5 flex items-center justify-between text-left group focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald focus-visible:ring-offset-2 focus-visible:ring-offset-navy rounded-t-xl cursor-pointer touch-manipulation min-h-[56px]"
         aria-expanded={isOpen}
         aria-controls={panelId}
+        type="button"
       >
         <div class="flex items-center gap-4 pr-4">
           {#if item.emoji}

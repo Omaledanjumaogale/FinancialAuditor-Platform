@@ -5,8 +5,21 @@
   import { useQuery } from 'convex-svelte';
   import { api } from '$convex/_generated/api';
 
+  interface Auditor {
+    _id: string;
+    name: string;
+    specialty: string;
+    rating: number;
+    reviews: number;
+    rate: number;
+    location: string;
+    verified: boolean;
+    initials: string;
+    bio: string;
+  }
+
   const auditorsQuery = useQuery(api.auditors.list, {});
-  const auditors = $derived(auditorsQuery?.data || []);
+  const auditors = $derived<Auditor[]>(auditorsQuery?.data || []);
   const isLoading = $derived(!auditorsQuery || auditorsQuery.isLoading);
 
   let searchQuery = $state('');
@@ -26,7 +39,7 @@
   const displayAuditors = $derived(!isLoading && auditors.length === 0 ? mockAuditors : auditors);
 
   const filtered = $derived(
-    displayAuditors.filter(a => {
+    displayAuditors.filter((a: Auditor) => {
       const matchSearch = !searchQuery ||
         a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         a.specialty?.toLowerCase().includes(searchQuery.toLowerCase());

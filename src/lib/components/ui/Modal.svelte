@@ -23,7 +23,7 @@
     maxWidth = '560px', 
     children,
     emoji
-  } = $props<Props>();
+  }: Props = $props();
 
   function handleKeyDown(e: KeyboardEvent) {
     if (e.key === 'Escape' && isOpen) {

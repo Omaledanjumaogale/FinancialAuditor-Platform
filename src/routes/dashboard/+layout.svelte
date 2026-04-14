@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fade } from 'svelte/transition';
+  import { fade, fly } from 'svelte/transition';
   import Sidebar from '$lib/components/layout/Sidebar.svelte';
   import TopBar from '$lib/components/layout/TopBar.svelte';
 
@@ -10,7 +10,7 @@
 <!-- Dashboard Shell -->
 <div class="flex min-h-screen" style="background-color:#0a1628;">
 
-  <!-- Sidebar — desktop always visible -->
+  <!-- Sidebar — desktop always visible (xl+) -->
   <Sidebar />
 
   <!-- Mobile Sidebar Overlay -->
@@ -26,6 +26,7 @@
     <div
       class="fixed inset-y-0 left-0 w-[240px] z-50 xl:hidden overflow-y-auto"
       style="background-color:#0f2040; border-right:1px solid rgba(255,255,255,0.08);"
+      transition:fly={{ x: -240, duration: 300, opacity: 1 }}
     >
       <Sidebar />
     </div>
@@ -33,9 +34,9 @@
 
   <!-- Main Content Area -->
   <div class="flex-1 flex flex-col xl:ml-[240px] min-w-0">
-    <TopBar onMenuClick={() => (mobileSidebarOpen = !mobileSidebarOpen)} />
+    <TopBar onMenuClick={() => { mobileSidebarOpen = !mobileSidebarOpen; }} />
     <main
-      class="flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden"
+      class="flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden pb-24 xl:pb-8"
       id="main-content"
       style="background-color:#0a1628;"
     >

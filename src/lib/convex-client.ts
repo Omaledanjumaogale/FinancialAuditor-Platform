@@ -1,9 +1,5 @@
 import { ConvexHttpClient } from "convex/browser";
+import { PUBLIC_CONVEX_URL } from "$env/static/public";
 
-const convexUrl = import.meta.env.VITE_CONVEX_URL || "https://placeholder-url.convex.cloud";
-
-if (!import.meta.env.VITE_CONVEX_URL && typeof window !== 'undefined') {
-  console.warn("VITE_CONVEX_URL is not defined. Using placeholder URL.");
-}
-
-export const convex = new ConvexHttpClient(convexUrl);
+// Uses SvelteKit static env (inlined at build time) — works on Cloudflare Pages edge
+export const convex = new ConvexHttpClient(PUBLIC_CONVEX_URL);

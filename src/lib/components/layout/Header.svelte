@@ -82,7 +82,17 @@
       </div>
     </a>
 
-    <!-- Desktop CTAs -->
+    <!-- Desktop Nav Links — hidden on mobile -->
+    <nav class="hidden md:flex items-center gap-1" aria-label="Desktop navigation">
+      {#each navLinks as link (link.href)}
+        <a
+          href={link.href}
+          class="px-3 py-2 text-sm font-medium text-slate hover:text-white hover:bg-white/5 rounded-lg transition-all"
+        >{link.name}</a>
+      {/each}
+    </nav>
+
+    <!-- Desktop CTAs — hidden on mobile -->
     <div class="hidden md:flex items-center gap-3">
       <a href="/auth" class="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-slate rounded-xl hover:text-white hover:bg-white/5 transition-all">
         <LogIn size={15} aria-hidden="true" />
@@ -94,12 +104,12 @@
       </a>
     </div>
 
-    <!-- HAMBURGER BUTTON — always visible -->
+    <!-- HAMBURGER BUTTON — mobile only (hidden on md+) -->
     <button
       type="button"
       onclick={toggleMenu}
       class={cn(
-        'flex items-center justify-center w-10 h-10 z-[120] rounded-xl transition-all duration-200 border',
+        'md:hidden flex items-center justify-center w-11 h-11 z-[120] rounded-xl transition-all duration-200 border touch-manipulation',
         isMenuOpen
           ? 'bg-emerald/20 border-emerald/40 text-emerald'
           : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 text-slate'

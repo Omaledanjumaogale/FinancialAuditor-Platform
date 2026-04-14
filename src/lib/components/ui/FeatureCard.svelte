@@ -18,7 +18,7 @@
     tags = [], 
     delay = 0,
     class: className 
-  } = $props<Props>();
+  }: Props = $props();
 </script>
 
 <div 
@@ -31,7 +31,7 @@
 >
   <!-- Emoji Icon with Original Glow -->
   <div class="w-16 h-16 rounded-[24px] bg-emerald/10 flex items-center justify-center text-4xl mb-8 group-hover:bg-emerald group-hover:text-white transition-all duration-500 border border-emerald/20 shadow-glow relative overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+    <div class="absolute inset-0 bg-linear-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
     <span class="relative z-10 select-none group-hover:scale-110 transition-transform duration-500">{emoji}</span>
   </div>
 
@@ -52,7 +52,7 @@
   </div>
 
   <!-- Decorative Gradient from Original -->
-  <div class="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-emerald/5 to-transparent rounded-tl-[100px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+  <div class="absolute bottom-0 right-0 w-32 h-32 bg-linear-to-tl from-emerald/5 to-transparent rounded-tl-[100px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
 </div>
 
 <style>
