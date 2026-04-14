@@ -78,8 +78,9 @@ export default defineSchema({
     currency: v.string(),
     status: v.union(v.literal("pending"), v.literal("completed"), v.literal("failed")),
     reference: v.string(),
+    description: v.optional(v.string()),
     type: v.union(v.literal("subscription"), v.literal("audit_fee"), v.literal("marketplace_hire")),
-    provider: v.union(v.literal("flutterwave"), v.literal("paystack")),
+    provider: v.union(v.literal("flutterwave"), v.literal("korapay"), v.literal("paystack")),
     createdAt: v.number(),
   }).index("by_user", ["userId"])
     .index("by_reference", ["reference"]),

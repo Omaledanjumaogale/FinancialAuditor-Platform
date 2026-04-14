@@ -12,6 +12,18 @@ export const getByUser = query({
   },
 });
 
+// Alias used by the payments dashboard page
+export const getByUserId = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("payments")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .order("desc")
+      .collect();
+  },
+});
+
 export const create = mutation({
   args: {
     userId: v.id("users"),
@@ -19,8 +31,9 @@ export const create = mutation({
     currency: v.string(),
     status: v.union(v.literal("pending"), v.literal("completed"), v.literal("failed")),
     reference: v.string(),
+    description: v.optional(v.string()),
     type: v.union(v.literal("subscription"), v.literal("audit_fee"), v.literal("marketplace_hire")),
-    provider: v.union(v.literal("flutterwave"), v.literal("paystack")),
+    provider: v.union(v.literal("flutterwave"), v.literal("korapay"), v.literal("paystack")),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("payments", {
@@ -42,7 +55,6 @@ export const updateStatus = mutation({
       .unique();
 
     if (!payment) throw new Error("Payment not found");
-
     await ctx.db.patch(payment._id, { status: args.status });
   },
 });

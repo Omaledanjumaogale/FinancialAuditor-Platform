@@ -1,4 +1,5 @@
 import { ConvexClient } from "convex/browser";
-import { env } from "$env/dynamic/public";
+import { PUBLIC_CONVEX_URL } from "$env/static/public";
 
-export const convexClient = new ConvexClient(env.PUBLIC_CONVEX_URL as string);
+// Real-time WebSocket client for reactive Convex queries
+export const convexClient = new ConvexClient(PUBLIC_CONVEX_URL);
