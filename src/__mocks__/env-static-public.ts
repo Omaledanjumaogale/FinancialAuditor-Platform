@@ -1,0 +1,10 @@
+// Mock $env/static/public for vitest
+export const PUBLIC_CONVEX_URL = 'https://placeholder.convex.cloud';
+export const PUBLIC_FIREBASE_API_KEY = 'test-api-key';
+export const PUBLIC_FIREBASE_AUTH_DOMAIN = 'test-project.firebaseapp.com';
+export const PUBLIC_FIREBASE_PROJECT_ID = 'test-project';
+export const PUBLIC_FIREBASE_STORAGE_BUCKET = 'test-project.appspot.com';
+export const PUBLIC_FIREBASE_MESSAGING_SENDER_ID = '123456789';
+export const PUBLIC_FIREBASE_APP_ID = '1:123456789:web:abcdef';
+export const PUBLIC_SITE_URL = 'http://localhost:5173';
+export const PUBLIC_CRAWL4AI_API_URL = '';

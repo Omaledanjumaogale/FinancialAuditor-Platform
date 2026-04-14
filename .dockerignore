@@ -1,14 +1,51 @@
+# ── Development artefacts ────────────────────────────────────────────────────
 node_modules
 .svelte-kit
-build
-.env
-.env.*
-!.env.example
-npm-debug.log
-Dockerfile
-.git
-.github
-tests
+.wrangler
+coverage
 playwright-report
 blob-report
 test-results
+e2e
+
+# ── Source & config (not needed at runtime) ───────────────────────────────────
+src
+convex
+static
+.vscode
+_backup
+
+# ── Build tools & config files ────────────────────────────────────────────────
+vite.config.ts
+vitest.config.ts
+vitest-setup.ts
+playwright.config.ts
+svelte.config.js
+tailwind.config.*
+tsconfig.json
+eslint.config.js
+.prettierrc
+.prettierignore
+.eslintrc*
+
+# ── Secrets & environment ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Git & CI ──────────────────────────────────────────────────────────────────
+.git
+.gitignore
+.github
+
+# ── Documentation ─────────────────────────────────────────────────────────────
+README.md
+IMPLEMENTATION_PLAN.md
+Dockerfile
+*.html
+*.txt
+
+# ── OS artefacts ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+npm-debug.log*

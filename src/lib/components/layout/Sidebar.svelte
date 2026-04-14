@@ -7,8 +7,6 @@
   } from 'lucide-svelte';
   import { cn } from '$lib/utils';
   import { authState } from '$lib/stores/auth.svelte';
-  import { auth } from '$lib/firebase';
-  import { signOut } from 'firebase/auth';
 
   const menuItems = [
     { name: 'Dashboard',    href: '/dashboard',           icon: LayoutDashboard },
@@ -34,7 +32,7 @@
   const userEmail = $derived(authState.user?.email || '');
 
   async function handleSignOut() {
-    try { await signOut(auth); } catch (err) { console.error('Sign out failed:', err); }
+    try { await authState.logout(); } catch (err) { console.error('Sign out failed:', err); }
     window.location.href = '/auth';
   }
 </script>

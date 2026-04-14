@@ -2,8 +2,6 @@
   import { Bell, Search, Settings, Menu, ChevronRight } from 'lucide-svelte';
   import { page } from '$app/state';
   import { authState } from '$lib/stores/auth.svelte';
-  import { auth } from '$lib/firebase';
-  import { signOut } from 'firebase/auth';
 
   interface Props { onMenuClick: () => void; }
   let { onMenuClick }: Props = $props();
@@ -28,7 +26,7 @@
   const fiscalYears = [2026, 2025, 2024, 2023];
 
   async function handleSignOut() {
-    try { await signOut(auth); } catch {}
+    try { await authState.logout(); } catch { /* silent */ }
     window.location.href = '/auth';
   }
 </script>
